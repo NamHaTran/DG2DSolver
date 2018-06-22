@@ -1,0 +1,16 @@
+﻿  CommandCheck.cpp
+  ConstDeclaration.cpp
+  DG2D.cpp
+  DGAuxUltilitiesLib.cpp
+  DGController.cpp
+  DGIOLib.cpp
+  DGMath.cpp
+  DGMeshReaderLib.cpp
+  DGMessagesLib.cpp
+  DGPostProcessLib.cpp
+  DGProcLib.cpp
+  Unv2DReader.cpp
+  Unv2DReaderLib.cpp
+  VarDeclaration.cpp
+  Generating Code...
+  DG2DSolver.vcxproj -> C:\Users\NAM TRAN Ha\Google Drive\Code C++ for fun\DGProject\DG2DSolver\Debug\DG2DSolver.exe

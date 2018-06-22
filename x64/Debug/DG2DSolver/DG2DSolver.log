@@ -1,0 +1,22 @@
+﻿  CommandCheck.cpp
+  ConstDeclaration.cpp
+  DG2D.cpp
+  DGAuxUltilitiesLib.cpp
+  DGBCsLib.cpp
+  DGController.cpp
+  DGIOLib.cpp
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(45): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(161): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(432): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(520): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(647): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(731): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  DGMath.cpp
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(491): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  DGMeshReaderLib.cpp
+  DGMessagesLib.cpp
+  DGPostProcessLib.cpp
+  DGProcLib.cpp
+  VarDeclaration.cpp
+  Generating Code...
+  DG2DSolver.vcxproj -> C:\Users\NAM TRAN Ha\Google Drive\Code C++ for fun\DGProject\DG2DSolver\x64\Debug\DG2DSolver.exe

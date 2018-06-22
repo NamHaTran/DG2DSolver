@@ -1,0 +1,5 @@
+﻿  DGMeshReaderLib.cpp
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmeshreaderlib.cpp : fatal error C1041: cannot open program database 'C:\Users\NAM TRAN Ha\Google Drive\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\Debug\vc141.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+  DG2D.cpp
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dg2d.cpp : fatal error C1041: cannot open program database 'C:\Users\NAM TRAN Ha\Google Drive\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\Debug\vc141.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+  Generating Code...
