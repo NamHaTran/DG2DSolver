@@ -25,7 +25,7 @@ Boundary conditions compatibility
 std::vector <double> auxEqBCsImplement(int element, int edge, int nG, double n);
 
 /*Function applies advective and diffusive boundary conditions to edges in NSF equation, it returns values of fluxes at Gauss point*/
-std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG, double n);
+std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG);
 
 namespace advectionBCs
 {

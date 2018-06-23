@@ -66,7 +66,7 @@ std::vector <double> auxEqBCsImplement(int element, int edge, int nG, double n)
 	return Fluxes;
 }
 
-std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG, double n)
+std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG)
 {
 	/*Fluxes array has the following form:
 	- column 0: advective fluxes
@@ -100,6 +100,7 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 	dUYPlus[1] = math::pointAuxValue(element, a, b, 2, 2);
 	dUYPlus[2] = math::pointAuxValue(element, a, b, 3, 2);
 	dUYPlus[3] = math::pointAuxValue(element, a, b, 4, 2);
+	/*NOTE: can use math::SurfaceValueFromMaster to calculate plus values, but it will decrease perfomance*/
 
 	/*Apply boundary condition*/
 	UMinus = BCSupportFncs::boundaryMinusValsCalculator(1, edge, UPlus[0], UPlus[1], UPlus[2], UPlus[3], nx, ny);

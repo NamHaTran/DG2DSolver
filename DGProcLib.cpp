@@ -262,7 +262,7 @@ namespace process
 			std::vector<std::vector<double>> rhovGsVol(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
 			std::vector<std::vector<double>> rhoEGsVol(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
 
-			std::vector<double> Flux(mathVar::nGauss + 1, 0.0);
+			std::vector<double> Flux(4, 0.0);
 			std::vector<double> rhoFlux(mathVar::nGauss + 1, 0.0);
 			std::vector<double> rhouFlux(mathVar::nGauss + 1, 0.0);
 			std::vector<double> rhovFlux(mathVar::nGauss + 1, 0.0);
@@ -345,25 +345,22 @@ namespace process
 		{
 			std::vector<double> Flux(4, 0.0);
 			double muGsP(0.0), muGsM(0.0), valP(0.0), valM(0.0);
+			std::tie(muGsP, muGsM) = math::internalSurfaceValue(edge, element, nG, 7, 1);
 
 			//rho flux
 			std::tie(valP, valM) = math::internalSurfaceValue(edge, element, nG, 1, 2);
-			std::tie(muGsP, muGsM) = math::internalSurfaceValue(edge, element, nG, 7, 1);
 			Flux[0] = math::numericalFluxes::auxFlux(muGsM*valM, muGsP*valP, nVectorComp);
 
 			//rhou flux
 			std::tie(valP, valM) = math::internalSurfaceValue(edge, element, nG, 2, 2);
-			std::tie(muGsP, muGsM) = math::internalSurfaceValue(edge, element, nG, 7, 1);
 			Flux[1] = math::numericalFluxes::auxFlux(muGsM*valM, muGsP*valP, nVectorComp);
 
 			//rhov flux
 			std::tie(valP, valM) = math::internalSurfaceValue(edge, element, nG, 3, 2);
-			std::tie(muGsP, muGsM) = math::internalSurfaceValue(edge, element, nG, 7, 1);
 			Flux[2] = math::numericalFluxes::auxFlux(muGsM*valM, muGsP*valP, nVectorComp);
 
 			//rhoE flux
 			std::tie(valP, valM) = math::internalSurfaceValue(edge, element, nG, 4, 2);
-			std::tie(muGsP, muGsM) = math::internalSurfaceValue(edge, element, nG, 7, 1);
 			Flux[3] = math::numericalFluxes::auxFlux(muGsM*valM, muGsP*valP, nVectorComp);
 
 			return Flux;
@@ -594,80 +591,104 @@ namespace process
 
 		std::vector<double> calcSurfaceIntegralTerms(int element, int order)
 		{
+			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+			std::vector <double> inviscFlux1(mathVar::nGauss + 1, 0.0),
+				inviscFlux2(mathVar::nGauss + 1, 0.0),
+				inviscFlux3(mathVar::nGauss + 1, 0.0),
+				inviscFlux4(mathVar::nGauss + 1, 0.0);
+
+			std::vector <double> ViscFlux1(mathVar::nGauss + 1, 0.0),
+				ViscFlux2(mathVar::nGauss + 1, 0.0),
+				ViscFlux3(mathVar::nGauss + 1, 0.0),
+				ViscFlux4(mathVar::nGauss + 1, 0.0);
+
+			std::vector<double> SurInt(4, 0.0);
+
 			int elemType(auxUlti::checkType(element)), edgeName(0);
 			int faceBcType(0);
 
 			for (int nface = 0; nface < elemType; nface++)
 			{
 				edgeName = meshVar::inedel[nface][element];
-
 				faceBcType = auxUlti::getBCType(edgeName);
-				nVectorComp = (auxUlti::getNormVectorComp(element, edgeName, dir));
 
 				if (faceBcType == 0)  //internal edge
 				{
 					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
 					{
-						Flux = process::auxEq::getGaussVectorOfConserVarFluxesAtInternal(edgeName, element, nGauss, nVectorComp);
-						rhoFlux[nGauss] = Flux[0];
-						rhouFlux[nGauss] = Flux[1];
-						rhovFlux[nGauss] = Flux[2];
-						rhoEFlux[nGauss] = Flux[3];
+						Fluxes = process::NSFEq::getGaussVectorOfConserVarFluxesAtInternal(edgeName, element, nGauss);
+						inviscFlux1[nGauss] = Fluxes[0][0];
+						inviscFlux2[nGauss] = Fluxes[1][0];
+						inviscFlux3[nGauss] = Fluxes[2][0];
+						inviscFlux4[nGauss] = Fluxes[3][0];
+
+						ViscFlux1[nGauss] = Fluxes[0][1];
+						ViscFlux2[nGauss] = Fluxes[1][1];
+						ViscFlux3[nGauss] = Fluxes[2][1];
+						ViscFlux4[nGauss] = Fluxes[3][1];
 					}
 				}
 				else  //boundary edge
 				{
 					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
 					{
-						Flux = auxilaryBCs::BCsImplement(element, edgeName, nGauss, nVectorComp);
-						rhoFlux[nGauss] = Flux[0];
-						rhouFlux[nGauss] = Flux[1];
-						rhovFlux[nGauss] = Flux[2];
-						rhoEFlux[nGauss] = Flux[3];
+						Fluxes = NSFEqBCsImplement(element, edgeName, nGauss);
+						inviscFlux1[nGauss] = Fluxes[0][0];
+						inviscFlux2[nGauss] = Fluxes[1][0];
+						inviscFlux3[nGauss] = Fluxes[2][0];
+						inviscFlux4[nGauss] = Fluxes[3][0];
+
+						ViscFlux1[nGauss] = Fluxes[0][1];
+						ViscFlux2[nGauss] = Fluxes[1][1];
+						ViscFlux3[nGauss] = Fluxes[2][1];
+						ViscFlux4[nGauss] = Fluxes[3][1];
 					}
 				}
-				SurInt[0] += process::surfaceInte(element, edgeName, rhoFlux, order);
-				SurInt[1] += process::surfaceInte(element, edgeName, rhouFlux, order);
-				SurInt[2] += process::surfaceInte(element, edgeName, rhovFlux, order);
-				SurInt[3] += process::surfaceInte(element, edgeName, rhoEFlux, order);
+				SurInt[0] += process::surfaceInte(element, edgeName, inviscFlux1, order) + process::surfaceInte(element, edgeName, ViscFlux1, order);
+				SurInt[1] += process::surfaceInte(element, edgeName, inviscFlux2, order) + process::surfaceInte(element, edgeName, ViscFlux2, order);
+				SurInt[2] += process::surfaceInte(element, edgeName, inviscFlux3, order) + process::surfaceInte(element, edgeName, ViscFlux3, order);
+				SurInt[3] += process::surfaceInte(element, edgeName, inviscFlux4, order) + process::surfaceInte(element, edgeName, ViscFlux4, order);
 			}
+			return SurInt;
 		}
 
-		std::vector<double> getGaussVectorOfConserVarFluxesAtInternal(double edgeName, double element, double nGauss)
+		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, double nGauss)
 		{
-			std::vector<double> Flux(4, 0.0);
-			double rhoP(0.0), rhoM(0.0),
-				rhouP(0.0), rhouM(0.0),
-				rhovP(0.0), rhovM(0.0),
-				rhoEP(0.0), rhoEM(0.0);
-			double drhoxP(0.0), drhoxM(0.0),
-				drhouxP(0.0), drhouxM(0.0),
-				drhovxP(0.0), drhovxM(0.0),
-				drhoExP(0.0), drhoExM(0.0),
+			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+			std::vector<double> UMinus(4, 0.0),
+				UPlus(4, 0.0),
+				dUXMinus(4, 0.0),
+				dUXPlus(4, 0.0),
+				dUYMinus(4, 0.0),
+				dUYPlus(4, 0.0),
+				normalVector(2, 0.0);
 
-				drhoyP(0.0), drhoyM(0.0),
-				drhouyP(0.0), drhouyM(0.0),
-				drhovyP(0.0), drhovyM(0.0),
-				drhoEyP(0.0), drhoEyM(0.0);
+			/*Normal vector*/
+			normalVector[0] = auxUlti::getNormVectorComp(element, edgeName, 1);
+			normalVector[1] = auxUlti::getNormVectorComp(element, edgeName, 2);
 
 			/*INVISCID TERMS*/
-			std::tie(rhoP, rhoM) = math::internalSurfaceValue(edgeName, element, nGauss, 1, 2);
-			std::tie(rhouP, rhouM) = math::internalSurfaceValue(edgeName, element, nGauss, 2, 2);
-			std::tie(rhovP, rhovM) = math::internalSurfaceValue(edgeName, element, nGauss, 3, 2);
-			std::tie(rhoEP, rhoEM) = math::internalSurfaceValue(edgeName, element, nGauss, 4, 2);
+			std::tie(UPlus[0], UMinus[0]) = math::internalSurfaceValue(edgeName, element, nGauss, 1, 2);  //rho
+			std::tie(UPlus[1], UMinus[1]) = math::internalSurfaceValue(edgeName, element, nGauss, 2, 2);  //rhou
+			std::tie(UPlus[2], UMinus[2]) = math::internalSurfaceValue(edgeName, element, nGauss, 3, 2);  //rhov
+			std::tie(UPlus[3], UMinus[3]) = math::internalSurfaceValue(edgeName, element, nGauss, 4, 2);  //rhoE
 			
 			/*VISCOUS TERMS*/
-			std::tie(drhoxP, drhoxM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 1, 1);
-			std::tie(drhoyP, drhoyM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 1, 2);
+			std::tie(dUXPlus[0], dUXMinus[0]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 1, 1);  //drhox
+			std::tie(dUYPlus[0], dUYMinus[0]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 1, 2);  //drhoy
 
-			std::tie(drhouxP, drhouxM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 2, 1);
-			std::tie(drhouyP, drhouyM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 2, 2);
+			std::tie(dUXPlus[1], dUXMinus[1]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 2, 1);  //drhoux
+			std::tie(dUYPlus[1], dUYMinus[1]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 2, 2);  //drhoux
 
-			std::tie(drhovxP, drhovxM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 3, 1);
-			std::tie(drhovyP, drhovyM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 3, 2);
+			std::tie(dUXPlus[2], dUXMinus[2]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 3, 1);  //drhovx
+			std::tie(dUYPlus[2], dUYMinus[2]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 3, 2);  //drhovx
 
-			std::tie(drhoExP, drhoExM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 4, 1);
-			std::tie(drhoEyP, drhoEyM) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 4, 2);
+			std::tie(dUXPlus[3], dUXMinus[3]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 4, 1);  //drhoEx
+			std::tie(dUYPlus[3], dUYMinus[3]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 4, 2);  //drhoEx
+			
+			/*Calculate fluxes*/
+			Fluxes = math::numericalFluxes::NSFEqFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
+			return Fluxes;
 		}
 	}
 
