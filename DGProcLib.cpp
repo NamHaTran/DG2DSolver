@@ -198,7 +198,7 @@ namespace process
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
 				//1) Calculate Stiff matrix
-				StiffMatrix = process::calculateStiffMatrix(nelement);
+				StiffMatrix = process::auxEq::calculateStiffMatrix(nelement);
 				
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
@@ -251,23 +251,16 @@ namespace process
 			}
 		}
 
-		/*Function calculates right hand side terms of all conservative variables at ALL one order*/
-		std::vector<std::vector<double>> CalcRHSTerm(int element, int dir)
+		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
+		std::vector<double> CalcRHSTerm(int element, int order, int dir)
 		{
-<<<<<<< HEAD
 			/*NOTE: AUXILARY EQUATION:
 			volumeInt(S_term) + volumeInt(U_term) - surfaceInt(U_term) = 0
 			<=> volumeInt(S_term) = - volumeInt(U_term) + surfaceInt(U_term)
 								   |				RHS term			   |*/
 			
-			std::vector<std::vector<double>> RHS(4, std::vector<double>(mathVar::orderElem + 1, 0.0));
-			std::vector<std::vector<double>> SurfaceInt(4, std::vector<double>(mathVar::orderElem + 1, 0.0));
 			//std::vector<double> VolInt(4, 0.0);
 			//std::vector<double> SurInt(4, 0.0);
-=======
-			std::vector<double> VolInt(4, 0.0);
-			std::vector<double> SurInt(4, 0.0);
->>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 			std::vector<double> RHS(4, 0.0);
 			std::vector<std::vector<double>> rhoGsVol(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
 			std::vector<std::vector<double>> rhouGsVol(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
@@ -287,36 +280,53 @@ namespace process
 			/*Volume integral term===========================================================================*/
 			//rho -------------------------------------------------------------------------------------------
 			rhoGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 1);
-			VolInt[0] = process::volumeInte(element, rhoGsVol, order, dir);
+			RHS[0] -= process::volumeInte(element, rhoGsVol, order, dir);
 			//rhou ------------------------------------------------------------------------------------------
 			rhouGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 2);
-			VolInt[1] = process::volumeInte(element, rhouGsVol, order, dir);
+			RHS[1] -= process::volumeInte(element, rhouGsVol, order, dir);
 			//rhov ------------------------------------------------------------------------------------------
 			rhovGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 3);
-			VolInt[2] = process::volumeInte(element, rhovGsVol, order, dir);
-			//rhou ------------------------------------------------------------------------------------------
+			RHS[2] -= process::volumeInte(element, rhovGsVol, order, dir);
+			//rhoE ------------------------------------------------------------------------------------------
 			rhoEGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 4);
-			VolInt[3] = process::volumeInte(element, rhoEGsVol, order, dir);
+			RHS[3] -= process::volumeInte(element, rhoEGsVol, order, dir);
 
 			/*Surface integral term==========================================================================*/
-			SurfaceInt = process::auxEq::calcSurfaceIntegralTerms(element, dir);
-
-			for (int order = 0; order <= mathVar::orderElem; order++)
+			for (int nface = 0; nface < elemType; nface++)
 			{
-				for (int i = 0; i < 4; i++)
+				edgeName= meshVar::inedel[nface][element];
+				
+				faceBcType = auxUlti::getBCType(edgeName);
+				nVectorComp = (auxUlti::getNormVectorComp(element, edgeName, dir));
+
+				if (faceBcType == 0)  //internal edge
 				{
-					RHS[0][order] += SurfaceInt[0][order];
+					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
+					{
+						Flux = process::auxEq::getGaussVectorOfConserVarFluxesAtInternal(edgeName, element, nGauss, nVectorComp);
+						rhoFlux[nGauss] = Flux[0];
+						rhouFlux[nGauss] = Flux[1];
+						rhovFlux[nGauss] = Flux[2];
+						rhoEFlux[nGauss] = Flux[3];
+					}
 				}
-<<<<<<< HEAD
+				else  //boundary edge
+				{
+					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
+					{
+						Flux = auxEqBCsImplement(element, edgeName, nGauss, nVectorComp);
+						rhoFlux[nGauss] = Flux[0];
+						rhouFlux[nGauss] = Flux[1];
+						rhovFlux[nGauss] = Flux[2];
+						rhoEFlux[nGauss] = Flux[3];
+					}
+				}
+				RHS[0] += process::surfaceInte(element, edgeName, rhoFlux, order);
+				RHS[1] += process::surfaceInte(element, edgeName, rhouFlux, order);
+				RHS[2] += process::surfaceInte(element, edgeName, rhovFlux, order);
+				RHS[3] += process::surfaceInte(element, edgeName, rhoEFlux, order);
 			}
-=======
-				SurInt[0] += process::surfaceInte(element, edgeName, rhoFlux, order);
-				SurInt[1] += process::surfaceInte(element, edgeName, rhouFlux, order);
-				SurInt[2] += process::surfaceInte(element, edgeName, rhovFlux, order);
-				SurInt[3] += process::surfaceInte(element, edgeName, rhoEFlux, order);
-			}
-			RHS = math::vectorSum(VolInt, SurInt);
->>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
+			//RHS = math::vectorSum(VolInt, SurInt);
 			return RHS;
 		}
 
@@ -336,7 +346,7 @@ namespace process
 			return GaussMatrix;
 		}
 
-		std::vector<double> getVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nVectorComp)
+		std::vector<double> getGaussVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nVectorComp)
 		{
 			std::vector<double> Flux(4, 0.0);
 			double muGsP(0.0), muGsM(0.0), valP(0.0), valM(0.0);
@@ -361,109 +371,40 @@ namespace process
 			return Flux;
 		}
 
-		std::vector< std::vector<double> > getGaussVectorOfConserVarFlux(int element, int nGauss, int dir)
+		std::vector<std::vector<double>> calculateStiffMatrix(int element)
 		{
-			int elemType(auxUlti::checkType(element)), edgeName(0);
+			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
 
-			/*Function calculates flux of ALL conservative variables at ONE Gauss point on ALL surfaces of element
-			output array has form:
-			- 4 rows: 4 fluxes of conservative variables at input nGauss
-			- n column: number of faces of element*/
-			std::vector<std::vector<double>> output(4, std::vector<double>(elemType, 0.0));
-
-			int faceBcType(0);
-			double nVectorComp(0.0);
-			std::vector<double> Flux(4, 0.0);
-
-			for (int nface = 0; nface < elemType; nface++)
+			for (int order1 = 0; order1 <= mathVar::orderElem; order1++)
 			{
-				edgeName = meshVar::inedel[nface][element];
-
-				faceBcType = auxUlti::getBCType(edgeName);
-				nVectorComp = (auxUlti::getNormVectorComp(element, edgeName, dir));
-
-				if (faceBcType == 0)  //internal edge
+				for (int order2 = 0; order2 <= mathVar::orderElem; order2++)
 				{
-					Flux = process::auxEq::getVectorOfConserVarFluxesAtInternal(edgeName, element, nGauss, nVectorComp);
+					StiffMatrix[order1][order2] = process::auxEq::calculateStiffMatrixElement(element, order1, order2);
 				}
-				else  //boundary edge
-				{
-					Flux = auxEqBCsImplement(element, edgeName, nGauss, nVectorComp);
-				}
-				output[0][nface] = Flux[0];
-				output[1][nface] = Flux[1];
-				output[2][nface] = Flux[2];
-				output[3][nface] = Flux[3];
 			}
-			return output;
+			return StiffMatrix;
 		}
 
-		std::vector<std::vector<double>> calcSurfaceIntegralTerms(int element, int dir)
+		double calculateStiffMatrixElement(int element, int order1, int order2)
 		{
-			int elemType(auxUlti::checkType(element)), edgeName(0);
-
-			/*Surface integral array has form :
-			- 4 rows : 4 fluxes of conservative variables at input nGauss
-			- orderElem column : containt surface integrals at all order of accuracy*/
-			std::vector<std::vector<double>> SurfInt(4, std::vector<double>(mathVar::orderElem + 1, 0.0));
-
-			/*Fluxes array has form :
-			- 4 rows : 4 fluxes of conservative variables at input nGauss
-			- n column : number of faces of element*/
-			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(elemType, 0.0));
-
-			/*rhoFlux, etc .. has the following form:
-			- nGauss+1 rows: contain flux at all Gauss points
-			- 4 columns: contain flux at all faces of element (default is 4 faces)*/
-			std::vector<std::vector<double>> rhoFlux(mathVar::nGauss + 1, std::vector<double>(elemType, 0.0)),
-				rhouFlux(mathVar::nGauss + 1, std::vector<double>(elemType, 0.0)),
-				rhovFlux(mathVar::nGauss + 1, std::vector<double>(elemType, 0.0)),
-				rhoEFlux(mathVar::nGauss + 1, std::vector<double>(elemType, 0.0));
-
-			std::vector<double> rhoFluxFace(mathVar::nGauss + 1, 0.0),
-				rhouFluxFace(mathVar::nGauss + 1, 0.0),
-				rhovFluxFace(mathVar::nGauss + 1, 0.0),
-				rhoEFluxFace(mathVar::nGauss + 1, 0.0);
-
-			for (int nG = 0; nG <= mathVar::nGauss; nG++)
+			double B1(0.0), B2(0.0), Inte(0.0);
+			std::vector<std::vector<double>> FMatrix(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
+			for (int na = 0; na <= mathVar::nGauss; na++)
 			{
-				Fluxes = process::auxEq::getGaussVectorOfConserVarFlux(element, nG, dir);
-
-				//distributes flux data to flux array
-				for (int nface = 0; nface < elemType; nface++)
+				for (int nb = 0; nb <= mathVar::nGauss; nb++)
 				{
-					rhoFlux[nG][nface] = Fluxes[0][nface];
-					rhouFlux[nG][nface] = Fluxes[1][nface];
-					rhovFlux[nG][nface] = Fluxes[2][nface];
-					rhoEFlux[nG][nface] = Fluxes[3][nface];
+					B1 = mathVar::BPts[order1][na][nb];
+					B2 = mathVar::BPts[order2][na][nb];
+					FMatrix[na][nb] = B1 * B2;
 				}
 			}
-
-			for (int order = 0; order <= mathVar::orderElem; order++)
-			{
-				for (int nface = 0; nface < elemType; nface++)
-				{
-					for (int nG = 0; nG <= mathVar::nGauss; nG++)
-					{
-						rhoFluxFace[nG] = rhoFlux[nG][nface];
-						rhouFluxFace[nG] = rhouFlux[nG][nface];
-						rhovFluxFace[nG] = rhovFlux[nG][nface];
-						rhoEFluxFace[nG] = rhoEFlux[nG][nface];
-					}
-
-					SurfInt[0][order] += process::surfaceInte(element, edgeName, rhoFluxFace, order);
-					SurfInt[1][order] += process::surfaceInte(element, edgeName, rhouFluxFace, order);
-					SurfInt[2][order] += process::surfaceInte(element, edgeName, rhovFluxFace, order);
-					SurfInt[3][order] += process::surfaceInte(element, edgeName, rhoEFluxFace, order);
-				}
-			}
-			return SurfInt;
+			Inte = math::volumeInte(FMatrix, element);
+			return Inte;
 		}
 	}//end namespace auxEq
 
 	namespace NSFEq
 	{
-<<<<<<< HEAD
 		void solveNSFEquation()
 		{
 			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
@@ -481,14 +422,14 @@ namespace process
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
 				//1) Calculate Stiff matrix
-				StiffMatrix = process::calculateStiffMatrix(nelement);
+				StiffMatrix = process::auxEq::calculateStiffMatrix(nelement);
 
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					//At each order, right hand side terms of all conservative variables are calculated
 
 					//2) Calculate right hand side terms
-					RHSOrder = process::NSFEq::CalcRHSTerm(nelement, order);
+					RHSOrder = process::auxEq::CalcRHSTerm(nelement, order, 1);
 					rhoRHSTerm[order] = RHSOrder[0];
 					rhouRHSTerm[order] = RHSOrder[1];
 					rhovRHSTerm[order] = RHSOrder[2];
@@ -513,13 +454,17 @@ namespace process
 			}
 		}
 
-=======
->>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
 		std::vector<double> CalcRHSTerm(int element, int order)
 		{
+			/*NOTE: NSF EQUATION:
+			ddt(volumeInt(U_term)) - (volumeInt(F_inv1) + volumeInt(F_inv2)) + surfaceInt(F_inv1 + F_inv2) - (volumeInt(F_vis1) + volumeInt(F_vis2)) + surfaceInt(F_vis1 + F_vis2)= 0
+			<=> ddt(volumeInt(U_term)) = + (volumeInt(F_inv1) + volumeInt(F_inv2) + volumeInt(F_vis1) + volumeInt(F_vis2)) - (surfaceInt(F_inv1 + F_inv2) + surfaceInt(F_vis1 + F_vis2))
+										|																	RHS term																   |*/
+
 			std::vector<double> RHS(4, 0.0);
-			std::vector<double> VolInt(4, 0.0);
+			std::vector<double> VolInt(4, 0.0),
+				SurInt(4, 0.0);
 			/*Volume integral term===========================================================================*/
 			VolInt = process::NSFEq::calcVolumeIntegralTerms(element, order);
 			RHS[0] += VolInt[0];
@@ -528,7 +473,13 @@ namespace process
 			RHS[3] += VolInt[3];
 
 			/*Surface integral term===========================================================================*/
+			SurInt = process::NSFEq::calcSurfaceIntegralTerms(element, order);
+			RHS[0] -= SurInt[0];
+			RHS[1] -= SurInt[1];
+			RHS[2] -= SurInt[2];
+			RHS[3] -= SurInt[3];
 
+			return RHS;
 		}
 
 		/*Function calculates Inviscid terms at Gauss point (a, b)*/
@@ -661,45 +612,45 @@ namespace process
 			/*CALCULATE INTEGRALS*/
 			/*A INVISCID TERMS*/
 			/*- integral term of (dB/dx)*(rho*u)*/
-			VolInt[0] += process::volumeInte(element, InvisGsVolX1, order, 1);
+			VolInt[0] -= process::volumeInte(element, InvisGsVolX1, order, 1);
 			/*- integral term of (dB/dy)*(rho*v)*/
-			VolInt[0] += process::volumeInte(element, InvisGsVolY1, order, 2);
+			VolInt[0] -= process::volumeInte(element, InvisGsVolY1, order, 2);
 
 			/*- integral term of (dB/dx)*(rho*u^2 + p)*/
-			VolInt[1] += process::volumeInte(element, InvisGsVolX2, order, 1);
+			VolInt[1] -= process::volumeInte(element, InvisGsVolX2, order, 1);
 			/*- integral term of (dB/dy)*(rho*u*v)*/
-			VolInt[1] += process::volumeInte(element, InvisGsVolY2, order, 2);
+			VolInt[1] -= process::volumeInte(element, InvisGsVolY2, order, 2);
 
 			/*- integral term of (dB/dx)*(rho*u*v)*/
-			VolInt[2] += process::volumeInte(element, InvisGsVolX3, order, 1);
+			VolInt[2] -= process::volumeInte(element, InvisGsVolX3, order, 1);
 			/*- integral term of (dB/dy)*(rho*v^2 + p)*/
-			VolInt[2] += process::volumeInte(element, InvisGsVolY3, order, 2);
+			VolInt[2] -= process::volumeInte(element, InvisGsVolY3, order, 2);
 
 			/*- integral term of (dB/dx)*(rho*totalE + p)*u*/
-			VolInt[3] += process::volumeInte(element, InvisGsVolX4, order, 1);
+			VolInt[3] -= process::volumeInte(element, InvisGsVolX4, order, 1);
 			/*- integral term of (dB/dy)*(rho*totalE + p)*v*/
-			VolInt[3] += process::volumeInte(element, InvisGsVolY4, order, 2);
+			VolInt[3] -= process::volumeInte(element, InvisGsVolY4, order, 2);
 
 			/*B VISCOUS TERMS*/
 			/*- integral term of (dB/dx)*(0.0)*/
-			VolInt[0] += 0.0;
+			VolInt[0] -= 0.0;
 			/*- integral term of (dB/dy)*(0.0)*/
-			VolInt[0] += 0.0;
+			VolInt[0] -= 0.0;
 
 			/*- integral term of (dB/dx)*(tau_xx)*/
-			VolInt[1] += process::volumeInte(element, ViscGsVolX2, order, 1);
+			VolInt[1] -= process::volumeInte(element, ViscGsVolX2, order, 1);
 			/*- integral term of (dB/dy)*(tau_xy)*/
-			VolInt[1] += process::volumeInte(element, ViscGsVolY2, order, 2);
+			VolInt[1] -= process::volumeInte(element, ViscGsVolY2, order, 2);
 
 			/*- integral term of (dB/dx)*(tau_xy)*/
-			VolInt[2] += process::volumeInte(element, ViscGsVolX3, order, 1);
+			VolInt[2] -= process::volumeInte(element, ViscGsVolX3, order, 1);
 			/*- integral term of (dB/dy)*(tau_yy)*/
-			VolInt[2] += process::volumeInte(element, ViscGsVolY3, order, 2);
+			VolInt[2] -= process::volumeInte(element, ViscGsVolY3, order, 2);
 
 			/*- integral term of (dB/dx)*(u*tau_xx + v*tau_xy + Qx)*/
-			VolInt[3] += process::volumeInte(element, ViscGsVolX4, order, 1);
+			VolInt[3] -= process::volumeInte(element, ViscGsVolX4, order, 1);
 			/*- integral term of (dB/dy)*(u*tau_xy + v*tau_yy + Qy)*/
-			VolInt[3] += process::volumeInte(element, ViscGsVolY4, order, 2);
+			VolInt[3] -= process::volumeInte(element, ViscGsVolY4, order, 2);
 			/*End volume terms===========================================================================*/
 			return VolInt;
 		}
@@ -767,7 +718,7 @@ namespace process
 			return SurInt;
 		}
 
-		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, double nGauss)
+		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss)
 		{
 			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
 			std::vector<double> UMinus(4, 0.0),
@@ -844,36 +795,5 @@ namespace process
 		Int = inte;
 
 		return Int;
-	}
-
-	std::vector<std::vector<double>> calculateStiffMatrix(int element)
-	{
-		std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
-
-		for (int order1 = 0; order1 <= mathVar::orderElem; order1++)
-		{
-			for (int order2 = 0; order2 <= mathVar::orderElem; order2++)
-			{
-				StiffMatrix[order1][order2] = process::calculateStiffMatrixElement(element, order1, order2);
-			}
-		}
-		return StiffMatrix;
-	}
-
-	double calculateStiffMatrixElement(int element, int order1, int order2)
-	{
-		double B1(0.0), B2(0.0), Inte(0.0);
-		std::vector<std::vector<double>> FMatrix(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
-		for (int na = 0; na <= mathVar::nGauss; na++)
-		{
-			for (int nb = 0; nb <= mathVar::nGauss; nb++)
-			{
-				B1 = mathVar::BPts[order1][na][nb];
-				B2 = mathVar::BPts[order2][na][nb];
-				FMatrix[na][nb] = B1 * B2;
-			}
-		}
-		Inte = math::volumeInte(FMatrix, element);
-		return Inte;
 	}
 }
