@@ -255,6 +255,7 @@ namespace process
 		std::vector<std::vector<double>> CalcRHSTerm(int element, int dir)
 		{
 <<<<<<< HEAD
+<<<<<<< HEAD
 			/*NOTE: AUXILARY EQUATION:
 			volumeInt(S_term) + volumeInt(U_term) - surfaceInt(U_term) = 0
 			<=> volumeInt(S_term) = - volumeInt(U_term) + surfaceInt(U_term)
@@ -264,6 +265,10 @@ namespace process
 			std::vector<std::vector<double>> SurfaceInt(4, std::vector<double>(mathVar::orderElem + 1, 0.0));
 			//std::vector<double> VolInt(4, 0.0);
 			//std::vector<double> SurInt(4, 0.0);
+=======
+			std::vector<double> VolInt(4, 0.0);
+			std::vector<double> SurInt(4, 0.0);
+>>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 =======
 			std::vector<double> VolInt(4, 0.0);
 			std::vector<double> SurInt(4, 0.0);
@@ -308,14 +313,20 @@ namespace process
 					RHS[0][order] += SurfaceInt[0][order];
 				}
 <<<<<<< HEAD
+<<<<<<< HEAD
 			}
 =======
+=======
+>>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 				SurInt[0] += process::surfaceInte(element, edgeName, rhoFlux, order);
 				SurInt[1] += process::surfaceInte(element, edgeName, rhouFlux, order);
 				SurInt[2] += process::surfaceInte(element, edgeName, rhovFlux, order);
 				SurInt[3] += process::surfaceInte(element, edgeName, rhoEFlux, order);
 			}
 			RHS = math::vectorSum(VolInt, SurInt);
+<<<<<<< HEAD
+>>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
+=======
 >>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 			return RHS;
 		}
@@ -464,6 +475,7 @@ namespace process
 	namespace NSFEq
 	{
 <<<<<<< HEAD
+<<<<<<< HEAD
 		void solveNSFEquation()
 		{
 			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
@@ -513,6 +525,8 @@ namespace process
 			}
 		}
 
+=======
+>>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 =======
 >>>>>>> parent of 622c1e9... hoàn thành phần tính RHS, chờ công thức tính time step
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
