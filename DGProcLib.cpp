@@ -254,13 +254,8 @@ namespace process
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
 		std::vector<double> CalcRHSTerm(int element, int order, int dir)
 		{
-			/*NOTE: AUXILARY EQUATION:
-			volumeInt(S_term) + volumeInt(U_term) - surfaceInt(U_term) = 0
-			<=> volumeInt(S_term) = - volumeInt(U_term) + surfaceInt(U_term)
-								   |				RHS term			   |*/
-			
-			//std::vector<double> VolInt(4, 0.0);
-			//std::vector<double> SurInt(4, 0.0);
+			std::vector<double> VolInt(4, 0.0);
+			std::vector<double> SurInt(4, 0.0);
 			std::vector<double> RHS(4, 0.0);
 			std::vector<std::vector<double>> rhoGsVol(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
 			std::vector<std::vector<double>> rhouGsVol(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
@@ -280,16 +275,16 @@ namespace process
 			/*Volume integral term===========================================================================*/
 			//rho -------------------------------------------------------------------------------------------
 			rhoGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 1);
-			RHS[0] -= process::volumeInte(element, rhoGsVol, order, dir);
+			VolInt[0] = process::volumeInte(element, rhoGsVol, order, dir);
 			//rhou ------------------------------------------------------------------------------------------
 			rhouGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 2);
-			RHS[1] -= process::volumeInte(element, rhouGsVol, order, dir);
+			VolInt[1] = process::volumeInte(element, rhouGsVol, order, dir);
 			//rhov ------------------------------------------------------------------------------------------
 			rhovGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 3);
-			RHS[2] -= process::volumeInte(element, rhovGsVol, order, dir);
-			//rhoE ------------------------------------------------------------------------------------------
+			VolInt[2] = process::volumeInte(element, rhovGsVol, order, dir);
+			//rhou ------------------------------------------------------------------------------------------
 			rhoEGsVol = process::auxEq::getGaussMatrixOfConserVar(element, 4);
-			RHS[3] -= process::volumeInte(element, rhoEGsVol, order, dir);
+			VolInt[3] = process::volumeInte(element, rhoEGsVol, order, dir);
 
 			/*Surface integral term==========================================================================*/
 			for (int nface = 0; nface < elemType; nface++)
@@ -321,12 +316,12 @@ namespace process
 						rhoEFlux[nGauss] = Flux[3];
 					}
 				}
-				RHS[0] += process::surfaceInte(element, edgeName, rhoFlux, order);
-				RHS[1] += process::surfaceInte(element, edgeName, rhouFlux, order);
-				RHS[2] += process::surfaceInte(element, edgeName, rhovFlux, order);
-				RHS[3] += process::surfaceInte(element, edgeName, rhoEFlux, order);
+				SurInt[0] += process::surfaceInte(element, edgeName, rhoFlux, order);
+				SurInt[1] += process::surfaceInte(element, edgeName, rhouFlux, order);
+				SurInt[2] += process::surfaceInte(element, edgeName, rhovFlux, order);
+				SurInt[3] += process::surfaceInte(element, edgeName, rhoEFlux, order);
 			}
-			//RHS = math::vectorSum(VolInt, SurInt);
+			RHS = math::vectorSum(VolInt, SurInt);
 			return RHS;
 		}
 
@@ -405,66 +400,11 @@ namespace process
 
 	namespace NSFEq
 	{
-		void solveNSFEquation()
-		{
-			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
-			std::vector<double> RHSOrder(4, 0.0);
-			std::vector<double> rhoRHSTerm(mathVar::orderElem + 1, 0.0),
-				rhouRHSTerm(mathVar::orderElem + 1, 0.0),
-				rhovRHSTerm(mathVar::orderElem + 1, 0.0),
-				rhoERHSTerm(mathVar::orderElem + 1, 0.0);
-
-			std::vector<double> rhoVector(mathVar::orderElem + 1, 0.0),
-				rhouVector(mathVar::orderElem + 1, 0.0),
-				rhovVector(mathVar::orderElem + 1, 0.0),
-				rhoEVector(mathVar::orderElem + 1, 0.0);
-
-			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
-			{
-				//1) Calculate Stiff matrix
-				StiffMatrix = process::auxEq::calculateStiffMatrix(nelement);
-
-				for (int order = 0; order <= mathVar::orderElem; order++)
-				{
-					//At each order, right hand side terms of all conservative variables are calculated
-
-					//2) Calculate right hand side terms
-					RHSOrder = process::auxEq::CalcRHSTerm(nelement, order, 1);
-					rhoRHSTerm[order] = RHSOrder[0];
-					rhouRHSTerm[order] = RHSOrder[1];
-					rhovRHSTerm[order] = RHSOrder[2];
-					rhoERHSTerm[order] = RHSOrder[3];
-					//4 vector RHS of 4 conservative variables for each direction is achieved after these steps have been finished
-				}
-
-				//3) Solve for conservative variables
-				rhoVector = math::SolveSysEqs(StiffMatrix, rhoRHSTerm);
-				rhouVector = math::SolveSysEqs(StiffMatrix, rhouRHSTerm);
-				rhovVector = math::SolveSysEqs(StiffMatrix, rhovRHSTerm);
-				rhoEVector = math::SolveSysEqs(StiffMatrix, rhoERHSTerm);
-
-				//4) Save results to conservative variables array
-				for (int order = 0; order <= mathVar::orderElem; order++)
-				{
-					rho[nelement][order] = rhoVector[order];
-					rhou[nelement][order] = rhouVector[order];
-					rhov[nelement][order] = rhovVector[order];
-					rhoE[nelement][order] = rhoEVector[order];
-				}
-			}
-		}
-
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
 		std::vector<double> CalcRHSTerm(int element, int order)
 		{
-			/*NOTE: NSF EQUATION:
-			ddt(volumeInt(U_term)) - (volumeInt(F_inv1) + volumeInt(F_inv2)) + surfaceInt(F_inv1 + F_inv2) - (volumeInt(F_vis1) + volumeInt(F_vis2)) + surfaceInt(F_vis1 + F_vis2)= 0
-			<=> ddt(volumeInt(U_term)) = + (volumeInt(F_inv1) + volumeInt(F_inv2) + volumeInt(F_vis1) + volumeInt(F_vis2)) - (surfaceInt(F_inv1 + F_inv2) + surfaceInt(F_vis1 + F_vis2))
-										|																	RHS term																   |*/
-
 			std::vector<double> RHS(4, 0.0);
-			std::vector<double> VolInt(4, 0.0),
-				SurInt(4, 0.0);
+			std::vector<double> VolInt(4, 0.0);
 			/*Volume integral term===========================================================================*/
 			VolInt = process::NSFEq::calcVolumeIntegralTerms(element, order);
 			RHS[0] += VolInt[0];
@@ -473,13 +413,7 @@ namespace process
 			RHS[3] += VolInt[3];
 
 			/*Surface integral term===========================================================================*/
-			SurInt = process::NSFEq::calcSurfaceIntegralTerms(element, order);
-			RHS[0] -= SurInt[0];
-			RHS[1] -= SurInt[1];
-			RHS[2] -= SurInt[2];
-			RHS[3] -= SurInt[3];
 
-			return RHS;
 		}
 
 		/*Function calculates Inviscid terms at Gauss point (a, b)*/
@@ -718,7 +652,7 @@ namespace process
 			return SurInt;
 		}
 
-		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss)
+		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, double nGauss)
 		{
 			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
 			std::vector<double> UMinus(4, 0.0),
