@@ -12,7 +12,7 @@ c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolv
 c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(647): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(731): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGMath.cpp
-c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(491): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\nam tran ha\google drive\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(514): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGMeshReaderLib.cpp
   DGMessagesLib.cpp
   DGPostProcessLib.cpp

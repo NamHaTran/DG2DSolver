@@ -743,7 +743,7 @@ namespace math
 			*/
 			std::vector<std::vector<double>> OutputMatrix(2, std::vector<double>(3, 0.0));
 
-			double dux(0.0), duy(0.0), dvx(0.0), dvy(0.0), muVal(0.0), rhouVal(0.0), rhovVal, rhoVal(0.0);
+			double dux(0.0), duy(0.0), dvx(0.0), dvy(0.0), rhouVal(0.0), rhovVal, rhoVal(0.0);
 			double drhox(0.0), drhoy(0.0),
 				drhoux(0.0), drhouy(0.0),
 				drhovx(0.0), drhovy(0.0),

@@ -67,6 +67,12 @@ namespace process
 
 		/*Function calculates volume integral terms in NSF equation at ONLY ONE ORDER*/
 		std::vector<double> calcVolumeIntegralTerms(int element, int order);
+
+		/*Function calculates surface integral terms in NSF equation at ONLY ONE ORDER*/
+		std::vector<double> calcSurfaceIntegralTerms(int element, int order);
+
+		/*Function calculates flux at nGauss point of all conservative variables at internal egde*/
+		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);
 	}
 
 	/*Function calculates volume integral terms of auxilary equations of ONLY one order
