@@ -39,13 +39,13 @@ namespace process
 
 		/*Function returns vector content Gauss values of flux of <valType> conservative variable at all Gauss points on the edge,
 		use only for auxilary equation*/
-		std::vector<double> getVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nVectorComp);
+		std::vector<double> getGaussVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nVectorComp);
 
-		/*Function calculates flux of ALL conservative variables at ONE Gauss point on ALL surfaces of element*/
-		std::vector< std::vector<double> > getGaussVectorOfConserVarFlux(int element, int nGauss, int dir);
+		/*Function calculates Auxilary Stiff matrix*/
+		std::vector<std::vector<double>> calculateStiffMatrix(int element);
 
-		/*Function calculates surface integral terms at all order of element*/
-		std::vector<std::vector<double>> calcSurfaceIntegralTerms(int element, int dir);
+		/*Function calculates value of element of Auxilary Stiff matrix*/
+		double calculateStiffMatrixElement(int element, int order1, int order2);
 	}
 
 	namespace NSFEq
@@ -67,6 +67,12 @@ namespace process
 
 		/*Function calculates volume integral terms in NSF equation at ONLY ONE ORDER*/
 		std::vector<double> calcVolumeIntegralTerms(int element, int order);
+
+		/*Function calculates surface integral terms in NSF equation at ONLY ONE ORDER*/
+		std::vector<double> calcSurfaceIntegralTerms(int element, int order);
+
+		/*Function gets vector of fluxes at all Gauss points on edge */
+		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);
 	}
 
 	/*Function calculates volume integral terms of auxilary equations of ONLY one order
@@ -84,12 +90,6 @@ namespace process
 	1: x direction
 	2: y direction*/
 	double surfaceInte(int elem, int edge, std::vector<double> &FluxVector, int order);
-
-	/*Function calculates Auxilary Stiff matrix*/
-	std::vector<std::vector<double>> calculateStiffMatrix(int element);
-
-	/*Function calculates value of element of Auxilary Stiff matrix*/
-	double calculateStiffMatrixElement(int element, int order1, int order2);
 }
 
 #endif // DGPROCLIB_H_INCLUDED
