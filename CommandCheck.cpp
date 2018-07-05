@@ -19,15 +19,11 @@ namespace postProcessKey
 
 namespace preProcessKey
 {
-	std::string UnvRdKeyW1("UnvToDG"), UnvRdKeyW2("unvtodg"), UnvRdKeyW3("UNVTODG");
-	std::string UnvHelpKeyW1("UnvReaderHelp"), UnvHelpKeyW2("unvreaderhelp"), UnvHelpKeyW3("unvreaderhelp");
-	std::string reSubmitKW1("resubmit"), reSubmitKW2("reSubmit");
-
 	/*Function return true if UnvToDG is available*/
 	bool checkUnvReader(std::string cmd)
 	{
 		bool trigger(false);
-		if ((cmd.compare(UnvRdKeyW1) == 0) || (cmd.compare(UnvRdKeyW2) == 0) || (cmd.compare(UnvRdKeyW3) == 0))
+		if ((cmd.compare("UnvToDG") == 0) || (cmd.compare("unvtodg") == 0) || (cmd.compare("UNVTODG") == 0))
 		{
 			trigger = true;
 		}
@@ -38,7 +34,17 @@ namespace preProcessKey
 	bool checkUnvHelper(std::string cmd)
 	{
 		bool trigger(false);
-		if ((cmd.compare(UnvHelpKeyW1) == 0) || (cmd.compare(UnvHelpKeyW2) == 0) || (cmd.compare(UnvHelpKeyW3) == 0))
+		if ((cmd.compare("UnvReaderHelp") == 0) || (cmd.compare("unvreaderhelp") == 0) || (cmd.compare("unvreaderhelp") == 0))
+		{
+			trigger = true;
+		}
+		return trigger;
+	}
+	/*Function return true if bcHelp is available*/
+	bool checkBCsHelper(std::string cmd)
+	{
+		bool trigger(false);
+		if ((cmd.compare("bchelp") == 0) || (cmd.compare("BcHelp") == 0))
 		{
 			trigger = true;
 		}
@@ -48,7 +54,7 @@ namespace preProcessKey
 	bool reSubmit(std::string cmd)
 	{
 		bool trigger(false);
-		if ((cmd.compare(reSubmitKW1) == 0) || (cmd.compare(reSubmitKW1) == 0))
+		if ((cmd.compare("resubmit") == 0) || (cmd.compare("reSubmit") == 0))
 		{
 			trigger = true;
 		}

@@ -417,16 +417,27 @@ namespace auxUlti
 		return bcType;
 	}
 
-	bool checkSubSonic(double TInf, double uInf, double vInf)
+	bool checkSubSonic()
 	{
+		double uInf(0.0), vInf(0.0), TInf(0.0), SpeedOfSound(0.0), Mach(0.0), Velocity(0.0);
 		bool Out(true);
-		double SpeedOfSound(sqrt(material::gamma*material::R*TInf)), Mach(0.0), Velocity(sqrt(uInf*uInf + vInf * vInf));
-		Mach = Velocity / SpeedOfSound;
-		if (Mach >= 1.0)
+		for (int i = 0; i < meshVar::nBc; i++)
 		{
-			Out = false;
+			if (bcValues::UBcType[i]==1 || bcValues::UBcType[i] == 3) //subsonic checking is applied only for inOutFlow and fixedValue boudary condition
+			{
+				TInf = bcValues::TBC[i];
+				uInf = bcValues::uBC[i];
+				vInf = bcValues::vBC[i];
+				SpeedOfSound = (sqrt(material::gamma*material::R*TInf));
+				Velocity = (sqrt(uInf*uInf + vInf * vInf));
+				Mach = Velocity / SpeedOfSound;
+				if (Mach >= 1.0)
+				{
+					Out = false;
+					break;
+				}
+			}
 		}
-
 		return Out;
 	}
 

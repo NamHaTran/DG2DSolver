@@ -102,6 +102,7 @@ namespace bcValues
 namespace refValues
 {
 	double Ma(0.0);
+	bool subsonic(false);
 }
 
 /*Conservative variables declaration*/

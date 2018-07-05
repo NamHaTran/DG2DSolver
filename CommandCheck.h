@@ -16,6 +16,9 @@ namespace preProcessKey
 	/*Function return true if UnvReaderHelp is available*/
 	bool checkUnvHelper(std::string cmd);
 
+	/*Function return true if bcHelp is available*/
+	bool checkBCsHelper(std::string cmd);
+
 	/*Function return true if reSubmit is available*/
 	bool reSubmit(std::string cmd);
 }

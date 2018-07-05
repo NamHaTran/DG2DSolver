@@ -266,7 +266,7 @@ namespace advectionBCs
 			double uPlus(rhouP / rhoP), vPlus(rhovP / rhoP);
 			bool inflow(BCSupportFncs::checkInflow(uPlus, vPlus, nx, ny));
 			double TInternal(math::CalcTFromPriVar(rhoP, rhouP, rhovP, rhoEP));
-			bool subsonic(auxUlti::checkSubSonic(TInternal, uPlus, vPlus));
+			//bool subsonic(auxUlti::checkSubSonic(TInternal, uPlus, vPlus)); this line checks subsonic locally, not globally
 
 			if (method==1)  //weak Riemann
 			{
@@ -280,17 +280,17 @@ namespace advectionBCs
 					MinusVal[2] = MinusVal[0] * bcValues::vBC[edgeGrp];
 					MinusVal[3] = MinusVal[0] * (bcValues::TBC[edgeGrp] * material::Cv + pow(bcValues::uBC[edgeGrp],2) + pow(bcValues::vBC[edgeGrp], 2));
 				}
-				else if (inflow==false)
+				else if (inflow == false)
 				{
 					//Apply Partially non-reflective pressure outflow
-					if (subsonic==true)
+					if (refValues::subsonic == true)
 					{
 						MinusVal[0] = rhoP;
 						MinusVal[1] = rhouP;
 						MinusVal[2] = rhovP;
 						MinusVal[3] = (2 * bcValues::pBC[edgeGrp] - pInternal) / (material::gamma - 1) + 0.5*rhoP*(pow(uPlus, 2) + pow(vPlus, 2));
 					}
-					else if (subsonic==false)
+					else if (refValues::subsonic == false)
 					{
 						MinusVal[0] = rhoP;
 						MinusVal[1] = rhouP;
@@ -324,11 +324,11 @@ namespace advectionBCs
 
 				if (inflow == true)  //inflow boundary condtion
 				{
-					if (subsonic == true)
+					if (refValues::subsonic == true)
 					{
 						RPlus = vInternalNormMag + (2 * cInternal) / (material::gamma - 1);
 					}
-					else if (subsonic == false)
+					else if (refValues::subsonic == false)
 					{
 						RPlus = vExternalNormMag + (2 * cExternal) / (material::gamma - 1);
 					}
@@ -345,11 +345,11 @@ namespace advectionBCs
 				else if (inflow == false)  //outflow boundary condition
 				{
 					RPlus = vInternalNormMag + (2 * cInternal) / (material::gamma - 1);
-					if (subsonic == true)
+					if (refValues::subsonic == true)
 					{
 						RMinus = vExternalNormMag - (2 * cExternal) / (material::gamma - 1);
 					}
-					else if (subsonic == false)
+					else if (refValues::subsonic == false)
 					{
 						RPlus = vInternalNormMag - (2 * cInternal) / (material::gamma - 1);
 					}

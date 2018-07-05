@@ -69,7 +69,7 @@ namespace process
 		std::vector<std::vector<double>> calcGaussViscousTerm(int element, double a, double b);
 
 		/*Function calculates volume integral terms in NSF equation at ONLY ONE ORDER*/
-		std::vector<double> calcVolumeIntegralTerms(int element, int order);
+		void calcVolumeIntegralTerms(int element, int order);
 
 		/*Function calculates surface integral terms in NSF equation at ONLY ONE ORDER*/
 		std::vector<double> calcSurfaceIntegralTerms(int element, int order);

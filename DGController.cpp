@@ -31,6 +31,10 @@ void Executer(std::string cmd)
 	{
 		message::UnvReaderHelp();
 	}
+	else if (preProcessKey::checkBCsHelper(cmd))
+	{
+		message::BCsHelp();
+	}
 	else if (preProcessKey::reSubmit(cmd))
 	{
 		IO::getCase();
@@ -60,6 +64,8 @@ void PreProcessing()
 
 	/*LOAD p T U*/
 	IO::loadpTU();
+	//Check subsonic
+	refValues::subsonic = auxUlti::checkSubSonic;
 
 	/*PROCESS MESH*/
 	MshReader::meshProcess();

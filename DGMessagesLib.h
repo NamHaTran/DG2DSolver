@@ -37,5 +37,8 @@ namespace message
 
 	/*Function display help for unvReader ultility*/
 	void UnvReaderHelp();
+
+	/*Function display help for boundary conditions*/
+	void BCsHelp();
 }
 #endif // DGMESSAGESLIB_H_INCLUDED
