@@ -53,8 +53,11 @@ namespace process
 
 	namespace NSFEq
 	{
+		/*Function solves NSEF equation at all elements for conservative variables*/
+		void solveNSFEquation();
+
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
-		std::vector<double> CalcRHSTerm(int element, int order);
+		void CalcRHSTerm(int element, std::vector<double> &term1RHS, std::vector<double> &term2RHS, std::vector<double> &term3RHS, std::vector<double> &term4RHS);
 
 		/*Function calculates Inviscid terms at Gauss point (a, b) and returns 2D matrix
 		InviscidTerm 2D array has 4 row 2 column:
@@ -69,10 +72,10 @@ namespace process
 		std::vector<std::vector<double>> calcGaussViscousTerm(int element, double a, double b);
 
 		/*Function calculates volume integral terms in NSF equation at ONLY ONE ORDER*/
-		void calcVolumeIntegralTerms(int element, int order);
+		void calcVolumeIntegralTerms(int element, std::vector<double> VolIntTerm1, std::vector<double> VolIntTerm2, std::vector<double> VolIntTerm3, std::vector<double> VolIntTerm4);
 
 		/*Function calculates surface integral terms in NSF equation at ONLY ONE ORDER*/
-		std::vector<double> calcSurfaceIntegralTerms(int element, int order);
+		void calcSurfaceIntegralTerms(int element, std::vector<double> SurfIntTerm1, std::vector<double> SurfIntTerm2, std::vector<double> SurfIntTerm3, std::vector<double> SurfIntTerm4);
 
 		/*Function calculates flux at nGauss point of all conservative variables at internal egde*/
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);

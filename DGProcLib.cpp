@@ -437,27 +437,72 @@ namespace process
 
 	namespace NSFEq
 	{
-		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
-		std::vector<double> CalcRHSTerm(int element, int order)
+		void solveNSFEquation()
 		{
-			std::vector<double> RHS(4, 0.0);
-			std::vector<double> VolInt(4, 0.0);
-			std::vector<double> SurInt(4, 0.0);
+			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
+			std::vector<double>
+				RHSTerm1(mathVar::orderElem, 0.0),
+				RHSTerm2(mathVar::orderElem, 0.0),
+				RHSTerm3(mathVar::orderElem, 0.0),
+				RHSTerm4(mathVar::orderElem, 0.0),
+
+				rhoVector(mathVar::orderElem, 0.0),
+				rhouVector(mathVar::orderElem, 0.0),
+				rhovVector(mathVar::orderElem, 0.0),
+				rhoEVector(mathVar::orderElem, 0.0);
+
+			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
+			{
+				//1) Calculate Stiff matrix
+				StiffMatrix = process::calculateStiffMatrix(nelement);
+
+				//2) Calculate Right hand side terms
+				process::NSFEq::CalcRHSTerm(nelement, RHSTerm1, RHSTerm2, RHSTerm3, RHSTerm4);
+
+				//3) Solve for conservative variables
+				rhoVector = math::SolveSysEqs(StiffMatrix, RHSTerm1);
+				rhouVector = math::SolveSysEqs(StiffMatrix, RHSTerm2);
+				rhovVector = math::SolveSysEqs(StiffMatrix, RHSTerm3);
+				rhoEVector = math::SolveSysEqs(StiffMatrix, RHSTerm4);
+
+				//4) Save results to conservative variables array
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					rho[nelement][order] = rhoVector[order];
+					rhou[nelement][order] = rhouVector[order];
+					rhov[nelement][order] = rhovVector[order];
+					rhoE[nelement][order] = rhoEVector[order];
+				}
+			}
+		}
+
+		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
+		void CalcRHSTerm(int element, std::vector<double> &term1RHS, std::vector<double> &term2RHS, std::vector<double> &term3RHS, std::vector<double> &term4RHS)
+		{
+			std::vector<double>
+				VolIntTerm1(mathVar::orderElem, 0.0),
+				VolIntTerm2(mathVar::orderElem, 0.0),
+				VolIntTerm3(mathVar::orderElem, 0.0),
+				VolIntTerm4(mathVar::orderElem, 0.0),
+
+				SurfIntTerm1(mathVar::orderElem, 0.0),
+				SurfIntTerm2(mathVar::orderElem, 0.0),
+				SurfIntTerm3(mathVar::orderElem, 0.0),
+				SurfIntTerm4(mathVar::orderElem, 0.0);
+
 			/*Volume integral term===========================================================================*/
-			VolInt = process::NSFEq::calcVolumeIntegralTerms(element, order);
-			RHS[0] += VolInt[0];
-			RHS[1] += VolInt[1];
-			RHS[2] += VolInt[2];
-			RHS[3] += VolInt[3];
-
+			process::NSFEq::calcVolumeIntegralTerms(element, VolIntTerm1, VolIntTerm2, VolIntTerm3, VolIntTerm4);
+			
 			/*Surface integral term===========================================================================*/
-			SurInt = process::NSFEq::calcSurfaceIntegralTerms(element, order);
-			RHS[0] -= SurInt[0];
-			RHS[1] -= SurInt[1];
-			RHS[2] -= SurInt[2];
-			RHS[3] -= SurInt[3];
-
-			return RHS;
+			process::NSFEq::calcSurfaceIntegralTerms(element, SurfIntTerm1, SurfIntTerm2, SurfIntTerm3, SurfIntTerm4);
+			
+			for (int order = 0; order <= mathVar::orderElem; order++)
+			{
+				term1RHS[order] = VolIntTerm1[order] - SurfIntTerm1[order];
+				term2RHS[order] = VolIntTerm2[order] - SurfIntTerm2[order];
+				term3RHS[order] = VolIntTerm3[order] - SurfIntTerm3[order];
+				term4RHS[order] = VolIntTerm4[order] - SurfIntTerm4[order];
+			}
 		}
 
 		/*Function calculates Inviscid terms at Gauss point (a, b)*/
@@ -640,23 +685,39 @@ namespace process
 			//return VolInt;
 		}
 
-		std::vector<double> calcSurfaceIntegralTerms(int element, int order)
+		void calcSurfaceIntegralTerms(int element, std::vector<double> SurfIntTerm1, std::vector<double> SurfIntTerm2, std::vector<double> SurfIntTerm3, std::vector<double> SurfIntTerm4)
 		{
-			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
-			std::vector <double> inviscFlux1(mathVar::nGauss + 1, 0.0),
-				inviscFlux2(mathVar::nGauss + 1, 0.0),
-				inviscFlux3(mathVar::nGauss + 1, 0.0),
-				inviscFlux4(mathVar::nGauss + 1, 0.0);
-
-			std::vector <double> ViscFlux1(mathVar::nGauss + 1, 0.0),
-				ViscFlux2(mathVar::nGauss + 1, 0.0),
-				ViscFlux3(mathVar::nGauss + 1, 0.0),
-				ViscFlux4(mathVar::nGauss + 1, 0.0);
-
-			std::vector<double> SurInt(4, 0.0);
+			/*User's guide:
+			All input array have form:
+			- number of rows: orderElem*/
 
 			int elemType(auxUlti::checkType(element)), edgeName(0);
 			int faceBcType(0);
+
+			std::vector<double> inviscFlux1Temp(mathVar::nGauss + 1, 0.0),
+				inviscFlux2Temp(mathVar::nGauss + 1, 0.0),
+				inviscFlux3Temp(mathVar::nGauss + 1, 0.0),
+				inviscFlux4Temp(mathVar::nGauss + 1, 0.0),
+				
+				ViscFlux1Temp(mathVar::nGauss + 1, 0.0),
+				ViscFlux2Temp(mathVar::nGauss + 1, 0.0),
+				ViscFlux3Temp(mathVar::nGauss + 1, 0.0),
+				ViscFlux4Temp(mathVar::nGauss + 1, 0.0);
+
+			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+
+			std::vector<std::vector<double>>
+				inviscFlux1(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+				inviscFlux2(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+				inviscFlux3(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+				inviscFlux4(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+
+				ViscFlux1(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+				ViscFlux2(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+				ViscFlux3(mathVar::nGauss + 1, std::vector<double>(4, 0.0)),
+				ViscFlux4(mathVar::nGauss + 1, std::vector<double>(4, 0.0));
+
+			//std::vector<double> SurInt(4, 0.0);
 
 			for (int nface = 0; nface < elemType; nface++)
 			{
@@ -668,15 +729,15 @@ namespace process
 					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
 					{
 						Fluxes = process::NSFEq::getGaussVectorOfConserVarFluxesAtInternal(edgeName, element, nGauss);
-						inviscFlux1[nGauss] = Fluxes[0][0];
-						inviscFlux2[nGauss] = Fluxes[1][0];
-						inviscFlux3[nGauss] = Fluxes[2][0];
-						inviscFlux4[nGauss] = Fluxes[3][0];
+						inviscFlux1[nGauss][nface] = Fluxes[0][0];
+						inviscFlux2[nGauss][nface] = Fluxes[1][0];
+						inviscFlux3[nGauss][nface] = Fluxes[2][0];
+						inviscFlux4[nGauss][nface] = Fluxes[3][0];
 
-						ViscFlux1[nGauss] = Fluxes[0][1];
-						ViscFlux2[nGauss] = Fluxes[1][1];
-						ViscFlux3[nGauss] = Fluxes[2][1];
-						ViscFlux4[nGauss] = Fluxes[3][1];
+						ViscFlux1[nGauss][nface] = Fluxes[0][1];
+						ViscFlux2[nGauss][nface] = Fluxes[1][1];
+						ViscFlux3[nGauss][nface] = Fluxes[2][1];
+						ViscFlux4[nGauss][nface] = Fluxes[3][1];
 					}
 				}
 				else  //boundary edge
@@ -684,23 +745,42 @@ namespace process
 					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
 					{
 						Fluxes = NSFEqBCsImplement(element, edgeName, nGauss);
-						inviscFlux1[nGauss] = Fluxes[0][0];
-						inviscFlux2[nGauss] = Fluxes[1][0];
-						inviscFlux3[nGauss] = Fluxes[2][0];
-						inviscFlux4[nGauss] = Fluxes[3][0];
+						inviscFlux1[nGauss][nface] = Fluxes[0][0];
+						inviscFlux2[nGauss][nface] = Fluxes[1][0];
+						inviscFlux3[nGauss][nface] = Fluxes[2][0];
+						inviscFlux4[nGauss][nface] = Fluxes[3][0];
 
-						ViscFlux1[nGauss] = Fluxes[0][1];
-						ViscFlux2[nGauss] = Fluxes[1][1];
-						ViscFlux3[nGauss] = Fluxes[2][1];
-						ViscFlux4[nGauss] = Fluxes[3][1];
+						ViscFlux1[nGauss][nface] = Fluxes[0][1];
+						ViscFlux2[nGauss][nface] = Fluxes[1][1];
+						ViscFlux3[nGauss][nface] = Fluxes[2][1];
+						ViscFlux4[nGauss][nface] = Fluxes[3][1];
 					}
 				}
-				SurInt[0] += process::surfaceInte(element, edgeName, inviscFlux1, order) + process::surfaceInte(element, edgeName, ViscFlux1, order);
-				SurInt[1] += process::surfaceInte(element, edgeName, inviscFlux2, order) + process::surfaceInte(element, edgeName, ViscFlux2, order);
-				SurInt[2] += process::surfaceInte(element, edgeName, inviscFlux3, order) + process::surfaceInte(element, edgeName, ViscFlux3, order);
-				SurInt[3] += process::surfaceInte(element, edgeName, inviscFlux4, order) + process::surfaceInte(element, edgeName, ViscFlux4, order);
 			}
-			return SurInt;
+
+			for (int order = 0; order <= mathVar::orderElem; order++)
+			{
+				for (int nface = 0; nface < elemType; nface++)
+				{
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						inviscFlux1Temp[nG] = inviscFlux1[nG][nface];
+						inviscFlux2Temp[nG] = inviscFlux2[nG][nface];
+						inviscFlux3Temp[nG] = inviscFlux3[nG][nface];
+						inviscFlux4Temp[nG] = inviscFlux4[nG][nface];
+
+						ViscFlux1Temp[nG] = inviscFlux1[nG][nface];
+						ViscFlux2Temp[nG] = inviscFlux2[nG][nface];
+						ViscFlux3Temp[nG] = inviscFlux3[nG][nface];
+						ViscFlux4Temp[nG] = inviscFlux4[nG][nface];
+					}
+					SurfIntTerm1[order] += process::surfaceInte(element, edgeName, inviscFlux1Temp, order) + process::surfaceInte(element, edgeName, ViscFlux1Temp, order);
+					SurfIntTerm2[order] += process::surfaceInte(element, edgeName, inviscFlux2Temp, order) + process::surfaceInte(element, edgeName, ViscFlux2Temp, order);
+					SurfIntTerm3[order] += process::surfaceInte(element, edgeName, inviscFlux3Temp, order) + process::surfaceInte(element, edgeName, ViscFlux3Temp, order);
+					SurfIntTerm4[order] += process::surfaceInte(element, edgeName, inviscFlux4Temp, order) + process::surfaceInte(element, edgeName, ViscFlux4Temp, order);
+				}
+			}
+			//return SurInt;
 		}
 
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss)

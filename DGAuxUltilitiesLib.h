@@ -71,7 +71,7 @@ namespace auxUlti
 	int getBCType(int edge);
 
 	/*Function returns true if problem is subsonic*/
-	bool checkSubSonic(double TInf, double uInf, double vInf);
+	bool checkSubSonic();
 
 	/*Function returns master element and servant element of edge*/
 	std::tuple<int, int> getMasterServantOfEdge(int edge);
