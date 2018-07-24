@@ -61,16 +61,21 @@ namespace meshVar
 		dxb[elements2DArrSize][maxGauss][maxGauss],
 		dya[elements2DArrSize][maxGauss][maxGauss],
 		dyb[elements2DArrSize][maxGauss][maxGauss];
+
+	extern std::vector<std::vector<double>> geoCenter;
+	extern std::vector<double> cellSize;
 }
 
 namespace mathVar
 {
 	extern int nGauss, orderElem;
-	extern double wGauss[maxGauss], xGauss[maxGauss];
+	extern double wGauss[maxGauss], xGauss[maxGauss], wGaussLobatto[maxGauss], xGaussLobatto[maxGauss];
 	extern double B[maxOrder], dBa[maxOrder], dBb[maxOrder];
 	extern double BPts[maxOrder][maxGauss][maxGauss], dBaPts[maxOrder][maxGauss][maxGauss], dBbPts[maxOrder][maxGauss][maxGauss];
 	extern double GaussPts[maxGauss][maxGauss][2], //coordinate a is array (..,..,1), coordinate b is array (..,..,2)
-		wGaussPts[maxGauss][maxGauss][2]; //weights on a direction (w1) is array (..,..,1), weights on b direction (w2) is array (..,..,2)
+		wGaussPts[maxGauss][maxGauss][2], //weights on a direction (w1) is array (..,..,1), weights on b direction (w2) is array (..,..,2)
+		GaussLobattoPts[maxGauss][maxGauss][2],
+		wGaussLobattoPts[maxGauss][maxGauss][2];
 }
 
 namespace material
@@ -106,31 +111,75 @@ namespace refValues
 	extern bool subsonic;
 }
 
-/*Conservative variables declaration*/
+/*Conservative variables declaration
 extern double rho[elements2DArrSize][maxOrder],
 rhou[elements2DArrSize][maxOrder],
 rhov[elements2DArrSize][maxOrder],
-rhoE[elements2DArrSize][maxOrder];
+rhoE[elements2DArrSize][maxOrder];*/
+extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE;
 
-/*Primary variables declaration*/
+/*Primary variables declaration
 extern double u[elements2DArrSize][maxOrder],
 v[elements2DArrSize][maxOrder],
 e[elements2DArrSize][maxOrder],
 p[elements2DArrSize][maxOrder],
 T[elements2DArrSize][maxOrder],
-mu[elements2DArrSize][maxOrder];
+mu[elements2DArrSize][maxOrder];*/
+extern std::vector<std::vector<double>>u, v, e, p, T, mu;
 
-/*Auxilary variables*/
+/*Auxilary variables
 //X direction
 extern double rhoX[elements2DArrSize][maxOrder],
 rhouX[elements2DArrSize][maxOrder],
 rhovX[elements2DArrSize][maxOrder],
-rhoEX[elements2DArrSize][maxOrder];
+rhoEX[elements2DArrSize][maxOrder];*/
+extern std::vector<std::vector<double>> rhoX, rhouX, rhovX, rhoEX;
 
-//Y direction
+/*Y direction
 extern double rhoY[elements2DArrSize][maxOrder],
 rhouY[elements2DArrSize][maxOrder],
 rhovY[elements2DArrSize][maxOrder],
-rhoEY[elements2DArrSize][maxOrder];
+rhoEY[elements2DArrSize][maxOrder];*/
+extern std::vector<std::vector<double>> rhoY, rhouY, rhovY, rhoEY;
+
+//time step
+extern double dt;
+
+//Limiting coefficients
+extern std::vector<double>
+theta1Arr,
+theta2Arr;
+
+//Mean values
+extern std::vector<std::vector<double>> meanVals;
+
+//system settings
+namespace sysSetting
+{
+	/*
+	time discretization scheme	|keyWord	|index		|
+	----------------------------|-----------|-----------|
+	-Euler						|Euler		|1			|
+	-Runge-Kutta 2 order		|RK2		|2			|
+	-Runge-Kutta 3 order		|RK3		|3			|
+	-Total Variation Diminishing|TVDRK2		|4			|
+	Runge-Kutta 2 order			|			| 			|
+	-Total Variation Diminishing|TVDRK2		|5			|
+	Runge-Kutta 3 order			|			| 			|
+	----------------------------|-----------|-----------|*/
+	extern int ddtScheme;
+
+	/*
+	limiting scheme				|keyWord	|index		|
+	----------------------------|-----------|-----------|
+	-Positivity preserving		|Pp			|1			|
+	-off						|off		|0			|
+	----------------------------|-----------|-----------|*/
+	extern int limiter;
+
+	//constant for limiter
+	extern double epsilon;
+}
+
 
 #endif // VARDECLARATION_H_INCLUDED

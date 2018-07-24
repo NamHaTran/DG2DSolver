@@ -60,16 +60,21 @@ namespace meshVar
 		dxb[elements2DArrSize][maxGauss][maxGauss] = {},
 		dya[elements2DArrSize][maxGauss][maxGauss] = {},
 		dyb[elements2DArrSize][maxGauss][maxGauss] = {};
+
+	std::vector<std::vector<double>> geoCenter(elements2DArrSize, std::vector<double>(2, 0.0));
+	std::vector<double> cellSize(elements2DArrSize, 0.0);
 }
 
 namespace mathVar
 {
 	int nGauss(0), orderElem(0);
-	double wGauss[maxGauss] = {}, xGauss[maxGauss] = {};
+	double wGauss[maxGauss] = {}, xGauss[maxGauss] = {}, wGaussLobatto[maxGauss] = {}, xGaussLobatto[maxGauss] = {};
 	double B[maxOrder] = {}, dBa[maxOrder] = {}, dBb[maxOrder] = {};
 	double BPts[maxOrder][maxGauss][maxGauss] = {}, dBaPts[maxOrder][maxGauss][maxGauss] = {}, dBbPts[maxOrder][maxGauss][maxGauss] = {};
 	double GaussPts[maxGauss][maxGauss][2] = {}, //coordinate a is array (..,..,0), coordinate b is array (..,..,1)
-		wGaussPts[maxGauss][maxGauss][2] = {}; //weights on a direction (w1) is array (..,..,1), weights on b direction (w2) is array (..,..,2)
+		wGaussPts[maxGauss][maxGauss][2] = {}, //weights on a direction (w1) is array (..,..,1), weights on b direction (w2) is array (..,..,2)
+		GaussLobattoPts[maxGauss][maxGauss][2] = {},
+		wGaussLobattoPts[maxGauss][maxGauss][2] = {};
 }
 
 namespace material
@@ -105,29 +110,74 @@ namespace refValues
 	bool subsonic(false);
 }
 
-/*Conservative variables declaration*/
+/*Conservative variables declaration
 double rho[elements2DArrSize][maxOrder] = {},
 rhou[elements2DArrSize][maxOrder] = {},
 rhov[elements2DArrSize][maxOrder] = {},
-rhoE[elements2DArrSize][maxOrder] = {};
+rhoE[elements2DArrSize][maxOrder] = {};*/
+std::vector<std::vector<double>> 
+rho(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhou(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhov(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhoE(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
 
-/*Primary variables declaration*/
+/*Primary variables declaration
 double u[elements2DArrSize][maxOrder] = {},
 v[elements2DArrSize][maxOrder] = {},
 e[elements2DArrSize][maxOrder] = {},
 p[elements2DArrSize][maxOrder] = {},
 T[elements2DArrSize][maxOrder] = {},
-mu[elements2DArrSize][maxOrder] = {};
+mu[elements2DArrSize][maxOrder] = {};*/
+std::vector<std::vector<double>>
+u(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+v(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+//e(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+p(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+T(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+mu(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
 
-/*Auxilary variables*/
+/*Auxilary variables
 //X direction
 double rhoX[elements2DArrSize][maxOrder] = {},
 rhouX[elements2DArrSize][maxOrder] = {},
 rhovX[elements2DArrSize][maxOrder] = {},
-rhoEX[elements2DArrSize][maxOrder] = {};
+rhoEX[elements2DArrSize][maxOrder] = {};*/
+std::vector<std::vector<double>>
+rhoX(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhouX(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhovX(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhoEX(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
 
-//Y direction
+/*Y direction
 double rhoY[elements2DArrSize][maxOrder] = {},
 rhouY[elements2DArrSize][maxOrder] = {},
 rhovY[elements2DArrSize][maxOrder] = {},
-rhoEY[elements2DArrSize][maxOrder] = {};
+rhoEY[elements2DArrSize][maxOrder] = {};*/
+std::vector<std::vector<double>>
+rhoY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhouY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhovY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+rhoEY(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
+
+//time step
+double dt(1e-5);
+
+//Limiting coefficients
+std::vector<double>
+theta1Arr(elements2DArrSize, 0.0),
+theta2Arr(elements2DArrSize, 0.0);
+
+/*Mean values
+row1: mean rho
+row2: mean rhou
+row3: mean rhov
+row4: mean rhoE*/
+std::vector<std::vector<double>> meanVals(elements2DArrSize, std::vector<double>(4, 0.0));
+
+//system settings
+namespace sysSetting
+{
+	int ddtScheme(1);
+	int limiter(1);
+	double epsilon(1e-13);
+}

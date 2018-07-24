@@ -8,6 +8,9 @@ namespace math
 	/*Function calculates Gauss values*/
 	void Gauss(int nGauss);
 
+	/*Function calculates Gauss-Lobatto values*/
+	void GaussLobatto(int nGauss);
+
 	/*Function calculates basis function*/
 	void basisFc(double a, double b, int orderElem);
 
@@ -80,6 +83,22 @@ namespace math
 		3: rhov
 		4: rhoE*/
 	double pointValue(int element, double a, double b, int valType, int valKind);
+	
+	/*Function calculates values of primary and conservative variables at arbitrary point of arbitrary element without applying limiter.
+	ValKind 1: primary variable
+		valType 1: rho
+		2: u
+		3: v
+		4: e
+		5: p
+		6: T
+		7: mu
+	ValKind 2: conservative variable
+		valType 1: rho
+		2: rhou
+		3: rhov
+		4: rhoE*/
+	double pointValueNoLimiter(int element, double a, double b, int valType, int valKind);
 
 	/*Function calculates dot product of 2 vectors*/
 	double vectorDotProduct(std::vector<double> &a, std::vector<double> &b);
@@ -163,6 +182,9 @@ namespace math
 	/*Function calculates thermal conductivity*/
 	double calcThermalConductivity(double muVal);
 
+	//Function solves quadratic equation
+	std::tuple<bool, double, double> solvQuadraticEq(double A, double B, double C);
+
 	namespace numericalFluxes
 	{
 		/*Function calculates auxilary flux at Gauss point*/
@@ -214,6 +236,56 @@ namespace math
 
 		/*Function calculates viscous terms of NSF equation from Stress and Heat flux matrix returned from calcStressTensorAndHeatFlux function*/
 		std::tuple<double, double, double, double> calcViscousTermsFromStressHeatFluxMatrix(std::vector< std::vector<double> > &StressHeatFlux, double uVal, double vVal, int dir);
+	}
+
+	namespace limiter
+	{
+		/*Function calculates mean value of input valType of quad element
+		Available of valType
+		valType 1: rho
+		2: rhou
+		3: rhov
+		4: rhoE
+		*/
+		double calcMeanConsvVarQuad(int element, int valType);
+
+		/*Function calculates mean value of input valType of tri element
+		Available of valType
+		valType 1: rho
+		2: rhou
+		3: rhov
+		4: rhoE
+		*/
+		double calcMeanConsvVarTri(int element, int valType);
+
+		//Function calculates minimum value of rho of quad element
+		double calcMinRhoQuad(int element);
+
+		//Function calculates minimum value of rho of tri element
+		double calcMinRhoTri(int element);
+
+		//Function calculates minimum value of p of tri element
+		double calcMinPTri(int element);
+
+		//Function calculates modified value of Rho at abitrary point (for calculating theta2)
+		double calcRhoModified(int element, double a, double b, double theta1, double rhoMean);
+
+		/*Function computes value of conservative variables at abitrary point with applying limiter
+		valType:
+		1: rho
+		2: rhou
+		3: rhov
+		4: rhoE*/
+		double calcConsvVarWthLimiter(int element, double a, double b, int valType);
+
+		//Function returns true if element is needed to limit, and value of rho which applied first time limiter
+		std::tuple<bool, double> checkLimiterForQuad(int element, double a, double b);
+
+		//Function computes theta1 coefficient and omega for Pp limiter
+		std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
+
+		//Function computes theta2 at 1 Gauss point in input direction
+		double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir);
 	}
 }
 

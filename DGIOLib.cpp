@@ -745,9 +745,6 @@ namespace IO
 			}
 			else if (fileName.compare("T.txt") == 0)
 			{
-				std::string str2(), str3(), str4(), str5(),
-					str6("Value"), str7(), str8(), str9(), str10(), str11("symmetry");
-
 				while (std::getline(FileFlux, line))
 				{
 					std::istringstream line2str(line);
@@ -821,7 +818,7 @@ namespace IO
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)  //SYMMETRY BO SUNG SAU
 							{
-								if ((str0.compare(str11) == 0))  //Type symmetry
+								if ((str0.compare("symmetry") == 0))  //Type symmetry
 								{
 									bcValues::TBcType[bcGrp - 1] = 7;
 									bcValues::TBC[bcGrp - 1] = iniValues::TIni;

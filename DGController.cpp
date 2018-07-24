@@ -20,7 +20,7 @@ void Executer(std::string cmd)
 	}
 	else if (processKey::checkDGRun(cmd))
 	{
-		PreProcessing();  //for testing aim
+		PreProcessing();
 		Processing();
 	}
 	else if (postProcessKey::checkExit(cmd))
@@ -65,7 +65,7 @@ void PreProcessing()
 	/*LOAD p T U*/
 	IO::loadpTU();
 	//Check subsonic
-	refValues::subsonic = auxUlti::checkSubSonic;
+	refValues::subsonic = auxUlti::checkSubSonic();
 
 	/*PROCESS MESH*/
 	MshReader::meshProcess();
@@ -74,6 +74,10 @@ void PreProcessing()
 	meshParam::GaussParam();
 	meshParam::basisFcParam();
 	meshParam::JacobianParam();
+
+	/*CALCULATE CELL SIZE AND GEOMETRIC CENTERS*/
+	meshParam::calcCellSize();
+	meshParam::calcGeoCellCenter();
 
 	/*CALCULATE COORDINATES DERIVATIVES*/
 	meshParam::derivCoordinates();

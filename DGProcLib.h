@@ -15,6 +15,12 @@ namespace meshParam
 
 	/*Function saves coordinates derivatives to array*/
 	void derivCoordinates();
+
+	/*Function calculates geometric centers of elements*/
+	void calcGeoCellCenter();
+
+	/*Function calculates size of elements*/
+	void calcCellSize();
 }
 
 namespace process
@@ -79,6 +85,18 @@ namespace process
 
 		/*Function calculates flux at nGauss point of all conservative variables at internal egde*/
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);
+	}
+
+	namespace limiter
+	{
+		//Function applies limiter to input element
+		void limiter(int element);
+
+		namespace Pp
+		{
+			//Function computes coefficients theta1 theta2 for positivity preserving limiter
+			std::tuple<double, double> calcPpLimiterCoef(int element);
+		}
 	}
 
 	/*Function calculates volume integral terms of auxilary equations of ONLY one order

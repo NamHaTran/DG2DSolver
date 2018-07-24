@@ -5,21 +5,27 @@
 #include "DGAuxUltilitiesLib.h"
 #include <tuple>
 #include "DGBCsLib.h"
+#include <algorithm>
 
 namespace meshParam
 {
 	void GaussParam()
 	{
 		math::Gauss(mathVar::nGauss);
+		math::GaussLobatto(mathVar::nGauss);  //run GaussLobatto for applying limiter
 		for (int na = 0; na <= mathVar::nGauss; na++)  //nGauss is started from 0
 		{
 			for (int nb = 0; nb <= mathVar::nGauss; nb++)
 			{
 				mathVar::GaussPts[na][nb][0] = mathVar::xGauss[na];
 				mathVar::GaussPts[na][nb][1] = mathVar::xGauss[nb];
+				mathVar::GaussLobattoPts[na][nb][0] = mathVar::xGaussLobatto[na];
+				mathVar::GaussLobattoPts[na][nb][1] = mathVar::xGaussLobatto[nb];
 
 				mathVar::wGaussPts[na][nb][0] = mathVar::wGauss[na];
 				mathVar::wGaussPts[na][nb][1] = mathVar::wGauss[nb];
+				mathVar::wGaussLobattoPts[na][nb][0] = mathVar::wGaussLobatto[na];
+				mathVar::wGaussLobattoPts[na][nb][1] = mathVar::wGaussLobatto[nb];
 			}
 		}
 	}
@@ -87,6 +93,54 @@ namespace meshParam
 					meshVar::dya[ielem][na][nb] = dya;
 					meshVar::dyb[ielem][na][nb] = dyb;
 				}
+			}
+		}
+	}
+
+	void calcGeoCellCenter()
+	{
+		int elemType(0);
+		double x(0.0), y(0.0);
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			elemType = auxUlti::checkType(nelem);
+			for (int i = 0; i < elemType; i++)
+			{
+				std::tie(x, y) = auxUlti::getElemCornerCoord(nelem, i);
+				meshVar::geoCenter[nelem][0] += x;
+				meshVar::geoCenter[nelem][1] += y;
+			}
+
+			meshVar::geoCenter[nelem][0] = meshVar::geoCenter[nelem][0] / nelem;
+			meshVar::geoCenter[nelem][1] = meshVar::geoCenter[nelem][1] / nelem;
+		}
+	}
+
+	void calcCellSize()
+	{
+		int elemType(0);
+		
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			elemType = auxUlti::checkType(nelem);
+			if (elemType==3)
+			{
+				double x1(0.0), x2(0.0), x3(0.0), y1(0.0), y2(0.0), y3(0.0);
+				std::tie(x1, y1) = auxUlti::getElemCornerCoord(nelem, 0);
+				std::tie(x2, y2) = auxUlti::getElemCornerCoord(nelem, 1);
+				std::tie(x3, y3) = auxUlti::getElemCornerCoord(nelem, 2);
+
+				meshVar::cellSize[nelem] = fabs(0.5*(x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y1 - x1 * y3));
+			}
+			else if (elemType == 4)
+			{
+				double x1(0.0), x2(0.0), x3(0.0), x4(0.0), y1(0.0), y2(0.0), y3(0.0), y4(0.0);
+				std::tie(x1, y1) = auxUlti::getElemCornerCoord(nelem, 0);
+				std::tie(x2, y2) = auxUlti::getElemCornerCoord(nelem, 1);
+				std::tie(x3, y3) = auxUlti::getElemCornerCoord(nelem, 2);
+				std::tie(x4, y4) = auxUlti::getElemCornerCoord(nelem, 3);
+
+				meshVar::cellSize[nelem] = fabs(0.5*(x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y4 - x4 * y3 + x4 * y1 - x1 * y4));
 			}
 		}
 	}
@@ -821,6 +875,84 @@ namespace process
 			Fluxes = math::numericalFluxes::NSFEqFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
 			return Fluxes;
 		}
+	}
+
+	namespace limiter
+	{
+		void limiter(int element)
+		{
+			double theta1(0.0), theta2(0.0);
+			if (sysSetting::limiter==1)  //positivity preserving
+			{
+				std::tie(theta1, theta2) = limiter::Pp::calcPpLimiterCoef(element);
+			}
+			else if (sysSetting::limiter == 0)  //No limiter
+			{
+				theta1 = 1.0;
+				theta2 = 1.0;
+			}
+			theta1Arr[element] = theta1;
+			theta2Arr[element] = theta2;
+		}
+
+		namespace Pp
+		{
+			//Function calculates coefficients of positivity preserving limiter
+			std::tuple<double, double> calcPpLimiterCoef(int element)
+			{
+				double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
+				int elemType(auxUlti::checkType(element));
+
+				double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0);
+
+				/*Note: according to Kontzialis et al, positivity preserving limiter for quadrilateral element, which is presented on Zhang's paper,
+				shown a very good effect on results. Because of that, Zhang's limiter is used in this code for both triangular and quadrilateral elements*/
+
+				//Find theta1
+				minRho = math::limiter::calcMinRhoQuad(element);
+				meanRho = math::limiter::calcMeanConsvVarQuad(element, 1);
+
+				//find omega=min(1e-13, meanRHo, meanP)
+				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
+				meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
+				meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
+				double meanT(math::CalcTFromPriVar(meanRho, meanRhou, meanRhov, meanRhoE));
+				double meanP(math::CalcP(meanT, meanRho));
+				
+				//Compute theta1
+				std::tie(theta1, omega) = math::limiter::calcTheta1Coeff(meanRho, minRho, meanP);
+
+				//Find theta2
+				std::vector<double> vectort(2 * mathVar::nGauss * mathVar::nGauss, 0.0);
+				int index(0);
+
+				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
+				meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
+				meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
+
+				//Save mean values to arrays
+				meanVals[element][0] = meanRho;
+				meanVals[element][1] = meanRhou;
+				meanVals[element][2] = meanRhov;
+				meanVals[element][3] = meanRhoE;
+
+				for (int na = 0; na <= mathVar::nGauss; na++)
+				{
+					for (int nb = 0; nb <= mathVar::nGauss; nb++)
+					{
+						vectort[index] = math::limiter::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 1);
+						index++;
+
+						vectort[index] = math::limiter::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 2);
+						index++;
+					}
+				}
+				theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
+
+				return std::make_tuple(theta1, theta2);
+			}
+		}
+
 	}
 
 	double volumeInte(int elem, std::vector< std::vector<double> > &Ui, int order, int direction)

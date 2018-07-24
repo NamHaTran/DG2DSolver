@@ -120,6 +120,7 @@ namespace auxUlti
 				u[ielem][i] = rhou[ielem][i] / rho[ielem][i];
 				v[ielem][i] = rhov[ielem][i] / rho[ielem][i];
 				T[ielem][i] = math::CalcTFromPriVar(rho[ielem][i], rhou[ielem][i], rhov[ielem][i], rhoE[ielem][i]);
+				e[ielem][i] = material::Cv*T[ielem][i];
 				p[ielem][i] = math::CalcP(T[ielem][i], rho[ielem][i]);
 				mu[ielem][i] = math::CalcVisCoef(T[ielem][i]);
 			}
