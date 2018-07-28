@@ -287,6 +287,18 @@ namespace math
 		//Function computes theta2 at 1 Gauss point in input direction
 		double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir);
 	}
+
+	namespace geometricOp
+	{
+		//Function computes geometric center of polygon, inputs are coordinates of vertexs of polygon
+		std::tuple<double, double> calcGeoCenter(std::vector<double> &xCoor, std::vector<double> &yCoor, int type);
+
+		//Function computes area of polygon
+		double calcPolygonArea(std::vector<double> &xCoor, std::vector<double> &yCoor, int type);
+
+		//Function computes centroid of quad elements, for tri elements, centroid is coincident with geometric center
+		std::tuple<double, double> calcQuadCentroid(int element, double xCG, double yCG, double area);
+	}
 }
 
 #endif // DGMATH_H_INCLUDED

@@ -1266,4 +1266,87 @@ namespace math
 			return theta2;
 		}
 	}
+
+	namespace geometricOp
+	{
+		std::tuple<double, double> calcGeoCenter(std::vector<double> &xCoor, std::vector<double> &yCoor, int type)
+		{
+			double x(0.0), y(0.0), xCG(0.0), yCG(0.0);
+			for (int i = 0; i < type; i++)
+			{
+				x = xCoor[i];
+				y = yCoor[i];
+				xCG += x;
+				yCG += y;
+			}
+
+			xCG = xCG / type;
+			xCG = xCG / type;
+			return std::make_tuple(xCG, yCG);
+		}
+
+		double calcPolygonArea(std::vector<double> &xCoor, std::vector<double> &yCoor, int type)
+		{
+			double x1(xCoor[0]), x2(xCoor[1]), x3(xCoor[2]), x4(0.0), y1(yCoor[0]), y2(yCoor[1]), y3(yCoor[2]), y4(0.0),Area(0.0);
+			if (type == 3)
+			{
+				Area = fabs(0.5*(x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y1 - x1 * y3));
+			}
+			else if (type == 4)
+			{
+				x4 = xCoor[3];
+				y4 = yCoor[3];
+
+				Area = fabs(0.5*(x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y4 - x4 * y3 + x4 * y1 - x1 * y4));
+			}
+			return Area;
+		}
+
+		std::tuple<double, double> calcQuadCentroid(int element, double xCG, double yCG, double area)
+		{
+			std::vector<double> xSubTriCoor(3, 0.0), ySubTriCoor(3, 0.0);
+			std::vector<double> xCGSubTri(4, 0.0), yCGSubTri(4, 0.0), subTriArea(4,0.0);
+			double xC(0.0), yC(0.0);
+			//1. point 0, 1
+			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 0);
+			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 1);
+			xSubTriCoor[2] = xCG;
+			ySubTriCoor[2] = yCG;
+			std::tie(xCGSubTri[0], yCGSubTri[0]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
+			subTriArea[0] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
+
+			//2. point 1, 2
+			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 1);
+			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 2);
+			xSubTriCoor[2] = xCG;
+			ySubTriCoor[2] = yCG;
+			std::tie(xCGSubTri[1], yCGSubTri[1]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
+			subTriArea[1] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
+
+			//3. point 2, 3
+			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 2);
+			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 3);
+			xSubTriCoor[2] = xCG;
+			ySubTriCoor[2] = yCG;
+			std::tie(xCGSubTri[2], yCGSubTri[2]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
+			subTriArea[2] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
+
+			//4. point 3, 0
+			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 3);
+			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 0);
+			xSubTriCoor[2] = xCG;
+			ySubTriCoor[2] = yCG;
+			std::tie(xCGSubTri[3], yCGSubTri[3]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
+			subTriArea[3] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
+
+			for (int i = 0; i < 4; i++)
+			{
+				xC = subTriArea[i] * xCGSubTri[i];
+				yC = subTriArea[i] * yCGSubTri[i];
+			}
+			xC = xC / area;
+			yC = yC / area;
+			return std::make_tuple(xC, yC);
+		}
+	}
 }//end of namespace math

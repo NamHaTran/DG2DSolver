@@ -16,11 +16,8 @@ namespace meshParam
 	/*Function saves coordinates derivatives to array*/
 	void derivCoordinates();
 
-	/*Function calculates geometric centers of elements*/
-	void calcGeoCellCenter();
-
-	/*Function calculates size of elements*/
-	void calcCellSize();
+	/*Function calculates centroid and cell size of elements*/
+	void calcCellMetrics();
 }
 
 namespace process

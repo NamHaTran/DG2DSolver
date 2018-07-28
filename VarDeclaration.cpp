@@ -131,7 +131,7 @@ mu[elements2DArrSize][maxOrder] = {};*/
 std::vector<std::vector<double>>
 u(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
 v(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-//e(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
+e(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
 p(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
 T(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
 mu(elements2DArrSize, std::vector<double>(maxOrder, 0.0));

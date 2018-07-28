@@ -75,9 +75,8 @@ void PreProcessing()
 	meshParam::basisFcParam();
 	meshParam::JacobianParam();
 
-	/*CALCULATE CELL SIZE AND GEOMETRIC CENTERS*/
-	meshParam::calcCellSize();
-	meshParam::calcGeoCellCenter();
+	/*CALCULATE CELL METRICS*/
+	meshParam::calcCellMetrics();
 
 	/*CALCULATE COORDINATES DERIVATIVES*/
 	meshParam::derivCoordinates();

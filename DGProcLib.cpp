@@ -97,50 +97,37 @@ namespace meshParam
 		}
 	}
 
-	void calcGeoCellCenter()
+	void calcCellMetrics()
 	{
 		int elemType(0);
-		double x(0.0), y(0.0);
+		double xCG(0.0), yCG(0.0);
 		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 		{
 			elemType = auxUlti::checkType(nelem);
+			std::vector<double> xCoor(elemType, 0.0),
+				yCoor(elemType, 0.0),
+				xSubTriCoor(elemType, 0.0),
+				ySubTriCoor(elemType, 0.0);
 			for (int i = 0; i < elemType; i++)
 			{
-				std::tie(x, y) = auxUlti::getElemCornerCoord(nelem, i);
-				meshVar::geoCenter[nelem][0] += x;
-				meshVar::geoCenter[nelem][1] += y;
+				std::tie(xCoor[i], yCoor[i]) = auxUlti::getElemCornerCoord(nelem, i);
 			}
+			//1. Calculate cell area (cell size)
+			meshVar::cellSize[nelem] = math::geometricOp::calcPolygonArea(xCoor, yCoor, elemType);
 
-			meshVar::geoCenter[nelem][0] = meshVar::geoCenter[nelem][0] / nelem;
-			meshVar::geoCenter[nelem][1] = meshVar::geoCenter[nelem][1] / nelem;
-		}
-	}
+			//2. Compute geometric center of cell
+			std::tie(xCG, yCG) = math::geometricOp::calcGeoCenter(xCoor, yCoor, elemType);
 
-	void calcCellSize()
-	{
-		int elemType(0);
-		
-		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
-		{
-			elemType = auxUlti::checkType(nelem);
-			if (elemType==3)
+			//3. Compute centroid of cell
+			if (elemType == 3)
 			{
-				double x1(0.0), x2(0.0), x3(0.0), y1(0.0), y2(0.0), y3(0.0);
-				std::tie(x1, y1) = auxUlti::getElemCornerCoord(nelem, 0);
-				std::tie(x2, y2) = auxUlti::getElemCornerCoord(nelem, 1);
-				std::tie(x3, y3) = auxUlti::getElemCornerCoord(nelem, 2);
-
-				meshVar::cellSize[nelem] = fabs(0.5*(x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y1 - x1 * y3));
+				meshVar::geoCenter[nelem][0] = xCG;
+				meshVar::geoCenter[nelem][1] = yCG;
 			}
-			else if (elemType == 4)
+			else  //quad element
 			{
-				double x1(0.0), x2(0.0), x3(0.0), x4(0.0), y1(0.0), y2(0.0), y3(0.0), y4(0.0);
-				std::tie(x1, y1) = auxUlti::getElemCornerCoord(nelem, 0);
-				std::tie(x2, y2) = auxUlti::getElemCornerCoord(nelem, 1);
-				std::tie(x3, y3) = auxUlti::getElemCornerCoord(nelem, 2);
-				std::tie(x4, y4) = auxUlti::getElemCornerCoord(nelem, 3);
-
-				meshVar::cellSize[nelem] = fabs(0.5*(x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y4 - x4 * y3 + x4 * y1 - x1 * y4));
+				//3. Compute geometric center of sub-triangles which creates polygon
+				std::tie(meshVar::geoCenter[nelem][0], meshVar::geoCenter[nelem][1]) = math::geometricOp::calcQuadCentroid(nelem, xCG, yCG, meshVar::cellSize[nelem]);
 			}
 		}
 	}
@@ -877,6 +864,15 @@ namespace process
 		}
 	}
 
+	namespace Euler
+	{
+		double localTimeStep()
+		{
+			double deltaT(0.0);
+
+		}
+	}
+
 	namespace limiter
 	{
 		void limiter(int element)
@@ -912,7 +908,6 @@ namespace process
 				minRho = math::limiter::calcMinRhoQuad(element);
 				meanRho = math::limiter::calcMeanConsvVarQuad(element, 1);
 
-				//find omega=min(1e-13, meanRHo, meanP)
 				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
 				meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
 				meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
