@@ -22,13 +22,13 @@ Outlet
 	Type				noSlip
 }
  
-Wall
+ZeroGrad
 {
 	Group 3
 	Type				noSlip
 }
  
-zeroGrad
+FlatePlate
 {
 	Group 4
 	Type				noSlip

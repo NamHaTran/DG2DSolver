@@ -37,5 +37,8 @@ namespace IO
 	- outDbl: output array contents double values
 	- outInt: output array contents int values*/
 	void readDataFile(std::string fileName, std::string direction, std::string keyWordsDbl[], std::string keyWordsInt[], std::string keyWordsBool[], std::string keyWordsStr[], double *outDbl, int *outInt, bool *outBool, std::string *Str, int numParamDbl, int numParamInt, int numParamBool, int numParamStr);
+
+	/*Function writes residuals on console*/
+	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes);
 }
 #endif // DGIOLIB_H_INCLUDED

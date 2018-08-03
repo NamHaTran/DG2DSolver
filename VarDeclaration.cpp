@@ -15,6 +15,10 @@ namespace systemVar
 	double Ttime(0.0); //Total time
 	int wrtI(0); //write interval
 	bool wrtLog("true");
+
+	int ddtScheme(1);
+	int limiter(1);
+	double epsilon(1e-13);
 }
 
 namespace meshVar
@@ -160,7 +164,8 @@ rhovY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
 rhoEY(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
 
 //time step
-double dt(1e-5);
+double dt(1e-7);
+double runTime(0.0);
 
 //Limiting coefficients
 std::vector<double>
@@ -173,11 +178,3 @@ row2: mean rhou
 row3: mean rhov
 row4: mean rhoE*/
 std::vector<std::vector<double>> meanVals(elements2DArrSize, std::vector<double>(4, 0.0));
-
-//system settings
-namespace sysSetting
-{
-	int ddtScheme(1);
-	int limiter(1);
-	double epsilon(1e-13);
-}

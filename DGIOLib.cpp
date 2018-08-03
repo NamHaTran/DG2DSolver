@@ -852,4 +852,14 @@ namespace IO
 			}
 		}
 	}
+
+	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes)
+	{
+		if (systemVar::ddtScheme == 1)
+		{
+			std::cout << "Time step: " << dt << std::endl;
+		}
+		std::cout << "Residuals: ddt(rho)=" << rhoRes << ", ddt(rhou)=" << rhouRes << std::endl << "ddt(rhov)=" << rhovRes << ", ddt(rhoE)=" << rhoERes << std::endl;
+
+	}
 }

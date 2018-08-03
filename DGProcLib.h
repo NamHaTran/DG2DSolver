@@ -82,6 +82,18 @@ namespace process
 
 		/*Function calculates flux at nGauss point of all conservative variables at internal egde*/
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);
+
+		/*Function applies input ddtSchemme to solve time marching*/
+		std::vector<double> solveTimeMarching(std::vector<double> &ddtArr, std::vector<double> &UnArr);
+	}
+
+	namespace Euler
+	{
+		/*Function computes local time step*/
+		double localTimeStep(int element);
+
+		/*Function computes time derivative at centroid of standard cell*/
+		double errorEstimate(int element, std::vector<double> &ddtArr);
 	}
 
 	namespace limiter
@@ -117,6 +129,9 @@ namespace process
 
 	/*Function calculates value of element of Auxilary Stiff matrix*/
 	double calculateStiffMatrixElement(int element, int order1, int order2);
+
+	/*Function return false if running contion is wrong*/
+	bool checkRunningCond();
 }
 
 #endif // DGPROCLIB_H_INCLUDED

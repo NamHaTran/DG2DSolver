@@ -682,6 +682,29 @@ namespace math
 		return std::make_tuple(realRoot, root1, root2);
 	}
 
+	//On working
+	/*
+	std::tuple<double, double> centroidMapping(int element, double xCoor, double yCoor)
+	{
+		int elemType(auxUlti::checkType(element));
+
+		double xA(0.0), xB(0.0), xC(0.0), xD(0.0),
+			yA(0.0), yB(0.0), yC(0.0), yD(0.0);
+		std::tie(xA, yA) = auxUlti::getElemCornerCoord(element, 0);
+		std::tie(xB, yB) = auxUlti::getElemCornerCoord(element, 1);
+		std::tie(xC, yC) = auxUlti::getElemCornerCoord(element, 2);
+
+		if (elemType == 3)
+		{
+
+		}
+		else if (elemType == 4)
+		{
+			std::tie(xD, yD) = auxUlti::getElemCornerCoord(element, 3);
+		}
+	}
+	*/
+
 	namespace numericalFluxes
 	{
 		double auxFlux(double MinusVal, double PlusVar, double vectorComp)
@@ -1174,7 +1197,7 @@ namespace math
 			TVal = math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			pVal = math::CalcP(TVal, rhoVal);
 
-			if (pVal < sysSetting::epsilon)
+			if (pVal < systemVar::epsilon)
 			{
 				needLimiter = true;
 			}
@@ -1185,7 +1208,7 @@ namespace math
 		{
 			double temp1(0.0), theta1(0.0);
 			std::vector<double> vectorOmega(3, 0.0);
-			vectorOmega[0] = sysSetting::epsilon;
+			vectorOmega[0] = systemVar::epsilon;
 			vectorOmega[1] = meanP;
 			vectorOmega[2] = meanRho;
 			double omega(*std::min_element(vectorOmega.begin(), vectorOmega.end()));  //find min value of vector

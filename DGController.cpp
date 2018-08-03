@@ -51,7 +51,16 @@ void Processing()
 	process::setIniValues();
 	auxUlti::ConserToPri();
 
-	std::cout << meshVar::BoundaryType;
+	//std::cout << meshVar::BoundaryType;
+
+	while (process::checkRunningCond)
+	{
+		//SOLVE AUXILARY EQUATION
+		process::auxEq::solveAuxEquation();
+
+		//SOLVE NSF EQUATION
+		process::NSFEq::solveNSFEquation();
+	}
 }
 
 void PreProcessing()

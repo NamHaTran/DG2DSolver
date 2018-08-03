@@ -13,24 +13,24 @@ initialValue				0
 Inlet
 {
 	Group				1
-	Type				zeroNormalGrad
+	Type				WallAdiabatic
 }
  
 Outlet
 {
 	Group				2
-	Type				zeroNormalGrad
+	Type				WallAdiabatic
 }
  
-Wall
+ZeroGrad
 {
 	Group				3
-	Type				zeroNormalGrad
+	Type				WallAdiabatic
 }
  
-zeroGrad
+FlatePlate
 {
 	Group				4
-	Type				zeroNormalGrad
+	Type				WallAdiabatic
 }
  

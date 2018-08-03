@@ -6,7 +6,10 @@
 #include <tuple>
 #include "DGBCsLib.h"
 #include <algorithm>
+#include "DGIOLib.h"
 
+
+//NamTH123 - test Github
 namespace meshParam
 {
 	void GaussParam()
@@ -487,10 +490,19 @@ namespace process
 				RHSTerm3(mathVar::orderElem, 0.0),
 				RHSTerm4(mathVar::orderElem, 0.0),
 
-				rhoVector(mathVar::orderElem, 0.0),
-				rhouVector(mathVar::orderElem, 0.0),
-				rhovVector(mathVar::orderElem, 0.0),
-				rhoEVector(mathVar::orderElem, 0.0);
+				ddtRhoVector(mathVar::orderElem, 0.0),
+				ddtRhouVector(mathVar::orderElem, 0.0),
+				ddtRhovVector(mathVar::orderElem, 0.0),
+				ddtRhoEVector(mathVar::orderElem, 0.0),
+
+				rhoVectorN(mathVar::orderElem, 0.0),
+				rhouVectorN(mathVar::orderElem, 0.0),
+				rhovVectorN(mathVar::orderElem, 0.0),
+				rhoEVectorN(mathVar::orderElem, 0.0),
+				
+				UnVector(mathVar::orderElem, 0.0),
+				
+				timeStepArr(meshVar::nelem2D,1.0);
 
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
@@ -500,21 +512,59 @@ namespace process
 				//2) Calculate Right hand side terms
 				process::NSFEq::CalcRHSTerm(nelement, RHSTerm1, RHSTerm2, RHSTerm3, RHSTerm4);
 
-				//3) Solve for conservative variables
-				rhoVector = math::SolveSysEqs(StiffMatrix, RHSTerm1);
-				rhouVector = math::SolveSysEqs(StiffMatrix, RHSTerm2);
-				rhovVector = math::SolveSysEqs(StiffMatrix, RHSTerm3);
-				rhoEVector = math::SolveSysEqs(StiffMatrix, RHSTerm4);
+				//3) Solve for derivartives of conservative variables
+				ddtRhoVector = math::SolveSysEqs(StiffMatrix, RHSTerm1);
+				ddtRhouVector = math::SolveSysEqs(StiffMatrix, RHSTerm2);
+				ddtRhovVector = math::SolveSysEqs(StiffMatrix, RHSTerm3);
+				ddtRhoEVector = math::SolveSysEqs(StiffMatrix, RHSTerm4);
 
-				//4) Save results to conservative variables array
+				//4) Solve time marching
+				//rho
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
-					rho[nelement][order] = rhoVector[order];
-					rhou[nelement][order] = rhouVector[order];
-					rhov[nelement][order] = rhovVector[order];
-					rhoE[nelement][order] = rhoEVector[order];
+					UnVector[order] = rho[nelement][order];
 				}
+				rhoVectorN = process::NSFEq::solveTimeMarching(ddtRhoVector, UnVector);
+				//rhou
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					UnVector[order] = rhou[nelement][order];
+				}
+				rhouVectorN = process::NSFEq::solveTimeMarching(ddtRhouVector, UnVector);
+				//rhov
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					UnVector[order] = rhov[nelement][order];
+				}
+				rhovVectorN = process::NSFEq::solveTimeMarching(ddtRhovVector, UnVector);
+				//rhoE
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					UnVector[order] = rhoE[nelement][order];
+				}
+				rhoEVectorN = process::NSFEq::solveTimeMarching(ddtRhoEVector, UnVector);
+
+				//5) Save results to conservative variables array
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					rho[nelement][order] = rhoVectorN[order];
+					rhou[nelement][order] = rhouVectorN[order];
+					rhov[nelement][order] = rhovVectorN[order];
+					rhoE[nelement][order] = rhoEVectorN[order];
+				}
+
+				//6) Estimate Residuals
+				double rhoRes(process::Euler::errorEstimate(nelement, ddtRhoVector)),
+					rhouRes(process::Euler::errorEstimate(nelement, ddtRhouVector)),
+					rhovRes(process::Euler::errorEstimate(nelement, ddtRhovVector)),
+					rhoERes(process::Euler::errorEstimate(nelement, ddtRhoEVector));
+				IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
+
+				//7) Compute local time step
+				timeStepArr[nelement] = process::Euler::localTimeStep(nelement);
 			}
+			runTime += dt;
+			dt = *std::min_element(timeStepArr.begin(), timeStepArr.end());  //find min value of vector
 		}
 
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
@@ -862,14 +912,69 @@ namespace process
 			Fluxes = math::numericalFluxes::NSFEqFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
 			return Fluxes;
 		}
+
+		std::vector<double> solveTimeMarching(std::vector<double> &ddtArr, std::vector<double> &UnArr)
+		{
+			std::vector<double> OutArr(mathVar::orderElem, 0.0);
+
+			if (systemVar::ddtScheme==1) //Euler scheme
+			{
+				for (int order = 0; order < mathVar::orderElem; order++)
+				{
+					OutArr[order] = dt * ddtArr[order] + UnArr[order];
+				}
+			}
+			return OutArr;
+		}
 	}
 
 	namespace Euler
 	{
-		double localTimeStep()
+		double localTimeStep(int element)
 		{
-			double deltaT(0.0);
+			//Here, xC and yC are coordinates of center of standard elements
+			double deltaT(0.0), xC(-1.0 / 3.0), yC(1.0 / 3.0), size(0.0);
 
+			if (auxUlti::checkType(element) == 4)
+			{
+				xC = 0.0;
+				yC = 0.0;
+			}
+
+			//std::tie(xC, yC, size) = auxUlti::getCellMetrics(element);
+			double uVal(math::pointValue(element, xC, yC, 2, 1)),
+				vVal(math::pointValue(element, xC, yC, 3, 1)), velocity(0.0),
+				TVal(math::pointValue(element, xC, yC, 6, 1)), aSound(0.0), LocalMach(0.0);
+
+			velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+			aSound = math::CalcSpeedOfSound(TVal);
+			LocalMach = velocity / aSound;
+			size = meshVar::cellSize[element];
+			double muVal(math::CalcVisCoef(TVal));
+
+			deltaT = (1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
+
+			return deltaT;
+		}
+
+		double errorEstimate(int element, std::vector<double> &ddtArr)
+		{
+			double xC(-1.0 / 3.0), yC(1.0 / 3.0), errorVal(0.0);
+
+			if (auxUlti::checkType(element) == 4)
+			{
+				xC = 0.0;
+				yC = 0.0;
+			}
+
+			//Compute basis function
+			math::basisFc(xC, yC, mathVar::orderElem);
+			for (int order = 0; order <= mathVar::orderElem; order++)
+			{
+				errorVal += ddtArr[order] * mathVar::B[order];
+			}
+
+			return errorVal;
 		}
 	}
 
@@ -878,11 +983,11 @@ namespace process
 		void limiter(int element)
 		{
 			double theta1(0.0), theta2(0.0);
-			if (sysSetting::limiter==1)  //positivity preserving
+			if (systemVar::limiter==1)  //positivity preserving
 			{
 				std::tie(theta1, theta2) = limiter::Pp::calcPpLimiterCoef(element);
 			}
-			else if (sysSetting::limiter == 0)  //No limiter
+			else if (systemVar::limiter == 0)  //No limiter
 			{
 				theta1 = 1.0;
 				theta2 = 1.0;
@@ -1018,5 +1123,15 @@ namespace process
 		}
 		Inte = math::volumeInte(FMatrix, element);
 		return Inte;
+	}
+
+	bool checkRunningCond()
+	{
+		bool run(true);
+		if (runTime >= systemVar::Ttime)
+		{
+			run = false;
+		}
+		return run;
 	}
 }

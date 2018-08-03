@@ -75,5 +75,8 @@ namespace auxUlti
 
 	/*Function returns master element and servant element of edge*/
 	std::tuple<int, int> getMasterServantOfEdge(int edge);
+
+	//Function returns cell centroid coordinates and size (cell area)
+	std::tuple<double, double, double> getCellMetrics(int element);
 }
 #endif // DGAUXULTILITIESLIB_H_INCLUDED

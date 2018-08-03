@@ -455,4 +455,11 @@ namespace auxUlti
 		}
 		return std::make_tuple(master, servant);
 	}
+
+	//Function returns cell centroid coordinates and size (cell area)
+	std::tuple<double, double, double> getCellMetrics(int element)
+	{
+		double xC(meshVar::geoCenter[element][0]), yC(meshVar::geoCenter[element][1]), size(meshVar::cellSize[element]);
+		return std::make_tuple(xC, yC, size);
+	}
 }

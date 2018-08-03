@@ -16,6 +16,30 @@ namespace systemVar
 	extern double Ttime; //Total time
 	extern int wrtI; //write interval
 	extern bool wrtLog; //write log file
+
+	/*
+	time discretization scheme	|keyWord	|index		|
+	----------------------------|-----------|-----------|
+	-Euler						|Euler		|1			|
+	-Runge-Kutta 2 order		|RK2		|2			|
+	-Runge-Kutta 3 order		|RK3		|3			|
+	-Total Variation Diminishing|TVDRK2		|4			|
+	Runge-Kutta 2 order			|			| 			|
+	-Total Variation Diminishing|TVDRK2		|5			|
+	Runge-Kutta 3 order			|			| 			|
+	----------------------------|-----------|-----------|*/
+	extern int ddtScheme;
+
+	/*
+	limiting scheme				|keyWord	|index		|
+	----------------------------|-----------|-----------|
+	-Positivity preserving		|Pp			|1			|
+	-off						|off		|0			|
+	----------------------------|-----------|-----------|*/
+	extern int limiter;
+
+	//constant for limiter
+	extern double epsilon;
 }
 
 namespace meshVar
@@ -143,7 +167,7 @@ rhoEY[elements2DArrSize][maxOrder];*/
 extern std::vector<std::vector<double>> rhoY, rhouY, rhovY, rhoEY;
 
 //time step
-extern double dt;
+extern double dt, runTime;
 
 //Limiting coefficients
 extern std::vector<double>
@@ -152,34 +176,5 @@ theta2Arr;
 
 //Mean values
 extern std::vector<std::vector<double>> meanVals;
-
-//system settings
-namespace sysSetting
-{
-	/*
-	time discretization scheme	|keyWord	|index		|
-	----------------------------|-----------|-----------|
-	-Euler						|Euler		|1			|
-	-Runge-Kutta 2 order		|RK2		|2			|
-	-Runge-Kutta 3 order		|RK3		|3			|
-	-Total Variation Diminishing|TVDRK2		|4			|
-	Runge-Kutta 2 order			|			| 			|
-	-Total Variation Diminishing|TVDRK2		|5			|
-	Runge-Kutta 3 order			|			| 			|
-	----------------------------|-----------|-----------|*/
-	extern int ddtScheme;
-
-	/*
-	limiting scheme				|keyWord	|index		|
-	----------------------------|-----------|-----------|
-	-Positivity preserving		|Pp			|1			|
-	-off						|off		|0			|
-	----------------------------|-----------|-----------|*/
-	extern int limiter;
-
-	//constant for limiter
-	extern double epsilon;
-}
-
 
 #endif // VARDECLARATION_H_INCLUDED
