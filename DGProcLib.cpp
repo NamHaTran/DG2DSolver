@@ -1,15 +1,12 @@
 #include "DGProcLib.h"
 #include "DGMath.h"
 #include "varDeclaration.h"
-//#include <math.h>
 #include "DGAuxUltilitiesLib.h"
 #include <tuple>
 #include "DGBCsLib.h"
 #include <algorithm>
 #include "DGIOLib.h"
 
-
-//NamTH123 - test Github
 namespace meshParam
 {
 	void GaussParam()
@@ -1130,7 +1127,7 @@ namespace process
 		bool run(true);
 		if (runTime >= systemVar::Ttime)
 		{
-			run = false;
+			run = false;  //stop running if runtime bigger than Ttime (total time)
 		}
 		return run;
 	}
