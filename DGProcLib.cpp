@@ -6,6 +6,7 @@
 #include "DGBCsLib.h"
 #include <algorithm>
 #include "DGIOLib.h"
+#include <iostream>
 
 namespace meshParam
 {
@@ -140,31 +141,42 @@ namespace process
 		iniValues::rhoIni = iniValues::pIni / (material::R*iniValues::TIni);
 		material::Cp = material::R*material::gamma / (material::gamma - 1);
 		material::Cv = material::Cp - material::R;
-		iniValues::eIni = material::Cv*iniValues::TIni + 0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2) + pow(iniValues::wIni, 2));
+		iniValues::eIni = material::Cv*iniValues::TIni; //+0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2) + pow(iniValues::wIni, 2));
 		iniValues::muIni = math::CalcVisCoef(iniValues::TIni);
 
-		/*rho*/
-		std::vector<double> iniRho(mathVar::orderElem);
+		/*
+		
+		std::vector<double> iniRho(mathVar::orderElem + 1);
 		iniRho = process::calcIniValues(iniValues::rhoIni);
-		/*rhou*/
-		std::vector<double> iniRhou(mathVar::orderElem);
+		
+		std::vector<double> iniRhou(mathVar::orderElem + 1);
 		iniRhou = process::calcIniValues(iniValues::rhoIni*iniValues::uIni);
-		/*rhov*/
-		std::vector<double> iniRhov(mathVar::orderElem);
+		
+		std::vector<double> iniRhov(mathVar::orderElem + 1);
 		iniRhov = process::calcIniValues(iniValues::rhoIni*iniValues::vIni);
-		/*rhoE*/
-		std::vector<double> iniRhoE(mathVar::orderElem);
+		
+		std::vector<double> iniRhoE(mathVar::orderElem + 1);
 		iniRhoE = process::calcIniValues(iniValues::rhoIni*iniValues::eIni);
-
+		*/
+		
 		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 		{
+			/*
 			for (int i = 0; i <= mathVar::orderElem; i++)
 			{
+				
 				rho[nelem][i] = iniRho[i];
 				rhou[nelem][i] = iniRhou[i];
 				rhov[nelem][i] = iniRhov[i];
 				rhoE[nelem][i] = iniRhoE[i];
+				
+				
 			}
+			*/
+			rho[nelem][0] = iniValues::rhoIni;
+			rhou[nelem][0] = iniValues::rhoIni*iniValues::uIni;
+			rhov[nelem][0] = iniValues::rhoIni*iniValues::vIni;
+			rhoE[nelem][0] = iniValues::rhoIni*(iniValues::eIni + 0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2)));
 		}
 	}
 
@@ -343,10 +355,10 @@ namespace process
 
 			for (int order = 0; order <= mathVar::orderElem; order++)
 			{
-				rhoVolInt[order] += process::volumeInte(element, rhoGsVol, order, dir);
-				rhouVolInt[order] += process::volumeInte(element, rhouGsVol, order, dir);
-				rhovVolInt[order] += process::volumeInte(element, rhovGsVol, order, dir);
-				rhoVolInt[order] += process::volumeInte(element, rhoEGsVol, order, dir);
+				rhoVolInt[order] = process::volumeInte(element, rhoGsVol, order, dir);
+				rhouVolInt[order] = process::volumeInte(element, rhouGsVol, order, dir);
+				rhovVolInt[order] = process::volumeInte(element, rhovGsVol, order, dir);
+				rhoEVolInt[order] = process::volumeInte(element, rhoEGsVol, order, dir);
 			}
 		}
 
@@ -368,7 +380,7 @@ namespace process
 				rhoEFluxTemp(mathVar::nGauss + 1, 0.0);
 
 			/*1. Calculate flux of conservative variables at all Gauss points on all faces of element*/
-			process::auxEq::getGaussVecterOfConserVar(element, rhoFlux, rhouFlux, rhovFlux, rhoEFlux, dir);
+			process::auxEq::getGaussVectorOfConserVar(element, rhoFlux, rhouFlux, rhovFlux, rhoEFlux, dir);
 
 			/*2. Calculates surface integrals of all conservative variables at all order*/
 			for (int order = 0; order <= mathVar::orderElem; order++)
@@ -380,7 +392,7 @@ namespace process
 						rhoFluxTemp[nG] = rhoFlux[nG][nface];
 						rhouFluxTemp[nG] = rhouFlux[nG][nface];
 						rhovFluxTemp[nG] = rhovFlux[nG][nface];
-						rhoEFluxTemp[nG] = rhoEFlux[nG][nface];
+						rhoEFluxTemp[nG] = rhoEFlux[nG][nface];	
 					}
 					rhoSurfInt[order] += process::surfaceInte(element, edgeName, rhoFluxTemp, order);
 					rhouSurfInt[order] += process::surfaceInte(element, edgeName, rhouFluxTemp, order);
@@ -400,7 +412,7 @@ namespace process
 				{
 					std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
 					muGs = math::pointValue(element, a, b, 7, 1);
-					GaussMatrix[na][nb] = math::pointValue(element, a, b, 1, 2)*muGs;
+					GaussMatrix[na][nb] = math::pointValue(element, a, b, valType, 2)*muGs;
 				}
 			}
 			return GaussMatrix;
@@ -431,7 +443,7 @@ namespace process
 			return Flux;
 		}
 
-		void getGaussVecterOfConserVar(int element, std::vector<std::vector<double>> &rhoFlux, std::vector<std::vector<double>> &rhouFlux, std::vector<std::vector<double>> &rhovFlux, std::vector<std::vector<double>> &rhoEFlux, int dir)
+		void getGaussVectorOfConserVar(int element, std::vector<std::vector<double>> &rhoFlux, std::vector<std::vector<double>> &rhouFlux, std::vector<std::vector<double>> &rhovFlux, std::vector<std::vector<double>> &rhoEFlux, int dir)
 		{
 			/*User's guide:
 			Input array rhoFlux, rhouFlux, rhovFlux, rhoEFlux have following form:
@@ -480,26 +492,33 @@ namespace process
 	{
 		void solveNSFEquation()
 		{
+			std::vector<double> rhoError(meshVar::nelem2D, 1.0),
+				rhouError(meshVar::nelem2D, 1.0),
+				rhovError(meshVar::nelem2D, 1.0),
+				rhoEError(meshVar::nelem2D, 1.0);
+
 			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
 			std::vector<double>
-				RHSTerm1(mathVar::orderElem, 0.0),
-				RHSTerm2(mathVar::orderElem, 0.0),
-				RHSTerm3(mathVar::orderElem, 0.0),
-				RHSTerm4(mathVar::orderElem, 0.0),
+				RHSTerm1(mathVar::orderElem + 1, 0.0),
+				RHSTerm2(mathVar::orderElem + 1, 0.0),
+				RHSTerm3(mathVar::orderElem + 1, 0.0),
+				RHSTerm4(mathVar::orderElem + 1, 0.0),
 
-				ddtRhoVector(mathVar::orderElem, 0.0),
-				ddtRhouVector(mathVar::orderElem, 0.0),
-				ddtRhovVector(mathVar::orderElem, 0.0),
-				ddtRhoEVector(mathVar::orderElem, 0.0),
+				ddtRhoVector(mathVar::orderElem + 1, 0.0),
+				ddtRhouVector(mathVar::orderElem + 1, 0.0),
+				ddtRhovVector(mathVar::orderElem + 1, 0.0),
+				ddtRhoEVector(mathVar::orderElem + 1, 0.0),
 
-				rhoVectorN(mathVar::orderElem, 0.0),
-				rhouVectorN(mathVar::orderElem, 0.0),
-				rhovVectorN(mathVar::orderElem, 0.0),
-				rhoEVectorN(mathVar::orderElem, 0.0),
+				rhoVectorN(mathVar::orderElem + 1, 0.0),
+				rhouVectorN(mathVar::orderElem + 1, 0.0),
+				rhovVectorN(mathVar::orderElem + 1, 0.0),
+				rhoEVectorN(mathVar::orderElem + 1, 0.0),
 				
-				UnVector(mathVar::orderElem, 0.0),
+				UnVector(mathVar::orderElem + 1, 0.0),
 				
 				timeStepArr(meshVar::nelem2D,1.0);
+
+			double rhoRes(1.0), rhouRes(1.0), rhovRes(1.0), rhoERes(1.0);
 
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
@@ -551,32 +570,38 @@ namespace process
 				}
 
 				//6) Estimate Residuals
-				double rhoRes(process::Euler::errorEstimate(nelement, ddtRhoVector)),
-					rhouRes(process::Euler::errorEstimate(nelement, ddtRhouVector)),
-					rhovRes(process::Euler::errorEstimate(nelement, ddtRhovVector)),
-					rhoERes(process::Euler::errorEstimate(nelement, ddtRhoEVector));
-				IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
+				//
+				rhoError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhoVector));
+				rhouError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhouVector));
+				rhovError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhovVector));
+				rhoEError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhoEVector));
 
 				//7) Compute local time step
 				timeStepArr[nelement] = process::Euler::localTimeStep(nelement);
+
+				//8) Apply limiter
+				limiter::limiter(nelement);
 			}
 			runTime += dt;
-			dt = *std::min_element(timeStepArr.begin(), timeStepArr.end());  //find min value of vector
+			dt = *std::min_element(timeStepArr.begin(), timeStepArr.end());  //find min value of vector\
+
+			std::tie(rhoRes, rhouRes, rhovRes, rhoERes) = process::Euler::globalErrorEstimate(rhoError, rhouError, rhovError, rhoEError);
+			IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
 		}
 
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
 		void CalcRHSTerm(int element, std::vector<double> &term1RHS, std::vector<double> &term2RHS, std::vector<double> &term3RHS, std::vector<double> &term4RHS)
 		{
 			std::vector<double>
-				VolIntTerm1(mathVar::orderElem, 0.0),
-				VolIntTerm2(mathVar::orderElem, 0.0),
-				VolIntTerm3(mathVar::orderElem, 0.0),
-				VolIntTerm4(mathVar::orderElem, 0.0),
+				VolIntTerm1(mathVar::orderElem + 1, 0.0),
+				VolIntTerm2(mathVar::orderElem + 1, 0.0),
+				VolIntTerm3(mathVar::orderElem + 1, 0.0),
+				VolIntTerm4(mathVar::orderElem + 1, 0.0),
 
-				SurfIntTerm1(mathVar::orderElem, 0.0),
-				SurfIntTerm2(mathVar::orderElem, 0.0),
-				SurfIntTerm3(mathVar::orderElem, 0.0),
-				SurfIntTerm4(mathVar::orderElem, 0.0);
+				SurfIntTerm1(mathVar::orderElem + 1, 0.0),
+				SurfIntTerm2(mathVar::orderElem + 1, 0.0),
+				SurfIntTerm3(mathVar::orderElem + 1, 0.0),
+				SurfIntTerm4(mathVar::orderElem + 1, 0.0);
 
 			/*Volume integral term===========================================================================*/
 			process::NSFEq::calcVolumeIntegralTerms(element, VolIntTerm1, VolIntTerm2, VolIntTerm3, VolIntTerm4);
@@ -636,6 +661,7 @@ namespace process
 			vectorU[0] = math::pointValue(element, a, b, 1, 2);
 			vectorU[1] = math::pointValue(element, a, b, 2, 2);
 			vectorU[2] = math::pointValue(element, a, b, 3, 2);
+			vectorU[3] = math::pointValue(element, a, b, 4, 2);
 
 			vectordUx[0] = math::pointAuxValue(element, a, b, 1, 1);
 			vectordUy[0] = math::pointAuxValue(element, a, b, 1, 2);
@@ -656,7 +682,7 @@ namespace process
 			return ViscousTerm;
 		}
 
-		void calcVolumeIntegralTerms(int element, std::vector<double> VolIntTerm1, std::vector<double> VolIntTerm2, std::vector<double> VolIntTerm3, std::vector<double> VolIntTerm4)
+		void calcVolumeIntegralTerms(int element, std::vector<double> &VolIntTerm1, std::vector<double> &VolIntTerm2, std::vector<double> &VolIntTerm3, std::vector<double> &VolIntTerm4)
 		{
 			/*User's guide:
 			All input array have form:
@@ -773,7 +799,7 @@ namespace process
 			//return VolInt;
 		}
 
-		void calcSurfaceIntegralTerms(int element, std::vector<double> SurfIntTerm1, std::vector<double> SurfIntTerm2, std::vector<double> SurfIntTerm3, std::vector<double> SurfIntTerm4)
+		void calcSurfaceIntegralTerms(int element, std::vector<double> &SurfIntTerm1, std::vector<double> &SurfIntTerm2, std::vector<double> &SurfIntTerm3, std::vector<double> &SurfIntTerm4)
 		{
 			/*User's guide:
 			All input array have form:
@@ -857,10 +883,10 @@ namespace process
 						inviscFlux3Temp[nG] = inviscFlux3[nG][nface];
 						inviscFlux4Temp[nG] = inviscFlux4[nG][nface];
 
-						ViscFlux1Temp[nG] = inviscFlux1[nG][nface];
-						ViscFlux2Temp[nG] = inviscFlux2[nG][nface];
-						ViscFlux3Temp[nG] = inviscFlux3[nG][nface];
-						ViscFlux4Temp[nG] = inviscFlux4[nG][nface];
+						ViscFlux1Temp[nG] = ViscFlux1[nG][nface];
+						ViscFlux2Temp[nG] = ViscFlux1[nG][nface];
+						ViscFlux3Temp[nG] = ViscFlux1[nG][nface];
+						ViscFlux4Temp[nG] = ViscFlux1[nG][nface];
 					}
 					SurfIntTerm1[order] += process::surfaceInte(element, edgeName, inviscFlux1Temp, order) + process::surfaceInte(element, edgeName, ViscFlux1Temp, order);
 					SurfIntTerm2[order] += process::surfaceInte(element, edgeName, inviscFlux2Temp, order) + process::surfaceInte(element, edgeName, ViscFlux2Temp, order);
@@ -912,11 +938,11 @@ namespace process
 
 		std::vector<double> solveTimeMarching(std::vector<double> &ddtArr, std::vector<double> &UnArr)
 		{
-			std::vector<double> OutArr(mathVar::orderElem, 0.0);
+			std::vector<double> OutArr(mathVar::orderElem + 1, 0.0);
 
 			if (systemVar::ddtScheme==1) //Euler scheme
 			{
-				for (int order = 0; order < mathVar::orderElem; order++)
+				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					OutArr[order] = dt * ddtArr[order] + UnArr[order];
 				}
@@ -942,6 +968,10 @@ namespace process
 			double uVal(math::pointValue(element, xC, yC, 2, 1)),
 				vVal(math::pointValue(element, xC, yC, 3, 1)), velocity(0.0),
 				TVal(math::pointValue(element, xC, yC, 6, 1)), aSound(0.0), LocalMach(0.0);
+			if (TVal<=0 || TVal != TVal)
+			{
+				std::cout << "Negative T is detected at element " << element << std::endl;
+			}
 
 			velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
 			aSound = math::CalcSpeedOfSound(TVal);
@@ -949,12 +979,12 @@ namespace process
 			size = meshVar::cellSize[element];
 			double muVal(math::CalcVisCoef(TVal));
 
-			deltaT = (1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
+			deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
 
 			return deltaT;
 		}
 
-		double errorEstimate(int element, std::vector<double> &ddtArr)
+		double localErrorEstimate(int element, std::vector<double> &ddtArr)
 		{
 			double xC(-1.0 / 3.0), yC(1.0 / 3.0), errorVal(0.0);
 
@@ -972,6 +1002,15 @@ namespace process
 			}
 
 			return errorVal;
+		}
+
+		std::tuple <double, double, double, double> globalErrorEstimate(std::vector<double> &RhoError, std::vector<double> &RhouError, std::vector<double> &RhovError, std::vector<double> &RhoEError)
+		{
+			double rhoRes(*std::max_element(RhoError.begin(), RhoError.end())),
+				rhouRes(*std::max_element(RhouError.begin(), RhouError.end())),
+				rhovRes(*std::max_element(RhovError.begin(), RhovError.end())),
+				rhoERes(*std::max_element(RhoEError.begin(), RhoEError.end()));
+			return std::make_tuple(rhoRes, rhouRes, rhovRes, rhoERes);
 		}
 	}
 
@@ -1013,14 +1052,14 @@ namespace process
 				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
 				meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
 				meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
-				double meanT(math::CalcTFromPriVar(meanRho, meanRhou, meanRhov, meanRhoE));
+				double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
 				double meanP(math::CalcP(meanT, meanRho));
 				
 				//Compute theta1
 				std::tie(theta1, omega) = math::limiter::calcTheta1Coeff(meanRho, minRho, meanP);
 
 				//Find theta2
-				std::vector<double> vectort(2 * mathVar::nGauss * mathVar::nGauss, 0.0);
+				std::vector<double> vectort(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
 				int index(0);
 
 				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
@@ -1056,11 +1095,11 @@ namespace process
 	{
 		double Int(0.0);
 		std::vector<std::vector<double>> A(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
-		double dBi(0.0), a(0.0), b(0.0);
+		double dBi(0.0);
 
 		for (int na = 0; na <= mathVar::nGauss; na++)
 		{
-			for (int nb = 0; nb <= mathVar::nGauss; na++)
+			for (int nb = 0; nb <= mathVar::nGauss; nb++)
 			{
 				dBi = math::Calc_dBxdBy(elem, order, na, nb, direction);
 				A[na][nb] = dBi * Ui[na][nb];
@@ -1074,10 +1113,9 @@ namespace process
 	double surfaceInte(int elem, int edge, std::vector<double> &FluxVector, int order)
 	{
 		double Bi(0.0), a(0.0), b(0.0), inte(0.0);
-		std::vector<double> F(mathVar::nGauss, 0.0);
-		double Int(0.0);
+		std::vector<double> F(mathVar::nGauss + 1, 0.0);
 
-		inte = 0.0;  //value of integral is reset for each order
+		//inte = 0.0;  //value of integral is reset for each order
 		for (int nG = 0; nG <= mathVar::nGauss; nG++)
 		{
 			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, elem, nG);
@@ -1085,10 +1123,9 @@ namespace process
 			Bi = mathVar::B[order];
 			F[nG] = Bi * FluxVector[nG];
 		}
-		inte += math::surfaceInte(F, edge, elem);
-		Int = inte;
+		inte = math::surfaceInte(F, edge, elem);
 
-		return Int;
+		return inte;
 	}
 
 	std::vector<std::vector<double>> calculateStiffMatrix(int element)

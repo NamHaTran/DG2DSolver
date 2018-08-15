@@ -9,28 +9,31 @@
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
 Velocity conditions (m/s)
-initialValue			0 0 0
-Inlet
+initialValue			401 0 0
+inlet
 {
 	Group 1
-	Type				noSlip
+	Type				inOutFlow
+	value				400 0 0
 }
  
-Outlet
+wall
 {
 	Group 2
 	Type				noSlip
 }
  
-ZeroGrad
+outlet1
 {
 	Group 3
-	Type				noSlip
+	Type				fixedValue
+	value				400 0 0
 }
  
-FlatePlate
+outlet2
 {
 	Group 4
-	Type				noSlip
+	Type				inOutFlow
+	value				400 0 0
 }
  

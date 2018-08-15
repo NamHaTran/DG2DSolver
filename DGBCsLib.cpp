@@ -55,7 +55,7 @@ std::vector <double> auxEqBCsImplement(int element, int edge, int nG, double n)
 	rhouMinus = MinusVal[1];
 	rhovMinus = MinusVal[2];
 	rhoEMinus = MinusVal[3];
-	double TMinus(math::CalcTFromPriVar(rhoMinus, rhouMinus, rhovMinus, rhoEMinus));
+	double TMinus(math::CalcTFromConsvVar(rhoMinus, rhouMinus, rhovMinus, rhoEMinus));
 	muMinus = math::CalcVisCoef(TMinus);
 
 	/*Calculate fluxes*/
@@ -120,7 +120,7 @@ namespace BCSupportFncs
 		/*If option = 2 (diffusion boundary condition), input values (rhoP, rhouP, rhovP, rhoEP) are derivative type.*/
 		int edgeGrp(auxUlti::getGrpOfEdge(edge));
 		std::vector<double> MinusVal(4, 0.0);
-		int UType(bcValues::UBcType[edgeGrp]), TType(bcValues::TBcType[edgeGrp]), pType(bcValues::pBcType[edgeGrp]), method(meshVar::BoundaryType[edgeGrp][2]);
+		int UType(bcValues::UBcType[edgeGrp - 1]), TType(bcValues::TBcType[edgeGrp - 1]), pType(bcValues::pBcType[edgeGrp - 1]), method(meshVar::BoundaryType[edgeGrp - 1][2]);
 
 		if (option==1)  //advection boundary condition
 		{
@@ -185,7 +185,7 @@ namespace BCSupportFncs
 		std::vector < double > normVector(2, 0.0);
 
 		U[0] = u;
-		U[0] = v;
+		U[1] = v;
 		normVector[0] = nx;
 		normVector[1] = ny;
 
@@ -202,6 +202,10 @@ namespace BCSupportFncs
 	{
 		double vBCx(0.0), vBCy(0.0);
 		std::vector<double> vExternVector(2, 0.0), normVector(2, 0.0);
+		normVector[0] = nx;
+		normVector[1] = ny;
+		vExternVector[0] = vExternx;
+		vExternVector[1] = vExterny;
 		double vExternMag(math::vectorDotProduct(vExternVector, normVector));
 		vBCx = vExternx + (vBCMag - vExternMag)*nx;
 		vBCy = vExterny + (vBCMag - vExternMag)*ny;
@@ -226,7 +230,7 @@ namespace advectionBCs
 			}
 			else if (method == 2)  //weak Prescribed
 			{
-				double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoP*(material::Cv*bcValues::TBC[edgeGrp]));
+				double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]));
 				MinusVal[0] = 2 * rhoBC - rhoP;
 				MinusVal[1] = 2 * rhouBC - rhouP;
 				MinusVal[2] = 2 * rhovBC - rhovP;
@@ -248,7 +252,7 @@ namespace advectionBCs
 			}
 			else if (method == 2)  //weak Prescribed
 			{
-				double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoP*(material::Cv*bcValues::TBC[edgeGrp]));
+				double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoEP);  //value of rhoEBC = rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]), it's usage is not verified!!
 				MinusVal[0] = 2 * rhoBC - rhoP;
 				MinusVal[1] = 2 * rhouBC - rhouP;
 				MinusVal[2] = 2 * rhovBC - rhovP;
@@ -265,8 +269,8 @@ namespace advectionBCs
 			std::vector<double> MinusVal(4, 0.0);
 			double uPlus(rhouP / rhoP), vPlus(rhovP / rhoP);
 			bool inflow(BCSupportFncs::checkInflow(uPlus, vPlus, nx, ny));
-			double TInternal(math::CalcTFromPriVar(rhoP, rhouP, rhovP, rhoEP));
-			//bool subsonic(auxUlti::checkSubSonic(TInternal, uPlus, vPlus)); this line checks subsonic locally, not globally
+			double TInternal(math::CalcTFromConsvVar(rhoP, rhouP, rhovP, rhoEP));
+			bool subsonic(auxUlti::checkSubSonicLocally(TInternal, uPlus, vPlus));// this line checks subsonic locally, not generally
 
 			if (method==1)  //weak Riemann
 			{
@@ -275,22 +279,22 @@ namespace advectionBCs
 				if (inflow==true)
 				{
 					//Apply weak Riemann infinite value
-					MinusVal[0] = bcValues::pBC[edgeGrp] / (material::R*bcValues::TBC[edgeGrp]);
-					MinusVal[1] = MinusVal[0] * bcValues::uBC[edgeGrp];
-					MinusVal[2] = MinusVal[0] * bcValues::vBC[edgeGrp];
-					MinusVal[3] = MinusVal[0] * (bcValues::TBC[edgeGrp] * material::Cv + pow(bcValues::uBC[edgeGrp],2) + pow(bcValues::vBC[edgeGrp], 2));
+					MinusVal[0] = bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]);
+					MinusVal[1] = MinusVal[0] * bcValues::uBC[edgeGrp - 1];
+					MinusVal[2] = MinusVal[0] * bcValues::vBC[edgeGrp - 1];
+					MinusVal[3] = MinusVal[0] * (bcValues::TBC[edgeGrp - 1] * material::Cv + pow(bcValues::uBC[edgeGrp - 1],2) + pow(bcValues::vBC[edgeGrp - 1], 2));
 				}
 				else if (inflow == false)
 				{
 					//Apply Partially non-reflective pressure outflow
-					if (refValues::subsonic == true)
+					if (subsonic == true)
 					{
 						MinusVal[0] = rhoP;
 						MinusVal[1] = rhouP;
 						MinusVal[2] = rhovP;
-						MinusVal[3] = (2 * bcValues::pBC[edgeGrp] - pInternal) / (material::gamma - 1) + 0.5*rhoP*(pow(uPlus, 2) + pow(vPlus, 2));
+						MinusVal[3] = (2 * bcValues::pBC[edgeGrp - 1] - pInternal) / (material::gamma - 1) + 0.5*rhoP*(pow(uPlus, 2) + pow(vPlus, 2));
 					}
-					else if (refValues::subsonic == false)
+					else if (subsonic == false)
 					{
 						MinusVal[0] = rhoP;
 						MinusVal[1] = rhouP;
@@ -305,20 +309,21 @@ namespace advectionBCs
 					pBc(0.0), TBc(0.0), uBc(0.0), vBc(0.0);
 				double vInternalNormMag(0.0), vExternalNormMag(0.0), cInternal(0.0), SBc(0.0);
 				std::vector<double> vInternalVector(2, 0.0), normVector(2, 0.0);
-				double uExternal(bcValues::uBC[edgeGrp]), vExternal(bcValues::vBC[edgeGrp]), cExternal(0.0);
+				double uExternal(bcValues::uBC[edgeGrp - 1]), vExternal(bcValues::vBC[edgeGrp - 1]), cExternal(0.0);
 				std::vector<double> vExternalVector(2, 0.0);
 				double VBc(0.0), cBc(0.0), rhoExternal(0.0);
+				
+				normVector[0] = nx;
+				normVector[1] = ny;
 
-				rhoExternal = bcValues::pBC[edgeGrp] / (material::R*bcValues::TBC[edgeGrp]);
+				rhoExternal = bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]);
 				vExternalVector[0] = uExternal;
 				vExternalVector[1] = vExternal;
 				vExternalNormMag = math::vectorDotProduct(vExternalVector, normVector);
-				cExternal = math::CalcSpeedOfSound(bcValues::TBC[edgeGrp]);
+				cExternal = math::CalcSpeedOfSound(bcValues::TBC[edgeGrp - 1]);
 
 				vInternalVector[0] = uPlus;
 				vInternalVector[1] = vPlus;
-				normVector[0] = nx;
-				normVector[1] = ny;
 				vInternalNormMag = math::vectorDotProduct(vInternalVector, normVector);
 				cInternal = math::CalcSpeedOfSound(TInternal);
 
@@ -351,7 +356,7 @@ namespace advectionBCs
 					}
 					else if (refValues::subsonic == false)
 					{
-						RPlus = vInternalNormMag - (2 * cInternal) / (material::gamma - 1);
+						RMinus = vInternalNormMag - (2 * cInternal) / (material::gamma - 1);
 					}
 					VBc = 0.5*(RPlus + RMinus);
 					cBc = 0.25*(material::gamma - 1)*(RPlus - RMinus);
@@ -406,7 +411,7 @@ namespace auxilaryBCs
 		std::vector <double> noSlipIsoThermal(double rhoP, double rhouP, double rhovP, double rhoEP, int edgeGrp)
 		{
 			std::vector<double> MinusVal(4, 0.0);
-			double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoP*(material::Cv*bcValues::TBC[edgeGrp]));
+			double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]));
 			MinusVal[0] = 2 * rhoBC - rhoP;
 			MinusVal[1] = 2 * rhouBC - rhouP;
 			MinusVal[2] = 2 * rhovBC - rhovP;
@@ -435,10 +440,10 @@ namespace strongBCs
 	std::vector <double> fixedValues(double rhoP, double rhouP, double rhovP, double rhoEP, int edgeGrp)
 	{
 		std::vector<double> MinusVal(4, 0.0);
-		double rhoBC(bcValues::pBC[edgeGrp] / (material::R*bcValues::TBC[edgeGrp])),
-			rhouBC(rhoBC*bcValues::uBC[edgeGrp]),
-			rhovBC(rhoBC*bcValues::vBC[edgeGrp]),
-			rhoEBC(rhoBC*(bcValues::TBC[edgeGrp] * material::Cv + pow(bcValues::uBC[edgeGrp], 2) + pow(bcValues::vBC[edgeGrp], 2)));
+		double rhoBC(bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1])),
+			rhouBC(rhoBC*bcValues::uBC[edgeGrp - 1]),
+			rhovBC(rhoBC*bcValues::vBC[edgeGrp - 1]),
+			rhoEBC(rhoBC*(bcValues::TBC[edgeGrp - 1] * material::Cv + pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2)));
 		MinusVal[0] = 2 * rhoBC - rhoP;
 		MinusVal[1] = 2 * rhouBC - rhouP;
 		MinusVal[2] = 2 * rhovBC - rhovP;

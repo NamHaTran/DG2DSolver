@@ -11,10 +11,13 @@
 	Note: all parameter are in SI unit.
 DGoptions
 {
-	numberOfGaussPoints			2
-	orderOfAccuracy				2
+	numberOfGaussPoints			1
+	orderOfAccuracy				1
 	CourantNumber				0.5
 	totalTime(s)				10
 	writeInterval				100
 	writeLog					true
+	refMach						1.15
+	ddtScheme					Euler
+	limiter						PositivityPreserving
 }

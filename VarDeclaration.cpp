@@ -169,8 +169,8 @@ double runTime(0.0);
 
 //Limiting coefficients
 std::vector<double>
-theta1Arr(elements2DArrSize, 0.0),
-theta2Arr(elements2DArrSize, 0.0);
+theta1Arr(elements2DArrSize, 1.0),
+theta2Arr(elements2DArrSize, 1.0);
 
 /*Mean values
 row1: mean rho

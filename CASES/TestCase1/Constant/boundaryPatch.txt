@@ -10,31 +10,31 @@
 	Program ran at (d-m-y_h-m-s) time
   
 Boundary condition definitions:
-Inlet
+inlet
 {
 	Group				1
-	Type				wall
-	Method				weakRiemann
+	Type				patch
+	Method				weakPrescribed
 }
  
-Outlet
+wall
 {
 	Group				2
 	Type				wall
-	Method				weakRiemann
+	Method				weakPrescribed
 }
  
-ZeroGrad
+outlet1
 {
 	Group				3
-	Type				wall
-	Method				weakRiemann
+	Type				patch
+	Method				weakPrescribed
 }
  
-FlatePlate
+outlet2
 {
 	Group				4
-	Type				wall
-	Method				weakRiemann
+	Type				patch
+	Method				weakPrescribed
 }
  

@@ -3,10 +3,10 @@
 #include <string>
 
 //Maximum size of Points Array & Elements1D Array
-int const pointsArrSize(50000);
+int const pointsArrSize(200000);
 
 //Maximum size of Elements2D Array
-int const elements2DArrSize(200000);
+int const elements2DArrSize(300000);
 
 //Maximum size of boundary conditions Array
 int const bcSize(10);

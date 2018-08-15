@@ -73,6 +73,9 @@ namespace auxUlti
 	/*Function returns true if problem is subsonic*/
 	bool checkSubSonic();
 
+	/*Function checks subsonic flow locally*/
+	bool checkSubSonicLocally(double TVal, double uVal, double vVal);
+
 	/*Function returns master element and servant element of edge*/
 	std::tuple<int, int> getMasterServantOfEdge(int edge);
 

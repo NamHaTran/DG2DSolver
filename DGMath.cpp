@@ -69,11 +69,11 @@ namespace math
 			{
 				mathVar::B[i] = 1.0;
 			}
-			else if (i==1)
-			{
-				mathVar::B[i] = (3.0*b + 1) / 2.0;
-			}
 			else if (i==2)
+			{
+				mathVar::B[i] = (3.0*b + 1.0) / 2.0;
+			}
+			else if (i==1)
 			{
 				mathVar::B[i] = a * (1 - b);
 			}
@@ -93,12 +93,12 @@ namespace math
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 0;
 			}
-			else if (i == 1)
+			else if (i == 2)
 			{
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 3.0/2.0;
 			}
-			else if (i == 2)
+			else if (i == 1)
 			{
 				mathVar::dBa[i] = 1 - b;
 				mathVar::dBb[i] = -a;
@@ -231,10 +231,10 @@ namespace math
 		double dxa(0.0), dxb(0.0), dya(0.0), dyb(0.0);
 		double jQuad(0.0);
 
-		dxa = (1.0 / 4.0)*(-xA + xB - xD + xC) + (1.0 / 4.4)*(xA - xB - xD + xC)*b;
-		dxb = (1.0 / 4.0)*(-xA - xB + xD + xC) + (1.0 / 4.4)*(xA - xB - xD + xC)*a;
-		dya = (1.0 / 4.0)*(-yA + yB - yD + yC) + (1.0 / 4.4)*(yA - yB - yD + yC)*b;
-		dyb = (1.0 / 4.0)*(-yA - yB + yD + yC) + (1.0 / 4.4)*(yA - yB - yD + yC)*a;
+		dxa = (1.0 / 4.0)*(-xA + xB - xD + xC) + (1.0 / 4.0)*(xA - xB - xD + xC)*b;
+		dxb = (1.0 / 4.0)*(-xA - xB + xD + xC) + (1.0 / 4.0)*(xA - xB - xD + xC)*a;
+		dya = (1.0 / 4.0)*(-yA + yB - yD + yC) + (1.0 / 4.0)*(yA - yB - yD + yC)*b;
+		dyb = (1.0 / 4.0)*(-yA - yB + yD + yC) + (1.0 / 4.0)*(yA - yB - yD + yC)*a;
 		jQuad = dxa * dyb - dxb * dya;
 		return jQuad;
 	}
@@ -318,7 +318,7 @@ namespace math
 	std::vector<double> SolveSysEqs(std::vector< std::vector<double> > &a, std::vector<double> &b)
 	{
 		int n = static_cast<int>(b.size());
-		double eMax(1e-6), e(1.0), sum(0.0), xi(0.0);
+		double eMax(1e-9), e(1.0), sum(0.0), xi(0.0);
 		std::vector<double> results(n, 1.0);
 
 		while (e>eMax)
@@ -345,7 +345,7 @@ namespace math
 	{
 		/* Calculate a*No-b */
 		int n = static_cast<int>(b.size());
-		double rVal(0.0), error;
+		double rVal(0.0), error(1.0);
 		std::vector<double> R(n, 0.0);
 
 		for (int i = 0; i < n; i++)
@@ -378,7 +378,7 @@ namespace math
 		return T;
 	}
 
-	double CalcTFromPriVar(double rho, double rhou, double rhov, double rhoE)
+	double CalcTFromConsvVar(double rho, double rhou, double rhov, double rhoE)
 	{
 		double T(0.0);
 		return (T = (material::gamma - 1)*(rhoE - 0.5*(pow(rhou, 2) + pow(rhov, 2)) / rho) / (material::R*rho));
@@ -464,8 +464,8 @@ namespace math
 			else if (valType == 3)  //v
 			{
 				double rhoVal(limiter::calcConsvVarWthLimiter(element, a, b, 1)),
-					rhouVal(limiter::calcConsvVarWthLimiter(element, a, b, 3));
-				out = rhouVal / rhoVal;
+					rhovVal(limiter::calcConsvVarWthLimiter(element, a, b, 3));
+				out = rhovVal / rhoVal;
 			}
 			else if (valType == 4)  //e
 			{
@@ -473,7 +473,7 @@ namespace math
 					rhouVal(limiter::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(limiter::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(limiter::calcConsvVarWthLimiter(element, a, b, 4));
-				out = material::Cv*math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				out = material::Cv*math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			}
 			else if (valType == 5)  //p
 			{
@@ -481,7 +481,7 @@ namespace math
 					rhouVal(limiter::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(limiter::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(limiter::calcConsvVarWthLimiter(element, a, b, 4));
-				double TVal(math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal));
+				double TVal(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal));
 				out = math::CalcP(TVal, rhoVal);
 			}
 			else if (valType == 6)  //T
@@ -490,7 +490,7 @@ namespace math
 					rhouVal(limiter::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(limiter::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(limiter::calcConsvVarWthLimiter(element, a, b, 4));
-				out = math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				out = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			}
 			else if (valType == 7)  //mu
 			{
@@ -498,7 +498,7 @@ namespace math
 					rhouVal(limiter::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(limiter::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(limiter::calcConsvVarWthLimiter(element, a, b, 4));
-				double TVal(math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal));
+				double TVal(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal));
 				out = math::CalcVisCoef(TVal);
 			}
 		}
@@ -546,7 +546,7 @@ namespace math
 		double valPlus(0.0), valMinus(0.0), aMaster(0.0), bMaster(0.0), aServant(0.0), bServant(0.0);
 
 		std::tie(aMaster, bMaster) = auxUlti::getGaussSurfCoor(edge, masterElem, nG);
-		std::tie(aServant, bServant) = auxUlti::getGaussSurfCoor(edge, masterElem, nG);
+		std::tie(aServant, bServant) = auxUlti::getGaussSurfCoor(edge, servantElem, nG);
 
 		if (masterElem==element)  //considering element is master
 		{
@@ -645,12 +645,14 @@ namespace math
 		std::vector<double> Value(mathVar::orderElem + 1, 0.0);
 
 		Value = auxUlti::getElementAuxValuesOfOrder(element, valType, dir);
+		double muVal(math::pointValue(element, a, b, 7, 1));
 
 		math::basisFc(a, b, mathVar::orderElem);
 		for (int order = 0; order <= mathVar::orderElem; order++)
 		{
 			out += Value[order] * mathVar::B[order];
 		}
+		out = out / muVal;
 		return out;
 	}
 
@@ -665,14 +667,27 @@ namespace math
 	{
 		double delta(B*B - 4 * A*C), out(0.0), root1(0.0), root2(0.0);
 		bool realRoot(true);
-		if (delta>0)
+
+		if (A != 0)
 		{
-			root1 = ((-B + sqrt(delta)) / (2 * A));
-			root2 = ((-B - sqrt(delta)) / (2 * A));
+			if (delta>0)
+			{
+				root1 = ((-B + sqrt(delta)) / (2 * A));
+				root2 = ((-B - sqrt(delta)) / (2 * A));
+			}
+			else if (delta == 0)
+			{
+				root1 = (-B / (2 * A));
+				root2 = root1;
+			}
+			else
+			{
+				realRoot = false;
+			}
 		}
-		else if (delta==0)
+		else if (A == 0.0 && B !=0)
 		{
-			root1 = (-B / (2 * A));
+			root1 = -C / B;
 			root2 = root1;
 		}
 		else
@@ -788,8 +803,8 @@ namespace math
 			uMagM = sqrt(pow(uMinus, 2) + pow(vMinus, 2));
 
 			/*calculate T and P*/
-			TPlus = math::CalcTFromPriVar(rhoPlus, rhouPlus, rhovPlus, rhoEPlus);
-			TMinus = math::CalcTFromPriVar(rhoMinus, rhouMinus, rhovMinus, rhoEMinus);
+			TPlus = math::CalcTFromConsvVar(rhoPlus, rhouPlus, rhovPlus, rhoEPlus);
+			TMinus = math::CalcTFromConsvVar(rhoMinus, rhouMinus, rhovMinus, rhoEMinus);
 			pPlus = math::CalcP(TPlus, rhoPlus);
 			pMinus = math::CalcP(TMinus, rhoMinus);
 			muPlus = math::CalcVisCoef(TPlus);
@@ -852,7 +867,7 @@ namespace math
 			double term1(0.0), term2(0.0), term3(0.0), term4(0.0);
 
 			if (dir==1)  //Ox direction
-			{
+			{ 
 				term1 = rhoVal * uVal;
 				term2 = rhoVal * pow(uVal, 2) + pVal;
 				term3 = rhoVal * uVal*vVal;
@@ -879,7 +894,7 @@ namespace math
 			*/
 			std::vector<std::vector<double>> OutputMatrix(2, std::vector<double>(3, 0.0));
 
-			double dux(0.0), duy(0.0), dvx(0.0), dvy(0.0), rhouVal(0.0), rhovVal, rhoVal(0.0);
+			double dux(0.0), duy(0.0), dvx(0.0), dvy(0.0), dEx(0.0), dEy(0.0), rhouVal(0.0), rhovVal, rhoVal(0.0), rhoEVal(0.0);
 			double drhox(0.0), drhoy(0.0),
 				drhoux(0.0), drhouy(0.0),
 				drhovx(0.0), drhovy(0.0),
@@ -891,6 +906,7 @@ namespace math
 			rhoVal = U[0];
 			rhouVal = U[1];
 			rhovVal = U[2];
+			rhoEVal = U[3];
 
 			uVal = rhouVal / rhoVal;
 			vVal = rhovVal / rhoVal;
@@ -912,6 +928,9 @@ namespace math
 
 			dvx = math::calcRhouvEDeriv(drhovx, drhox, rhovVal, rhoVal);
 			dvy = math::calcRhouvEDeriv(drhovy, drhoy, rhovVal, rhoVal);
+
+			dEx = math::calcRhouvEDeriv(drhoEx, drhox, rhoEVal, rhoVal);
+			dEy = math::calcRhouvEDeriv(drhoEy, drhoy, rhoEVal, rhoVal);
 
 			/*calculate stresses*/
 			for (int i = 0; i < 2; i++)
@@ -935,13 +954,13 @@ namespace math
 			}
 
 			/*calculate heat flux*/
-			dTx = math::calcTDeriv(drhoEx, dux, dvx, uVal, vVal);
-			dTy = math::calcTDeriv(drhoEy, duy, dvy, uVal, vVal);
+			dTx = math::calcTDeriv(dEx, dux, dvx, uVal, vVal);
+			dTy = math::calcTDeriv(dEy, duy, dvy, uVal, vVal);
 			k = math::calcThermalConductivity(muVal);
 			std::tie(Qx, Qy) = math::viscousTerms::calcHeatFluxTerms(dTx, dTy, k);
 
 			OutputMatrix[0][2] = Qx;
-			OutputMatrix[1][2] = Qx;
+			OutputMatrix[1][2] = Qy;
 			return OutputMatrix;
 		}
 
@@ -991,7 +1010,7 @@ namespace math
 			tauYy = StressHeatFlux[1][1];
 			tauXy = StressHeatFlux[0][1];
 			Qx = StressHeatFlux[0][2];
-			Qx = StressHeatFlux[1][2];
+			Qy = StressHeatFlux[1][2];
 
 			if (dir==1)
 			{
@@ -1043,7 +1062,7 @@ namespace math
 		//Function calculates minimum value of rho of quad element
 		double calcMinRhoQuad(int element)
 		{
-			std::vector<double> vectorRho(2 * mathVar::nGauss * mathVar::nGauss, 0.0);
+			std::vector<double> vectorRho(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
 			double aG(0.0), bG(0.0), aGL(0.0), bGL(0.0), min(0.0);
 			int index(0);
 			for (int na = 0; na <= mathVar::nGauss; na++)
@@ -1073,8 +1092,8 @@ namespace math
 			double minVal(0.0);
 
 			vectorRho[0] = math::pointValueNoLimiter(element, -1.0, -1.0, 1, 2);
-			vectorRho[1] += math::pointValueNoLimiter(element, -1.0, 1.0, 1, 2);
-			vectorRho[2] += math::pointValueNoLimiter(element, 1.0, -1.0, 1, 2);
+			vectorRho[1] = math::pointValueNoLimiter(element, -1.0, 1.0, 1, 2);
+			vectorRho[2] = math::pointValueNoLimiter(element, 1.0, -1.0, 1, 2);
 			minVal = *std::min_element(vectorRho.begin(), vectorRho.end());
 			return minVal;
 		}
@@ -1090,21 +1109,21 @@ namespace math
 			rhouVal = math::pointValueNoLimiter(element, -1.0, -1.0, 2, 2);
 			rhovVal = math::pointValueNoLimiter(element, -1.0, -1.0, 3, 2);
 			rhoEVal = math::pointValueNoLimiter(element, -1.0, -1.0, 4, 2);
-			TVal = math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			vectorP[0] = math::CalcP(TVal, rhoVal);
 
 			rhoVal = math::pointValueNoLimiter(element, -1.0, 1.0, 1, 2);
 			rhouVal = math::pointValueNoLimiter(element, -1.0, 1.0, 2, 2);
 			rhovVal = math::pointValueNoLimiter(element, -1.0, 1.0, 3, 2);
 			rhoEVal = math::pointValueNoLimiter(element, -1.0, 1.0, 4, 2);
-			TVal = math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			vectorP[1] = math::CalcP(TVal, rhoVal);
 
 			rhoVal = math::pointValueNoLimiter(element, 1.0, -1.0, 1, 2);
 			rhouVal = math::pointValueNoLimiter(element, 1.0, -1.0, 2, 2);
 			rhovVal = math::pointValueNoLimiter(element, 1.0, -1.0, 3, 2);
 			rhoEVal = math::pointValueNoLimiter(element, 1.0, -1.0, 4, 2);
-			TVal = math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			vectorP[2] = math::CalcP(TVal, rhoVal);
 
 			minVal = *std::min_element(vectorP.begin(), vectorP.end());
@@ -1194,7 +1213,7 @@ namespace math
 			rhovVal = math::pointValueNoLimiter(element, a, b, 3, 2);
 			rhoEVal = math::pointValueNoLimiter(element, a, b, 4, 2);
 
-			TVal = math::CalcTFromPriVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			pVal = math::CalcP(TVal, rhoVal);
 
 			if (pVal < systemVar::epsilon)
@@ -1304,7 +1323,7 @@ namespace math
 			}
 
 			xCG = xCG / type;
-			xCG = xCG / type;
+			yCG = yCG / type;
 			return std::make_tuple(xCG, yCG);
 		}
 
@@ -1331,32 +1350,32 @@ namespace math
 			std::vector<double> xCGSubTri(4, 0.0), yCGSubTri(4, 0.0), subTriArea(4,0.0);
 			double xC(0.0), yC(0.0);
 			//1. point 0, 1
-			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 0);
-			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 1);
+			std::tie(xSubTriCoor[0], ySubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 0);
+			std::tie(xSubTriCoor[1], ySubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 1);
 			xSubTriCoor[2] = xCG;
 			ySubTriCoor[2] = yCG;
 			std::tie(xCGSubTri[0], yCGSubTri[0]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
 			subTriArea[0] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
 
 			//2. point 1, 2
-			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 1);
-			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 2);
+			std::tie(xSubTriCoor[0], ySubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 1);
+			std::tie(xSubTriCoor[1], ySubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 2);
 			xSubTriCoor[2] = xCG;
 			ySubTriCoor[2] = yCG;
 			std::tie(xCGSubTri[1], yCGSubTri[1]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
 			subTriArea[1] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
 
 			//3. point 2, 3
-			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 2);
-			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 3);
+			std::tie(xSubTriCoor[0], ySubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 2);
+			std::tie(xSubTriCoor[1], ySubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 3);
 			xSubTriCoor[2] = xCG;
 			ySubTriCoor[2] = yCG;
 			std::tie(xCGSubTri[2], yCGSubTri[2]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
 			subTriArea[2] = math::geometricOp::calcPolygonArea(xSubTriCoor, ySubTriCoor, 3);
 
 			//4. point 3, 0
-			std::tie(xSubTriCoor[0], xSubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 3);
-			std::tie(xSubTriCoor[1], xSubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 0);
+			std::tie(xSubTriCoor[0], ySubTriCoor[0]) = auxUlti::getElemCornerCoord(element, 3);
+			std::tie(xSubTriCoor[1], ySubTriCoor[1]) = auxUlti::getElemCornerCoord(element, 0);
 			xSubTriCoor[2] = xCG;
 			ySubTriCoor[2] = yCG;
 			std::tie(xCGSubTri[3], yCGSubTri[3]) = math::geometricOp::calcGeoCenter(xSubTriCoor, ySubTriCoor, 3);
@@ -1364,8 +1383,8 @@ namespace math
 
 			for (int i = 0; i < 4; i++)
 			{
-				xC = subTriArea[i] * xCGSubTri[i];
-				yC = subTriArea[i] * yCGSubTri[i];
+				xC += subTriArea[i] * xCGSubTri[i];
+				yC += subTriArea[i] * yCGSubTri[i];
 			}
 			xC = xC / area;
 			yC = yC / area;

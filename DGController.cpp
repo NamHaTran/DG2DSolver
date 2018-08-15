@@ -52,6 +52,16 @@ void Processing()
 	auxUlti::ConserToPri();
 
 	//std::cout << meshVar::BoundaryType;
+	std::cout << " \n" << "Simulation is started\n";
+
+	//Calculate initial limiter coefficients
+	for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+	{
+		process::limiter::limiter(nelem);
+	}
+	meanVals;
+	theta1Arr;
+	theta2Arr;
 
 	while (process::checkRunningCond)
 	{
@@ -60,6 +70,13 @@ void Processing()
 
 		//SOLVE NSF EQUATION
 		process::NSFEq::solveNSFEquation();
+
+		rho;
+		rhou;
+		rhov;
+		rhoE;
+		theta1Arr;
+		theta2Arr;
 	}
 }
 
@@ -90,7 +107,7 @@ void PreProcessing()
 	/*CALCULATE COORDINATES DERIVATIVES*/
 	meshParam::derivCoordinates();
 
-	debugTool::checkElemInfor(2029);
+	//debugTool::checkElemInfor(2029);
 }
 
 void PostProcessing()

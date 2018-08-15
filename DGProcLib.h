@@ -47,7 +47,7 @@ namespace process
 		std::vector<std::vector<double>> getGaussMatrixOfConserVar(int element, int valType);
 
 		/*Function returns vector of flux of all conservative variables at all faces of element*/
-		void getGaussVecterOfConserVar(int element, std::vector<std::vector<double>> &rhoFlux, std::vector<std::vector<double>> &rhouFlux, std::vector<std::vector<double>> &rhovFlux, std::vector<std::vector<double>> &rhoEFlux, int dir);
+		void getGaussVectorOfConserVar(int element, std::vector<std::vector<double>> &rhoFlux, std::vector<std::vector<double>> &rhouFlux, std::vector<std::vector<double>> &rhovFlux, std::vector<std::vector<double>> &rhoEFlux, int dir);
 
 		/*Function returns vector content Gauss values of flux of <valType> conservative variable at all Gauss points on the edge,
 		use only for auxilary equation*/
@@ -75,10 +75,10 @@ namespace process
 		std::vector<std::vector<double>> calcGaussViscousTerm(int element, double a, double b);
 
 		/*Function calculates volume integral terms in NSF equation at ONLY ONE ORDER*/
-		void calcVolumeIntegralTerms(int element, std::vector<double> VolIntTerm1, std::vector<double> VolIntTerm2, std::vector<double> VolIntTerm3, std::vector<double> VolIntTerm4);
+		void calcVolumeIntegralTerms(int element, std::vector<double> &VolIntTerm1, std::vector<double> &VolIntTerm2, std::vector<double> &VolIntTerm3, std::vector<double> &VolIntTerm4);
 
 		/*Function calculates surface integral terms in NSF equation at ONLY ONE ORDER*/
-		void calcSurfaceIntegralTerms(int element, std::vector<double> SurfIntTerm1, std::vector<double> SurfIntTerm2, std::vector<double> SurfIntTerm3, std::vector<double> SurfIntTerm4);
+		void calcSurfaceIntegralTerms(int element, std::vector<double> &SurfIntTerm1, std::vector<double> &SurfIntTerm2, std::vector<double> &SurfIntTerm3, std::vector<double> &SurfIntTerm4);
 
 		/*Function calculates flux at nGauss point of all conservative variables at internal egde*/
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);
@@ -93,7 +93,10 @@ namespace process
 		double localTimeStep(int element);
 
 		/*Function computes time derivative at centroid of standard cell*/
-		double errorEstimate(int element, std::vector<double> &ddtArr);
+		double localErrorEstimate(int element, std::vector<double> &ddtArr);
+
+		/*Function computes global errors*/
+		std::tuple <double, double, double, double> globalErrorEstimate(std::vector<double> &RhoError, std::vector<double> &RhouError, std::vector<double> &RhovError, std::vector<double> &RhoEError);
 	}
 
 	namespace limiter

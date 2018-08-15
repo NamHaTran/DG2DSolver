@@ -346,19 +346,33 @@ namespace IO
 		/*Read DGOptions*/
 		std::string DGOptfileName("DGOptions.txt");
 		std::string DGOptLoc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System");
-		std::string DGOptkeyWordsDouble[2] = { "CourantNumber", "totalTime(s)" }, DGOptkeyWordsInt[3] = { "numberOfGaussPoints", "orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[1] = { "writeLog" }, DGOptkeyWordsStr[1] = {};
-		double DGOptoutDB[2] = {};
+		std::string DGOptkeyWordsDouble[3] = { "CourantNumber", "totalTime(s)", "refMach" }, DGOptkeyWordsInt[3] = { "numberOfGaussPoints", "orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[1] = { "writeLog" }, DGOptkeyWordsStr[2] = {"ddtScheme", "limiter"};
+		double DGOptoutDB[3] = {};
 		int DGOptoutInt[3] = {};
 		bool DGOptoutBool[1] = {};
-		std::string DGOptoutStr[1] = {};
+		std::string DGOptoutStr[2] = {};
 
-		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 2, 3, 1, 0);
+		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 3, 3, 1, 2);
 		
 		systemVar::CFL = DGOptoutDB[0];
 		systemVar::Ttime = DGOptoutDB[1];
+		refValues::Ma = DGOptoutDB[2];
 		mathVar::nGauss = DGOptoutInt[0];
 		mathVar::orderElem = DGOptoutInt[1];
 		systemVar::wrtI = DGOptoutBool[0];
+
+		if (DGOptoutStr[0].compare("Euler") == 0)
+		{
+			systemVar::ddtScheme = 1;
+		}
+		if (DGOptoutStr[1].compare("PositivityPreserving") == 0)
+		{
+			systemVar::limiter = 1;
+		}
+		else
+		{
+			systemVar::limiter = 0;
+		}
 
 		if (mathVar::orderElem>pow(mathVar::nGauss,2))
 		{
@@ -588,9 +602,9 @@ namespace IO
 							if ((str0.compare("fixedValue") == 0))  //Type fixedValue
 							{
 								bcValues::UBcType[bcGrp - 1] = 3;
-								bcValues::uBC[bcGrp - 1] = 0.0;
-								bcValues::vBC[bcGrp - 1] = 0.0;
-								bcValues::wBC[bcGrp - 1] = 0.0;
+								std::getline(FileFlux, line);
+								std::istringstream fixedUStream(line);
+								fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
 							}
 							else if ((str0.compare("inOutFlow") == 0))  //Type inletOutlet
 							{
@@ -859,7 +873,7 @@ namespace IO
 		{
 			std::cout << "Time step: " << dt << std::endl;
 		}
-		std::cout << "Residuals: ddt(rho)=" << rhoRes << ", ddt(rhou)=" << rhouRes << std::endl << "ddt(rhov)=" << rhovRes << ", ddt(rhoE)=" << rhoERes << std::endl;
+		std::cout << "Residuals: ddt(rho)=" << rhoRes << ", ddt(rhou)=" << rhouRes << ", ddt(rhov)=" << rhovRes << ", ddt(rhoE)=" << rhoERes << std::endl << std::endl;
 
 	}
 }

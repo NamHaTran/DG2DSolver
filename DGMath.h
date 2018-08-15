@@ -54,7 +54,7 @@ namespace math
 	double CalcT(int elem, double a, double b);
 
 	/*Function calculates T from rho, rhou, rhov, rhoE (ver 2)*/
-	double CalcTFromPriVar(double rho, double rhou, double rhov, double rhoE);
+	double CalcTFromConsvVar(double rho, double rhou, double rhov, double rhoE);
 
 	/*Function calculates p from T and rho*/
 	double CalcP(double T, double rho);

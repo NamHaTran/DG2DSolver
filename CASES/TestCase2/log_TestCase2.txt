@@ -1,0 +1,4 @@
+log was created at 06-08-2018_23-26-39
+Boundary incompatibility error is detected, please check condition of boundary group 3 in folder /0/. This is considered as fatal error.
+log was created at time
+Cannot open file <D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\TestCase2\small.unv> located at D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\TestCase2

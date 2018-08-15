@@ -119,7 +119,7 @@ namespace auxUlti
 			{
 				u[ielem][i] = rhou[ielem][i] / rho[ielem][i];
 				v[ielem][i] = rhov[ielem][i] / rho[ielem][i];
-				T[ielem][i] = math::CalcTFromPriVar(rho[ielem][i], rhou[ielem][i], rhov[ielem][i], rhoE[ielem][i]);
+				T[ielem][i] = math::CalcTFromConsvVar(rho[ielem][i], rhou[ielem][i], rhov[ielem][i], rhoE[ielem][i]);
 				e[ielem][i] = material::Cv*T[ielem][i];
 				p[ielem][i] = math::CalcP(T[ielem][i], rho[ielem][i]);
 				mu[ielem][i] = math::CalcVisCoef(T[ielem][i]);
@@ -243,28 +243,28 @@ namespace auxUlti
 		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
 		if (type == 1)  //rho
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = rho[element][iorder];
 			}
 		}
 		else if (type == 2)  //rhou
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = rhou[element][iorder];
 			}
 		}
 		else if (type == 3)  //rhov
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = rhov[element][iorder];
 			}
 		}
 		else if (type == 4)  //rhoE
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = rhoE[element][iorder];
 			}
@@ -278,49 +278,49 @@ namespace auxUlti
 		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
 		if (type == 1)  //rho
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = rho[element][iorder];
 			}
 		}
 		else if (type == 2)  //u
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = u[element][iorder];
 			}
 		}
 		else if (type == 3)  //v
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = v[element][iorder];
 			}
 		}
 		else if (type == 4)  //e
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = e[element][iorder];
 			}
 		}
 		else if (type == 5)  //p
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = p[element][iorder];
 			}
 		}
 		else if (type == 6)  //T
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = T[element][iorder];
 			}
 		}
 		else if (type == 7)  //mu
 		{
-			for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 			{
 				Out[iorder] = mu[element][iorder];
 			}
@@ -336,28 +336,28 @@ namespace auxUlti
 		{
 			if (type == 1)  //d(rho)x
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhoX[element][iorder];
 				}
 			}
 			else if (type == 2)  //d(rhou)x
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhouX[element][iorder];
 				}
 			}
 			else if (type == 3)  //d(rhov)x
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhovX[element][iorder];
 				}
 			}
 			else if (type == 4)  //d(rhoE)x
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhoEX[element][iorder];
 				}
@@ -367,28 +367,28 @@ namespace auxUlti
 		{
 			if (type == 1)  //d(rho)y
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhoY[element][iorder];
 				}
 			}
 			else if (type == 2)  //d(rhou)y
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhouY[element][iorder];
 				}
 			}
 			else if (type == 3)  //d(rhov)y
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhovY[element][iorder];
 				}
 			}
 			else if (type == 4)  //d(rhoE)y
 			{
-				for (int iorder = 0; iorder < mathVar::orderElem; iorder++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
 					Out[iorder] = rhoEY[element][iorder];
 				}
@@ -438,6 +438,20 @@ namespace auxUlti
 					break;
 				}
 			}
+		}
+		return Out;
+	}
+
+	bool checkSubSonicLocally(double TVal, double uVal, double vVal)
+	{
+		bool Out(true);
+		double SpeedOfSound(sqrt(material::gamma*material::R*TVal)),
+			Velocity(sqrt(uVal*uVal + vVal * vVal));
+
+		double Mach(Velocity / SpeedOfSound);
+		if (Mach >= 1.0)
+		{
+			Out = false;
 		}
 		return Out;
 	}
