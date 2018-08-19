@@ -185,6 +185,12 @@ namespace math
 	//Function solves quadratic equation
 	std::tuple<bool, double, double> solvQuadraticEq(double A, double B, double C);
 
+	//Function computes value of primary and conservative variables at center of cell
+	double centerValue(int element, int valType, int valKind);
+
+	//Function computes value of auxilary variables at center of cell
+	double centerAuxValue(int element, int valType, int dir);
+
 	namespace numericalFluxes
 	{
 		/*Function calculates auxilary flux at Gauss point*/

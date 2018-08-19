@@ -24,6 +24,9 @@ Boundary conditions compatibility
 |3.	fixedValue		|4. fixedValue		|3. fixedValue		||fixedValues		|interiorExtrapolate|fixedValues		|
 |	value u v w		|	value T			|	value p			||					|					|					|
 +-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
+|4.	zeroGradient	|5. zeroGradient	|2. zeroGradient	||zeroGradient		|interiorExtrapolate|zeroGradient		|
+|	value u v w		|	value T			|	value p			||					|					|					|
++-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
 */
 
 std::vector <double> auxEqBCsImplement(int element, int edge, int nG, double n)
@@ -39,7 +42,7 @@ std::vector <double> auxEqBCsImplement(int element, int edge, int nG, double n)
 		rhovMinus(0.0),
 		rhoEPlus(0.0),
 		rhoEMinus(0.0);
-	double a(0.0), b(0.0);
+	double a(0.0), b(0.0), nx(auxUlti::getNormVectorComp(element, edge, 1)), ny(auxUlti::getNormVectorComp(element, edge, 2));
 
 	std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
 	rhoPlus = math::pointValue(element, a, b, 1, 2);
@@ -50,7 +53,7 @@ std::vector <double> auxEqBCsImplement(int element, int edge, int nG, double n)
 	/*NOTE: can use math::SurfaceValueFromMaster to calculate plus values, but it will decrease perfomance*/
 
 	/*Apply boundary condition*/
-	MinusVal = BCSupportFncs::boundaryMinusValsCalculator(3, edge, rhoPlus, rhouPlus, rhovPlus, rhoEPlus, 0.0, 0.0);
+	MinusVal = BCSupportFncs::boundaryMinusValsCalculator(3, element, edge, rhoPlus, rhouPlus, rhovPlus, rhoEPlus, nx, ny);
 	rhoMinus = MinusVal[0];
 	rhouMinus = MinusVal[1];
 	rhovMinus = MinusVal[2];
@@ -103,10 +106,10 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 	/*NOTE: can use math::SurfaceValueFromMaster to calculate plus values, but it will decrease perfomance*/
 
 	/*Apply boundary condition*/
-	UMinus = BCSupportFncs::boundaryMinusValsCalculator(1, edge, UPlus[0], UPlus[1], UPlus[2], UPlus[3], nx, ny);
+	UMinus = BCSupportFncs::boundaryMinusValsCalculator(1, element, edge, UPlus[0], UPlus[1], UPlus[2], UPlus[3], nx, ny);
 
-	dUXMinus = BCSupportFncs::boundaryMinusValsCalculator(2, edge, dUXPlus[0], dUXPlus[1], dUXPlus[2], dUXPlus[3], 0.0, 0.0);
-	dUYMinus = BCSupportFncs::boundaryMinusValsCalculator(2, edge, dUYPlus[0], dUYPlus[1], dUYPlus[2], dUYPlus[3], 0.0, 0.0);
+	dUXMinus = BCSupportFncs::boundaryMinusValsCalculator(2, element, edge, dUXPlus[0], dUXPlus[1], dUXPlus[2], dUXPlus[3], 0.0, 0.0);
+	dUYMinus = BCSupportFncs::boundaryMinusValsCalculator(2, element, edge, dUYPlus[0], dUYPlus[1], dUYPlus[2], dUYPlus[3], 0.0, 0.0);
 
 	/*Calculate fluxes*/
 	Fluxes = math::numericalFluxes::NSFEqFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
@@ -115,17 +118,50 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 
 namespace BCSupportFncs
 {
-	std::vector <double> boundaryMinusValsCalculator(int option, int edge, double rhoP, double rhouP, double rhovP, double rhoEP, double nx, double ny)
+	std::vector <double> boundaryMinusValsCalculator(int option, int element, int edge, double rhoP, double rhouP, double rhovP, double rhoEP, double nx, double ny)
 	{
 		/*If option = 2 (diffusion boundary condition), input values (rhoP, rhouP, rhovP, rhoEP) are derivative type.*/
 		int edgeGrp(auxUlti::getGrpOfEdge(edge));
 		std::vector<double> MinusVal(4, 0.0);
 		int UType(bcValues::UBcType[edgeGrp - 1]), TType(bcValues::TBcType[edgeGrp - 1]), pType(bcValues::pBcType[edgeGrp - 1]), method(meshVar::BoundaryType[edgeGrp - 1][2]);
 
-		if (option==1)  //advection boundary condition
+		if (option==1 || option == 3)  //advection boundary condition
 		{
 			if (UType == 1 && TType == 1 && pType == 1)
 			{
+				MinusVal = advectionBCs::patch::inOutFlow(method, edgeGrp, rhoP, rhouP, rhovP, rhoEP, nx, ny);  //working
+			}
+			else if (UType == 2 && TType == 2 && pType == 2)
+			{
+				MinusVal = advectionBCs::wall::noSlipIsoThermal(method, edgeGrp, rhoP, rhouP, rhovP, rhoEP);
+			}
+			else if (UType == 2 && TType == 3 && pType == 2)
+			{
+				MinusVal = advectionBCs::wall::noSlipAdiabatic(method, element, edgeGrp, rhoP, rhouP, rhovP, rhoEP);  //working
+			}
+			else if (UType == 3 && TType == 4 && pType == 3)
+			{
+				MinusVal = strongBCs::fixedValues(rhoP, rhouP, rhovP, rhoEP, edgeGrp);  //working
+			}
+			else if (UType == 4 && TType == 5 && pType == 2)
+			{
+				MinusVal = advectionBCs::patch::zeroGradient(element, rhoP, rhouP, rhovP, rhoEP);  //working
+			}
+			else
+			{
+				std::string errorStr = message::BcCompatibleError(edgeGrp);
+				message::writeLog(systemVar::pwd, systemVar::caseName, errorStr);
+			}
+		}
+		else if (option==2)  //diffusion boundary condition
+		{
+			MinusVal = diffusionBCs::interiorExtrapolate(rhoP, rhouP, rhovP, rhoEP);
+		}
+		/*else if (option==3)  //auxilary boundary condition
+		{
+			if (UType==1 && TType==1 && pType==1)
+			{
+				//MinusVal = auxilaryBCs::patch::inOutFlow(rhoP, rhouP, rhovP, rhoEP);
 				MinusVal = advectionBCs::patch::inOutFlow(method, edgeGrp, rhoP, rhouP, rhovP, rhoEP, nx, ny);
 			}
 			else if (UType == 2 && TType == 2 && pType == 2)
@@ -140,33 +176,9 @@ namespace BCSupportFncs
 			{
 				MinusVal = strongBCs::fixedValues(rhoP, rhouP, rhovP, rhoEP, edgeGrp);
 			}
-			else
+			else if (UType == 4 && TType == 5 && pType == 2)
 			{
-				std::string errorStr = message::BcCompatibleError(edgeGrp);
-				message::writeLog(systemVar::pwd, systemVar::caseName, errorStr);
-			}
-		}
-		else if (option==2)  //diffusion boundary condition
-		{
-			MinusVal = diffusionBCs::interiorExtrapolate(rhoP, rhouP, rhovP, rhoEP);
-		}
-		else if (option==3)  //auxilary boundary condition
-		{
-			if (UType==1 && TType==1 && pType==1)
-			{
-				MinusVal = auxilaryBCs::patch::inOutFlow(rhoP, rhouP, rhovP, rhoEP);
-			}
-			else if (UType == 2 && TType == 2 && pType == 2)
-			{
-				MinusVal=auxilaryBCs::wall::noSlipIsoThermal(rhoP, rhouP, rhovP, rhoEP, edgeGrp);
-			}
-			else if (UType == 2 && TType == 3 && pType == 2)
-			{
-				MinusVal = auxilaryBCs::wall::noSlipAdiabatic(rhoP, rhouP, rhovP, rhoEP);
-			}
-			else if (UType == 3 && TType == 4 && pType == 3)
-			{
-				MinusVal=strongBCs::fixedValues(rhoP, rhouP, rhovP, rhoEP, edgeGrp);
+				MinusVal = advectionBCs::patch::zeroGradient(rhoP, rhouP, rhovP, rhoEP);
 			}
 			else
 			{
@@ -174,6 +186,7 @@ namespace BCSupportFncs
 				message::writeLog(systemVar::pwd, systemVar::caseName, errorStr);
 			}
 		}
+		*/
 		return MinusVal;
 	}
 
@@ -191,7 +204,7 @@ namespace BCSupportFncs
 
 		normUMag = math::vectorDotProduct(U,normVector);
 
-		if (normUMag>=0)
+		if (normUMag>0)
 		{
 			inflow = false;
 		}
@@ -223,10 +236,12 @@ namespace advectionBCs
 
 			if (method == 1)  //weak Riemann
 			{
+				double rhoEBC(rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]));
 				MinusVal[0] = rhoP;
 				MinusVal[1] = -rhouP;
 				MinusVal[2] = -rhovP;
-				MinusVal[3] = rhoEP;
+				//MinusVal[3] = rhoEP;
+				MinusVal[2] = rhoEBC;
 			}
 			else if (method == 2)  //weak Prescribed
 			{
@@ -239,9 +254,13 @@ namespace advectionBCs
 			return MinusVal;
 		}
 
-		std::vector <double> noSlipAdiabatic(int method, int edgeGrp, double rhoP, double rhouP, double rhovP, double rhoEP)
+		std::vector <double> noSlipAdiabatic(int method, int element, int edgeGrp, double rhoP, double rhouP, double rhovP, double rhoEP)
 		{
 			std::vector<double> MinusVal(4, 0.0);
+			double rhoBC(math::centerValue(element, 1, 2)),
+				rhouBC(0.0),
+				rhovBC(0.0),
+				rhoEBC(math::centerValue(element, 4, 2));
 
 			if (method == 1)  //weak Riemann
 			{
@@ -252,7 +271,7 @@ namespace advectionBCs
 			}
 			else if (method == 2)  //weak Prescribed
 			{
-				double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoEP);  //value of rhoEBC = rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]), it's usage is not verified!!
+				//double rhoBC(rhoP), rhouBC(0.0), rhovBC(0.0), rhoEBC(rhoEP);  //value of rhoEBC = rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]), it's usage is not verified!!
 				MinusVal[0] = 2 * rhoBC - rhoP;
 				MinusVal[1] = 2 * rhouBC - rhouP;
 				MinusVal[2] = 2 * rhovBC - rhovP;
@@ -270,7 +289,7 @@ namespace advectionBCs
 			double uPlus(rhouP / rhoP), vPlus(rhovP / rhoP);
 			bool inflow(BCSupportFncs::checkInflow(uPlus, vPlus, nx, ny));
 			double TInternal(math::CalcTFromConsvVar(rhoP, rhouP, rhovP, rhoEP));
-			bool subsonic(auxUlti::checkSubSonicLocally(TInternal, uPlus, vPlus));// this line checks subsonic locally, not generally
+			//bool subsonic(auxUlti::checkSubSonicLocally(TInternal, uPlus, vPlus));// this line checks subsonic locally, not generally
 
 			if (method==1)  //weak Riemann
 			{
@@ -282,19 +301,19 @@ namespace advectionBCs
 					MinusVal[0] = bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]);
 					MinusVal[1] = MinusVal[0] * bcValues::uBC[edgeGrp - 1];
 					MinusVal[2] = MinusVal[0] * bcValues::vBC[edgeGrp - 1];
-					MinusVal[3] = MinusVal[0] * (bcValues::TBC[edgeGrp - 1] * material::Cv + pow(bcValues::uBC[edgeGrp - 1],2) + pow(bcValues::vBC[edgeGrp - 1], 2));
+					MinusVal[3] = MinusVal[0] * (bcValues::TBC[edgeGrp - 1] * material::Cv + 0.5*(pow(bcValues::uBC[edgeGrp - 1],2) + pow(bcValues::vBC[edgeGrp - 1], 2)));
 				}
 				else if (inflow == false)
 				{
 					//Apply Partially non-reflective pressure outflow
-					if (subsonic == true)
+					if (refValues::subsonic == true)
 					{
 						MinusVal[0] = rhoP;
 						MinusVal[1] = rhouP;
 						MinusVal[2] = rhovP;
 						MinusVal[3] = (2 * bcValues::pBC[edgeGrp - 1] - pInternal) / (material::gamma - 1) + 0.5*rhoP*(pow(uPlus, 2) + pow(vPlus, 2));
 					}
-					else if (subsonic == false)
+					else if (refValues::subsonic == false)
 					{
 						MinusVal[0] = rhoP;
 						MinusVal[1] = rhouP;
@@ -368,13 +387,67 @@ namespace advectionBCs
 				}
 				rhouBc = rhoBc * uBc;
 				rhovBc = rhoBc * vBc;
-				rhoEBc = rhoBc * (material::Cv*TBc + pow(uBc,2) + pow(vBc,2));
+				rhoEBc = rhoBc * (material::Cv*TBc + 0.5*(pow(uBc,2) + pow(vBc,2)));
 
 				MinusVal[0] = 2 * rhoBc - rhoP;
 				MinusVal[1] = 2 * rhouBc - rhouP;
 				MinusVal[2] = 2 * rhovBc - rhovP;
 				MinusVal[3] = 2 * rhoEBc - rhoEP;
 			}
+			else if (method == 3)  //strong BCS
+			{
+				if (inflow == true)
+				{
+					/*
+					MinusVal[0] = bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]);
+					MinusVal[1] = MinusVal[0] * bcValues::uBC[edgeGrp - 1];
+					MinusVal[2] = MinusVal[0] * bcValues::vBC[edgeGrp - 1];
+					MinusVal[3] = MinusVal[0] * (bcValues::TBC[edgeGrp - 1] * material::Cv + 0.5*(pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2)));*/
+
+					double rhoBC(bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]));
+					double rhouBC(rhoBC * bcValues::uBC[edgeGrp - 1]), rhovBC(rhoBC * bcValues::vBC[edgeGrp - 1]),
+						rhoEBC(rhoBC * (bcValues::TBC[edgeGrp - 1] * material::Cv + 0.5*(pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2))));  //value of rhoEBC = rhoP*(material::Cv*bcValues::TBC[edgeGrp - 1]), it's usage is not verified!!
+					MinusVal[0] = 2 * rhoBC - rhoP;
+					MinusVal[1] = 2 * rhouBC - rhouP;
+					MinusVal[2] = 2 * rhovBC - rhovP;
+					MinusVal[3] = 2 * rhoEBC - rhoEP;
+				}
+				else if (inflow == false)
+				{
+					//Apply Partially non-reflective pressure outflow
+					MinusVal[0] = rhoP;
+					MinusVal[1] = rhouP;
+					MinusVal[2] = rhovP;
+					MinusVal[3] = rhoEP;
+				}
+			}
+			return MinusVal;
+		}
+
+		/*
+		std::vector <double> zeroGradient(double rhoP, double rhouP, double rhovP, double rhoEP)
+		{
+			std::vector<double> MinusVal(4, 0.0);
+			MinusVal[0] = rhoP;
+			MinusVal[1] = rhouP;
+			MinusVal[2] = rhovP;
+			MinusVal[3] = rhoEP;
+			return MinusVal;
+		}
+		*/
+
+		std::vector <double> zeroGradient(int element, double rhoP, double rhouP, double rhovP, double rhoEP)
+		{
+			std::vector<double> MinusVal(4, 0.0);
+			double rhoBC(math::centerValue(element, 1, 2)),
+				rhouBC(math::centerValue(element, 2, 2)),
+				rhovBC(math::centerValue(element, 3, 2)),
+				rhoEBC(math::centerValue(element, 4, 2));
+
+			MinusVal[0] = 2 * rhoBC - rhoP;
+			MinusVal[1] = 2 * rhouBC - rhouP;
+			MinusVal[2] = 2 * rhovBC - rhovP;
+			MinusVal[3] = 2 * rhoEBC - rhoEP;
 			return MinusVal;
 		}
 	}
@@ -397,6 +470,7 @@ namespace auxilaryBCs
 {
 	namespace wall
 	{
+		//for auxilary equation, use the same approach as advective term
 		std::vector <double> noSlipAdiabatic(double rhoP, double rhouP, double rhovP, double rhoEP)
 		{
 			std::vector<double> MinusVal(4, 0.0);
@@ -440,10 +514,10 @@ namespace strongBCs
 	std::vector <double> fixedValues(double rhoP, double rhouP, double rhovP, double rhoEP, int edgeGrp)
 	{
 		std::vector<double> MinusVal(4, 0.0);
-		double rhoBC(bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1])),
-			rhouBC(rhoBC*bcValues::uBC[edgeGrp - 1]),
+		double rhoBC(bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]));
+		double rhouBC(rhoBC*bcValues::uBC[edgeGrp - 1]),
 			rhovBC(rhoBC*bcValues::vBC[edgeGrp - 1]),
-			rhoEBC(rhoBC*(bcValues::TBC[edgeGrp - 1] * material::Cv + pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2)));
+			rhoEBC(rhoBC*(bcValues::TBC[edgeGrp - 1] * material::Cv + 0.5*(pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2))));
 		MinusVal[0] = 2 * rhoBC - rhoP;
 		MinusVal[1] = 2 * rhouBC - rhouP;
 		MinusVal[2] = 2 * rhovBC - rhovP;

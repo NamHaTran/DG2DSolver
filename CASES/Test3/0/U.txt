@@ -10,37 +10,35 @@
 	Program ran at (d-m-y_h-m-s) time
 Velocity conditions (m/s)
 initialValue			400 0 0
-outlet1
+outlet_back
 {
 	Group 1
 	Type				inOutFlow
-	Value 400 0 0
-}
- 
-outlet2
-{
-	Group 2
-	Type				inOutFlow
-	Value 400 0 0
+	value				400 0 0
 }
  
 inlet
 {
-	Group 3
+	Group 2
 	Type				inOutFlow
-	Value 400 0 0
+	value				400 0 0
 }
  
-zero
+front
+{
+	Group 3
+	Type				zeroGradient
+}
+ 
+flat_plate
 {
 	Group 4
-	Type				fixedValue
-	Value 400 0 0
+	Type				noSlip
 }
  
-wall
+outlet
 {
 	Group 5
-	Type				noSlip
+	Type				zeroGradient
 }
  

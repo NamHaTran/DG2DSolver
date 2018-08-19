@@ -41,7 +41,7 @@ namespace advectionBCs
 
 		/*no slip, adiabatic wall boundary condition:
 		The advection term in this case is exactly equivalent to the isothermal no-slip wall BCs*/
-		std::vector <double> noSlipAdiabatic(int method, int edgeGrp, double rhoP, double rhouP, double rhovP, double rhoEP);
+		std::vector <double> noSlipAdiabatic(int method, int element, int edgeGrp, double rhoP, double rhouP, double rhovP, double rhoEP);
 	}
 
 	namespace patch
@@ -49,6 +49,10 @@ namespace advectionBCs
 		/*inflow-outflow boundary condition. This boundary condition uses Riemman invariants to calculates boundary values.
 		It also checks flow direction automatically, a surface with negative surface normal velocity is inlet, a surface with positive surface normal velocity is outlet*/
 		std::vector <double> inOutFlow(int method, int edgeGrp, double rhoP, double rhouP, double rhovP, double rhoEP, double nx, double ny);
+
+		/*zeroGradient boundary condition*/
+		//std::vector <double> zeroGradient(double rhoP, double rhouP, double rhovP, double rhoEP);
+		std::vector <double> zeroGradient(int element, double rhoP, double rhouP, double rhovP, double rhoEP);
 	}
 
 	//symmetry
@@ -91,7 +95,7 @@ namespace BCSupportFncs
 	- option == 1: advection boundary condition
 	- option == 2: diffusion boundary condition
 	- option == 3: auxilary boundary condition*/
-	std::vector <double> boundaryMinusValsCalculator(int option, int edge, double rhoP, double rhouP, double rhovP, double rhoEP, double nx, double ny);
+	std::vector <double> boundaryMinusValsCalculator(int option, int element,int edge, double rhoP, double rhouP, double rhovP, double rhoEP, double nx, double ny);
 
 	/*Function returns true if at considering face (edge), flow is going into computational domain, returns false if flow is going out of computational domain.
 	- nx, ny are surface unit normal vector components.*/

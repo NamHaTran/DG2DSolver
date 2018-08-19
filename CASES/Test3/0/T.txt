@@ -10,37 +10,35 @@
 	Program ran at (d-m-y_h-m-s) time
 Temperature conditions (K)
 initialValue				293
-outlet1
+outlet_back
 {
 	Group				1
 	Type				inOutFlow
-	Value 300
-}
- 
-outlet2
-{
-	Group				2
-	Type				inOutFlow
-	Value 300
+	value				300
 }
  
 inlet
 {
-	Group				3
+	Group				2
 	Type				inOutFlow
-	Value 300
+	value				300
 }
  
-zero
+front
+{
+	Group				3
+	Type				zeroGradient
+}
+ 
+flat_plate
 {
 	Group				4
-	Type				fixedValue
-	Value 300
+	Type				WallAdiabatic
 }
  
-wall
+outlet
 {
 	Group				5
-	Type				WallAdiabatic
+	Type				zeroGradient
 }
  

@@ -207,6 +207,10 @@ namespace IO
 								{
 									meshVar::BoundaryType[boundIndex - 1][2] = 2;  //type 2 is weak prescribed
 								}
+								else if (str2.compare("strongBCs") == 0)
+								{
+									meshVar::BoundaryType[boundIndex - 1][2] = 3;  //type 3 is strongBCs
+								}
 								else
 								{
 									std::string errorStr = "Boundary method <" + ptr[1] + R"(> is unknown, available boundary methods in file boundaryPatch are:
@@ -525,6 +529,9 @@ namespace IO
 		|3.	fixedValue		|4. fixedValue		|3. fixedValue		||fixedValues		|interiorExtrapolate|fixedValues		|
 		|	Value u v w		|	Value T			|	Value p			||					|					|					|
 		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
+		|4.	zeroGradient	|5. zeroGradient	|2. zeroGradient	||zeroGradient		|interiorExtrapolate|zeroGradient		|
+		|	value u v w		|	value T			|	value p			||					|					|					|
+		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
 		*/
 
 		std::string fileName("U.txt"), tempStr("");
@@ -576,7 +583,7 @@ namespace IO
 							else if ((str0.compare("slip") == 0))  //Type slip  BO SUNG SAU
 							{
 								//Use Maxwell-Smoluchovsky boundary condition
-								bcValues::UBcType[bcGrp - 1] = 4;
+								bcValues::UBcType[bcGrp - 1] = 5;
 								bcValues::uBC[bcGrp - 1] = 0.0;
 								bcValues::vBC[bcGrp - 1] = 0.0;
 								bcValues::vBC[bcGrp - 1] = 0.0;
@@ -612,6 +619,15 @@ namespace IO
 								std::getline(FileFlux, line);
 								std::istringstream fixedUStream(line);
 								fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
+							}
+							else if ((str0.compare("zeroGradient") == 0))  //Type zeroGradient
+							{
+								bcValues::UBcType[bcGrp - 1] = 4;
+								//std::getline(FileFlux, line);
+								//std::istringstream fixedUStream(line);
+								//fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
+								bcValues::uBC[bcGrp - 1] = iniValues::uIni;
+								bcValues::vBC[bcGrp - 1] = iniValues::vIni;
 							}
 							else
 							{
@@ -663,6 +679,9 @@ namespace IO
 		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
 		|3.	fixedValue		|4. fixedValue		|3. fixedValue		||fixedValues		|interiorExtrapolate|fixedValues		|
 		|	Value u v w		|	Value T			|	Value p			||					|					|					|
+		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
+		|4.	zeroGradient	|5. zeroGradient	|2. zeroGradient	||zeroGradient		|interiorExtrapolate|zeroGradient		|
+		|	value u v w		|	value T			|	value p			||					|					|					|
 		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
 		*/
 
@@ -731,6 +750,11 @@ namespace IO
 									std::istringstream Stream(line);
 									Stream >> tempStr >> bcValues::pBC[bcGrp - 1];
 								}
+								else if ((str0.compare("zeroGradient") == 0))
+								{
+									bcValues::pBcType[bcGrp - 1] = 2;
+									bcValues::pBC[bcGrp - 1] = iniValues::pIni;
+								}
 								else
 								{
 									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "patch"));
@@ -798,7 +822,7 @@ namespace IO
 								}
 								else if ((str0.compare("temperatureJump") == 0))  //Type temperatureJump, BO SUNG SAU
 								{
-									bcValues::TBcType[bcGrp - 1] = 5;
+									bcValues::TBcType[bcGrp - 1] = 6;
 									bcValues::TBC[bcGrp - 1] = iniValues::TIni;
 									std::getline(FileFlux, line);
 									std::istringstream Stream(line);
@@ -824,6 +848,14 @@ namespace IO
 									std::getline(FileFlux, line);
 									std::istringstream Stream(line);
 									Stream >> tempStr >> bcValues::TBC[bcGrp - 1];
+								}
+								else if ((str0.compare("zeroGradient") == 0))
+								{
+									bcValues::TBcType[bcGrp - 1] = 5;
+									//std::getline(FileFlux, line);
+									//std::istringstream Stream(line);
+									//Stream >> tempStr >> bcValues::TBC[bcGrp - 1];
+									bcValues::TBC[bcGrp - 1] = iniValues::TIni;
 								}
 								else
 								{
@@ -860,7 +892,7 @@ namespace IO
 
 		for (int i = 0; i < meshVar::nBc; i++)
 		{
-			if ((bcValues::UBcType[i]!= bcValues::TBcType[i])&&(bcValues::UBcType[i]==4))
+			if ((bcValues::UBcType[i]!= bcValues::TBcType[i])&&(bcValues::UBcType[i]==5))
 			{
 				message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::SlipBcCompatibleError(i+1));
 			}

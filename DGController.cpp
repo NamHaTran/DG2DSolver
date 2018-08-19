@@ -59,9 +59,6 @@ void Processing()
 	{
 		process::limiter::limiter(nelem);
 	}
-	meanVals;
-	theta1Arr;
-	theta2Arr;
 
 	while (process::checkRunningCond)
 	{
@@ -70,13 +67,6 @@ void Processing()
 
 		//SOLVE NSF EQUATION
 		process::NSFEq::solveNSFEquation();
-
-		rho;
-		rhou;
-		rhov;
-		rhoE;
-		theta1Arr;
-		theta2Arr;
 	}
 }
 

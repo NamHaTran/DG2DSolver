@@ -1,10 +1,8 @@
-﻿  DGMath.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(606): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  DGProcLib.cpp
+﻿  DGBCsLib.cpp
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
   Generating code
-  2 of 789 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    6 functions had inline decision re-evaluated but remain unchanged
+  24 of 787 functions ( 3.0%) were compiled, the rest were copied from previous compilation.
+    4 functions were new in current compilation
+    123 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Release\DG2DSolver.exe

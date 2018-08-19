@@ -970,7 +970,13 @@ namespace process
 				TVal(math::pointValue(element, xC, yC, 6, 1)), aSound(0.0), LocalMach(0.0);
 			if (TVal<=0 || TVal != TVal)
 			{
-				std::cout << "Negative T is detected at element " << element << std::endl;
+				std::cout << "Negative T is detected at element " << element + meshVar::nelem1D + 1 << std::endl;
+				TVal = iniValues::TIni;
+				double rhoVal(math::pointValue(element, xC, yC, 1, 2)),
+					rhouVal(math::pointValue(element, xC, yC, 2, 2)),
+					rhovVal(math::pointValue(element, xC, yC, 3, 2)),
+					rhoEVal(math::pointValue(element, xC, yC, 4, 2));
+				std::cout << "value rho, rhou, rhov, rhoe = " << rhoVal << ", " << rhouVal << ", " << rhovVal << ", " << rhoEVal << std::endl;
 			}
 
 			velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));

@@ -320,8 +320,10 @@ namespace math
 		int n = static_cast<int>(b.size());
 		double eMax(1e-9), e(1.0), sum(0.0), xi(0.0);
 		std::vector<double> results(n, 1.0);
+		int counter(0);
+		//eMax = fabs(*std::min_element(b.begin(), b.end())) / 1e3;
 
-		while (e>eMax)
+		while (e>eMax && counter<=15)
 		{
 			for (int i = 0; i < n; i++)
 			{
@@ -337,6 +339,7 @@ namespace math
 				results[i] = xi;
 			}
 			e = math::errorGS(a, b, results);
+			counter++;
 		}
 		return results;
 	}
@@ -569,7 +572,7 @@ namespace math
 		double valPlus(0.0), valMinus(0.0), aMaster(0.0), bMaster(0.0), aServant(0.0), bServant(0.0);
 
 		std::tie(aMaster, bMaster) = auxUlti::getGaussSurfCoor(edge, masterElem, nG);
-		std::tie(aServant, bServant) = auxUlti::getGaussSurfCoor(edge, masterElem, nG);
+		std::tie(aServant, bServant) = auxUlti::getGaussSurfCoor(edge, servantElem, nG);
 
 		if (masterElem == element)  //considering element is master
 		{
@@ -695,6 +698,32 @@ namespace math
 			realRoot = false;
 		}
 		return std::make_tuple(realRoot, root1, root2);
+	}
+
+	double centerValue(int element, int valType, int valKind)
+	{
+		double xC(-1.0 / 3.0), yC(1.0 / 3.0), output(0.0);
+
+		if (auxUlti::checkType(element) == 4)
+		{
+			xC = 0.0;
+			yC = 0.0;
+		}
+		output = math::pointValue(element, xC, yC, valType, valKind);
+		return output;
+	}
+
+	double centerAuxValue(int element, int valType, int dir)
+	{
+		double xC(-1.0 / 3.0), yC(1.0 / 3.0), output(0.0);
+
+		if (auxUlti::checkType(element) == 4)
+		{
+			xC = 0.0;
+			yC = 0.0;
+		}
+		output = math::pointAuxValue(element, xC, yC, valType, dir);
+		return output;
 	}
 
 	//On working
