@@ -1,5 +1,6 @@
 #include "DGAuxUltilitiesLib.h"
 #include "VarDeclaration.h"
+#include "dynamicVarDeclaration.h"
 #include "DGMath.h"
 #include <vector>
 #include <math.h>
@@ -126,7 +127,7 @@ namespace auxUlti
 			}
 		}
 	}
-
+	
 	std::string workingdir()
 	{
 		char buf[256];
@@ -470,10 +471,54 @@ namespace auxUlti
 		return std::make_tuple(master, servant);
 	}
 
+	void resize2DArray(std::vector<std::vector<double>> &Array, int row, int column)
+	{
+		Array.resize(row);
+		for (int i = 0; i < row; ++i)
+		{
+			Array[i].resize(column);
+		}
+	}
+
 	//Function returns cell centroid coordinates and size (cell area)
 	std::tuple<double, double, double> getCellMetrics(int element)
 	{
 		double xC(meshVar::geoCenter[element][0]), yC(meshVar::geoCenter[element][1]), size(meshVar::cellSize[element]);
 		return std::make_tuple(xC, yC, size);
+	}
+
+	void resizeDGArrays()
+	{
+		auxUlti::resize2DArray(rho, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhou, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhov, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhoE, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize2DArray(rhoN, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhouN, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhovN, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhoEN, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize2DArray(u, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(v, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(e, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(p, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(T, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(mu, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize2DArray(rhoX, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhouX, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhovX, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhoEX, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize2DArray(rhoY, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhouY, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhovY, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhoEY, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		theta1Arr.resize(meshVar::nelem2D);
+		theta2Arr.resize(meshVar::nelem2D);
+
+		auxUlti::resize2DArray(meanVals, meshVar::nelem2D, 4);
 	}
 }

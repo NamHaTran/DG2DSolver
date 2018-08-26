@@ -179,6 +179,7 @@
     <ClCompile Include="DGMessagesLib.cpp" />
     <ClCompile Include="DGPostProcessLib.cpp" />
     <ClCompile Include="DGProcLib.cpp" />
+    <ClCompile Include="dynamicVarDeclaration.cpp" />
     <ClCompile Include="VarDeclaration.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +194,7 @@
     <ClInclude Include="DGPostProcessLib.h" />
     <ClInclude Include="DGController.h" />
     <ClInclude Include="DGProcLib.h" />
+    <ClInclude Include="dynamicVarDeclaration.h" />
     <ClInclude Include="VarDeclaration.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

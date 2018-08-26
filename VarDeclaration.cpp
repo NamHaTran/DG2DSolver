@@ -114,67 +114,6 @@ namespace refValues
 	bool subsonic(false);
 }
 
-/*Conservative variables declaration
-double rho[elements2DArrSize][maxOrder] = {},
-rhou[elements2DArrSize][maxOrder] = {},
-rhov[elements2DArrSize][maxOrder] = {},
-rhoE[elements2DArrSize][maxOrder] = {};*/
-std::vector<std::vector<double>> 
-rho(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhou(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhov(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhoE(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
-
-/*Primary variables declaration
-double u[elements2DArrSize][maxOrder] = {},
-v[elements2DArrSize][maxOrder] = {},
-e[elements2DArrSize][maxOrder] = {},
-p[elements2DArrSize][maxOrder] = {},
-T[elements2DArrSize][maxOrder] = {},
-mu[elements2DArrSize][maxOrder] = {};*/
-std::vector<std::vector<double>>
-u(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-v(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-e(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-p(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-T(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-mu(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
-
-/*Auxilary variables
-//X direction
-double rhoX[elements2DArrSize][maxOrder] = {},
-rhouX[elements2DArrSize][maxOrder] = {},
-rhovX[elements2DArrSize][maxOrder] = {},
-rhoEX[elements2DArrSize][maxOrder] = {};*/
-std::vector<std::vector<double>>
-rhoX(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhouX(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhovX(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhoEX(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
-
-/*Y direction
-double rhoY[elements2DArrSize][maxOrder] = {},
-rhouY[elements2DArrSize][maxOrder] = {},
-rhovY[elements2DArrSize][maxOrder] = {},
-rhoEY[elements2DArrSize][maxOrder] = {};*/
-std::vector<std::vector<double>>
-rhoY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhouY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhovY(elements2DArrSize, std::vector<double>(maxOrder, 0.0)),
-rhoEY(elements2DArrSize, std::vector<double>(maxOrder, 0.0));
-
 //time step
 double dt(1e-7);
 double runTime(0.0);
-
-//Limiting coefficients
-std::vector<double>
-theta1Arr(elements2DArrSize, 1.0),
-theta2Arr(elements2DArrSize, 1.0);
-
-/*Mean values
-row1: mean rho
-row2: mean rhou
-row3: mean rhov
-row4: mean rhoE*/
-std::vector<std::vector<double>> meanVals(elements2DArrSize, std::vector<double>(4, 0.0));

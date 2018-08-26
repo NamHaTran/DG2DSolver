@@ -54,6 +54,9 @@
     <ClCompile Include="DGBCsLib.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="dynamicVarDeclaration.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DGIOLib.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DGBCsLib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicVarDeclaration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

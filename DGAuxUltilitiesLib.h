@@ -81,5 +81,11 @@ namespace auxUlti
 
 	//Function returns cell centroid coordinates and size (cell area)
 	std::tuple<double, double, double> getCellMetrics(int element);
+
+	/*Function resize 2D array*/
+	void resize2DArray(std::vector<std::vector<double>> &Array, int row, int column);
+
+	/*Function resizes all dynamic arrays, it helps to reduce amount of consumed RAM*/
+	void resizeDGArrays();
 }
 #endif // DGAUXULTILITIESLIB_H_INCLUDED

@@ -12,10 +12,10 @@ namespace math
 	void GaussLobatto(int nGauss);
 
 	/*Function calculates basis function*/
-	void basisFc(double a, double b, int orderElem);
+	void basisFc(double a, double b);
 
 	/*Function calculates derivatives of basis function respect to a, b*/
-	void dBasisFc(double a, double b, int orderElem);
+	void dBasisFc(double a, double b);
 
 	/*Function calculates 2D Jacobian*/
 	double J2DCal(int elem, double a, double b);

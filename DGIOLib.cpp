@@ -2,6 +2,7 @@
 #include "DGMessagesLib.h"
 #include "ConstDeclaration.h"
 #include "VarDeclaration.h"
+#include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
 #include <fstream>
 #include <string>

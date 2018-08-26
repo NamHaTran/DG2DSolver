@@ -49,24 +49,29 @@ void Processing()
 {
 	/*SET INITIAL VALUES*/
 	process::setIniValues();
-	auxUlti::ConserToPri();
+	//auxUlti::ConserToPri();
 
 	//std::cout << meshVar::BoundaryType;
 	std::cout << " \n" << "Simulation is started\n";
 
 	//Calculate initial limiter coefficients
-	for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
-	{
-		process::limiter::limiter(nelem);
-	}
+	process::limiter::limiter();
 
-	while (process::checkRunningCond)
+	while (process::checkRunningCond())
 	{
 		//SOLVE AUXILARY EQUATION
 		process::auxEq::solveAuxEquation();
 
 		//SOLVE NSF EQUATION
 		process::NSFEq::solveNSFEquation();
+
+		//UPDATE VARIABLES
+		process::NSFEq::updateVariables();
+
+		//APPLY LIMITER
+		process::limiter::limiter();
+
+		debugTool::checkPointValue(0);
 	}
 }
 
@@ -96,6 +101,9 @@ void PreProcessing()
 
 	/*CALCULATE COORDINATES DERIVATIVES*/
 	meshParam::derivCoordinates();
+
+	/*RESIZE ARRAYS*/
+	auxUlti::resizeDGArrays();
 
 	//debugTool::checkElemInfor(2029);
 }

@@ -135,46 +135,7 @@ namespace refValues
 	extern bool subsonic;
 }
 
-/*Conservative variables declaration
-extern double rho[elements2DArrSize][maxOrder],
-rhou[elements2DArrSize][maxOrder],
-rhov[elements2DArrSize][maxOrder],
-rhoE[elements2DArrSize][maxOrder];*/
-extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE;
-
-/*Primary variables declaration
-extern double u[elements2DArrSize][maxOrder],
-v[elements2DArrSize][maxOrder],
-e[elements2DArrSize][maxOrder],
-p[elements2DArrSize][maxOrder],
-T[elements2DArrSize][maxOrder],
-mu[elements2DArrSize][maxOrder];*/
-extern std::vector<std::vector<double>>u, v, e, p, T, mu;
-
-/*Auxilary variables
-//X direction
-extern double rhoX[elements2DArrSize][maxOrder],
-rhouX[elements2DArrSize][maxOrder],
-rhovX[elements2DArrSize][maxOrder],
-rhoEX[elements2DArrSize][maxOrder];*/
-extern std::vector<std::vector<double>> rhoX, rhouX, rhovX, rhoEX;
-
-/*Y direction
-extern double rhoY[elements2DArrSize][maxOrder],
-rhouY[elements2DArrSize][maxOrder],
-rhovY[elements2DArrSize][maxOrder],
-rhoEY[elements2DArrSize][maxOrder];*/
-extern std::vector<std::vector<double>> rhoY, rhouY, rhovY, rhoEY;
-
 //time step
-extern double dt, runTime;
-
-//Limiting coefficients
-extern std::vector<double>
-theta1Arr,
-theta2Arr;
-
-//Mean values
-extern std::vector<std::vector<double>> meanVals;
-
+extern double dt;
+extern double runTime;
 #endif // VARDECLARATION_H_INCLUDED

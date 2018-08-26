@@ -1,5 +1,6 @@
 #include "DGMath.h"
 #include "VarDeclaration.h"
+#include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
 #include <math.h>
 #include <tuple>  //Include this for returning multiple values in function
@@ -61,19 +62,19 @@ namespace math
 		}
 	}
 
-	void basisFc(double a, double b, int orderElem)
+	void basisFc(double a, double b)
 	{
-		for (int i = 0; i <= orderElem; i++)
+		for (int i = 0; i <= mathVar::orderElem; i++)
 		{
 			if (i==0)
 			{
 				mathVar::B[i] = 1.0;
 			}
-			else if (i==2)
+			else if (i==1)
 			{
 				mathVar::B[i] = (3.0*b + 1.0) / 2.0;
 			}
-			else if (i==1)
+			else if (i==2)
 			{
 				mathVar::B[i] = a * (1 - b);
 			}
@@ -84,21 +85,21 @@ namespace math
 		}
 	}
 
-	void dBasisFc(double a, double b, int orderElem)
+	void dBasisFc(double a, double b)
 	{
-		for (int i = 0; i <= orderElem; i++)
+		for (int i = 0; i <= mathVar::orderElem; i++)
 		{
 			if (i == 0)
 			{
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 0;
 			}
-			else if (i == 2)
+			else if (i == 1)
 			{
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 3.0/2.0;
 			}
-			else if (i == 1)
+			else if (i == 2)
 			{
 				mathVar::dBa[i] = 1 - b;
 				mathVar::dBb[i] = -a;
@@ -509,7 +510,6 @@ namespace math
 		{	
 			out = limiter::calcConsvVarWthLimiter(element, a, b, valType);
 		}
-
 		return out;
 	}
 
@@ -527,7 +527,7 @@ namespace math
 			Value = auxUlti::getElementConserValuesOfOrder(element, valType);
 		}
 
-		math::basisFc(a, b, mathVar::orderElem);
+		math::basisFc(a, b);
 		for (int order = 0; order <= mathVar::orderElem; order++)
 		{
 			out += Value[order] * mathVar::B[order];
@@ -650,7 +650,7 @@ namespace math
 		Value = auxUlti::getElementAuxValuesOfOrder(element, valType, dir);
 		double muVal(math::pointValue(element, a, b, 7, 1));
 
-		math::basisFc(a, b, mathVar::orderElem);
+		math::basisFc(a, b);
 		for (int order = 0; order <= mathVar::orderElem; order++)
 		{
 			out += Value[order] * mathVar::B[order];
@@ -1180,7 +1180,7 @@ namespace math
 			Value = auxUlti::getElementConserValuesOfOrder(element, valType);
 
 			//Compute value at point (a, b) without limiter
-			math::basisFc(a, b, mathVar::orderElem);
+			math::basisFc(a, b);
 			for (int order = 0; order <= mathVar::orderElem; order++)
 			{
 				out += Value[order] * mathVar::B[order];

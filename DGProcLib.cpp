@@ -2,6 +2,7 @@
 #include "DGMath.h"
 #include "varDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
+#include "dynamicVarDeclaration.h"
 #include <tuple>
 #include "DGBCsLib.h"
 #include <algorithm>
@@ -64,8 +65,8 @@ namespace meshParam
 			{
 				a = mathVar::GaussPts[na][nb][0];
 				b = mathVar::GaussPts[na][nb][1];
-				math::basisFc(a, b, mathVar::orderElem);
-				math::dBasisFc(a, b, mathVar::orderElem);
+				math::basisFc(a, b);
+				math::dBasisFc(a, b);
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					mathVar::BPts[order][na][nb] = mathVar::B[order];
@@ -143,85 +144,59 @@ namespace process
 		material::Cv = material::Cp - material::R;
 		iniValues::eIni = material::Cv*iniValues::TIni; //+0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2) + pow(iniValues::wIni, 2));
 		iniValues::muIni = math::CalcVisCoef(iniValues::TIni);
+		std::vector<double> iniRho(mathVar::orderElem + 1),
+			iniRhou(mathVar::orderElem + 1),
+			iniRhov(mathVar::orderElem + 1),
+			iniRhoE(mathVar::orderElem + 1);
 
-		/*
-		
-		std::vector<double> iniRho(mathVar::orderElem + 1);
-		iniRho = process::calcIniValues(iniValues::rhoIni);
-		
-		std::vector<double> iniRhou(mathVar::orderElem + 1);
-		iniRhou = process::calcIniValues(iniValues::rhoIni*iniValues::uIni);
-		
-		std::vector<double> iniRhov(mathVar::orderElem + 1);
-		iniRhov = process::calcIniValues(iniValues::rhoIni*iniValues::vIni);
-		
-		std::vector<double> iniRhoE(mathVar::orderElem + 1);
-		iniRhoE = process::calcIniValues(iniValues::rhoIni*iniValues::eIni);
-		*/
-		
-		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 		{
-			/*
+			iniRho = process::calcIniValues(iniValues::rhoIni, nelement);
+			iniRhou = process::calcIniValues(iniValues::rhoIni*iniValues::uIni, nelement);
+			iniRhov = process::calcIniValues(iniValues::rhoIni*iniValues::vIni, nelement);
+			iniRhoE = process::calcIniValues(iniValues::rhoIni*(iniValues::eIni + 0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2))), nelement);
+
 			for (int i = 0; i <= mathVar::orderElem; i++)
 			{
-				
-				rho[nelem][i] = iniRho[i];
-				rhou[nelem][i] = iniRhou[i];
-				rhov[nelem][i] = iniRhov[i];
-				rhoE[nelem][i] = iniRhoE[i];
-				
-				
+				rho[nelement][i] = iniRho[i];
+				rhou[nelement][i] = iniRhou[i];
+				rhov[nelement][i] = iniRhov[i];
+				rhoE[nelement][i] = iniRhoE[i];
 			}
-			*/
-			rho[nelem][0] = iniValues::rhoIni;
-			rhou[nelem][0] = iniValues::rhoIni*iniValues::uIni;
-			rhov[nelem][0] = iniValues::rhoIni*iniValues::vIni;
-			rhoE[nelem][0] = iniValues::rhoIni*(iniValues::eIni + 0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2)));
 		}
 	}
 
-	std::vector<double> calcIniValues(double iniVal)
+	std::vector<double> calcIniValues(double iniVal, int element)
 	{
-		
-		//std::vector<std::vector<double>> a(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, iniVal));
-		//std::vector<double> b(mathVar::orderElem + 1, iniVal);
+		std::vector<std::vector<double>> matrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
+		std::vector<double> RHS(mathVar::orderElem + 1, 0.0);
 		std::vector<double> iniVector(mathVar::orderElem + 1, 0.0);
-		double I(0.0);
-		
-		//int ptCount(0);
-		/*
-		for (int na = 0; na <= mathVar::orderElem; na++)
-		{
-			for (int nb = 0; nb <= mathVar::orderElem; nb++)
-			{
-				if (ptCount<=mathVar::orderElem)
-				{
-					for (int i = 0; i <= mathVar::orderElem; i++)
-					{
-						a[ptCount][i] = mathVar::BPts[i][na][nb];
-					}
-					ptCount++;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
 
-		for (int j = 0; j <= mathVar::orderElem; j++)
-		{
-			b[j] = iniVal;
-		}
+		matrix = process::calculateStiffMatrix(element);
+		RHS = process::calcIniValuesRHS(element, iniVal);
+		iniVector = math::SolveSysEqs(matrix, RHS);
+		return iniVector;
+	}
 
-		iniVector = math::SolveSysEqs(a, b);
-		*/
+	std::vector<double> calcIniValuesRHS(int element, int iniVal)
+	{
+		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
+		std::vector<std::vector<double>> matrix(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
+		double a(0.0), b(0.0);
 		for (int order = 0; order <= mathVar::orderElem; order++)
 		{
-			I = math::iniIntegral(order);
-			iniVector[order] = I * iniVal;
+			for (int na = 0; na <= mathVar::nGauss; na++)
+			{
+				for (int nb = 0; nb <= mathVar::nGauss; nb++)
+				{
+					std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
+					math::basisFc(a, b);
+					matrix[na][nb] = mathVar::B[order];
+				}
+			}
+			Out[order] = math::volumeInte(matrix, element)*iniVal;
 		}
-		return iniVector;
+		return Out;
 	}
 
 	namespace auxEq
@@ -563,10 +538,10 @@ namespace process
 				//5) Save results to conservative variables array
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
-					rho[nelement][order] = rhoVectorN[order];
-					rhou[nelement][order] = rhouVectorN[order];
-					rhov[nelement][order] = rhovVectorN[order];
-					rhoE[nelement][order] = rhoEVectorN[order];
+					rhoN[nelement][order] = rhoVectorN[order];
+					rhouN[nelement][order] = rhouVectorN[order];
+					rhovN[nelement][order] = rhovVectorN[order];
+					rhoEN[nelement][order] = rhoEVectorN[order];
 				}
 
 				//6) Estimate Residuals
@@ -578,15 +553,26 @@ namespace process
 
 				//7) Compute local time step
 				timeStepArr[nelement] = process::Euler::localTimeStep(nelement);
-
-				//8) Apply limiter
-				limiter::limiter(nelement);
 			}
 			runTime += dt;
 			dt = *std::min_element(timeStepArr.begin(), timeStepArr.end());  //find min value of vector\
 
 			std::tie(rhoRes, rhouRes, rhovRes, rhoERes) = process::Euler::globalErrorEstimate(rhoError, rhouError, rhovError, rhoEError);
 			IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
+		}
+
+		void updateVariables()
+		{
+			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
+			{
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					rho[nelement][order] = rhoN[nelement][order];
+					rhou[nelement][order] = rhouN[nelement][order];
+					rhov[nelement][order] = rhovN[nelement][order];
+					rhoE[nelement][order] = rhoEN[nelement][order];
+				}
+			}
 		}
 
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
@@ -1001,7 +987,7 @@ namespace process
 			}
 
 			//Compute basis function
-			math::basisFc(xC, yC, mathVar::orderElem);
+			math::basisFc(xC, yC);
 			for (int order = 0; order <= mathVar::orderElem; order++)
 			{
 				errorVal += ddtArr[order] * mathVar::B[order];
@@ -1022,20 +1008,26 @@ namespace process
 
 	namespace limiter
 	{
-		void limiter(int element)
+		void limiter()
 		{
 			double theta1(0.0), theta2(0.0);
 			if (systemVar::limiter==1)  //positivity preserving
 			{
-				std::tie(theta1, theta2) = limiter::Pp::calcPpLimiterCoef(element);
+				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+				{
+					std::tie(theta1, theta2) = limiter::Pp::calcPpLimiterCoef(nelem);
+					theta1Arr[nelem] = theta1;
+					theta2Arr[nelem] = theta2;
+				}
 			}
 			else if (systemVar::limiter == 0)  //No limiter
 			{
-				theta1 = 1.0;
-				theta2 = 1.0;
+				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+				{
+					theta1Arr[nelem] = 1.0;
+					theta2Arr[nelem] = 1.0;
+				}
 			}
-			theta1Arr[element] = theta1;
-			theta2Arr[element] = theta2;
 		}
 
 		namespace Pp
@@ -1068,9 +1060,9 @@ namespace process
 				std::vector<double> vectort(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
 				int index(0);
 
-				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
-				meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
-				meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
+				//meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
+				//meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
+				//meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
 
 				//Save mean values to arrays
 				meanVals[element][0] = meanRho;
@@ -1125,7 +1117,7 @@ namespace process
 		for (int nG = 0; nG <= mathVar::nGauss; nG++)
 		{
 			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, elem, nG);
-			math::basisFc(a, b, mathVar::orderElem);  //mathVar::B is changed after this command line is excuted
+			math::basisFc(a, b);  //mathVar::B is changed after this command line is excuted
 			Bi = mathVar::B[order];
 			F[nG] = Bi * FluxVector[nG];
 		}

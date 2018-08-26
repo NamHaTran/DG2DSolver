@@ -26,7 +26,10 @@ namespace process
 	void setIniValues();
 
 	/*Function distributes initial value to each order of accuracy of element*/
-	std::vector<double> calcIniValues(double iniVal);
+	std::vector<double> calcIniValues(double iniVal, int element);
+
+	/*Function computes RHS of initial condition equation*/
+	std::vector<double> calcIniValuesRHS(int element, int iniVal);
 
 	namespace auxEq
 	{
@@ -85,6 +88,9 @@ namespace process
 
 		/*Function applies input ddtSchemme to solve time marching*/
 		std::vector<double> solveTimeMarching(std::vector<double> &ddtArr, std::vector<double> &UnArr);
+		
+		/*Function updates values in conservative variable array*/
+		void updateVariables();
 	}
 
 	namespace Euler
@@ -102,7 +108,7 @@ namespace process
 	namespace limiter
 	{
 		//Function applies limiter to input element
-		void limiter(int element);
+		void limiter();
 
 		namespace Pp
 		{
