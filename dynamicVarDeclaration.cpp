@@ -2,6 +2,14 @@
 #include "dynamicVarDeclaration.h"
 #include <vector>
 
+namespace meshVar
+{
+	/*Gauss points on edges*/
+	std::vector<std::vector<double>>
+		edgeGaussPoints_a(1, std::vector<double>(1, 0.0)),
+		edgeGaussPoints_b(1, std::vector<double>(1, 0.0));
+}
+
 /*Conservative variables declaration
 double rho[meshVar::nelem2D][maxOrder] = {},
 rhou[meshVar::nelem2D][maxOrder] = {},
@@ -32,7 +40,6 @@ e(1, std::vector<double>(1, 0.0)),
 p(1, std::vector<double>(1, 0.0)),
 T(1, std::vector<double>(1, 0.0)),
 mu(1, std::vector<double>(1, 0.0));
-
 
 /*Auxilary variables
 //X direction

@@ -351,20 +351,20 @@ namespace IO
 		/*Read DGOptions*/
 		std::string DGOptfileName("DGOptions.txt");
 		std::string DGOptLoc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System");
-		std::string DGOptkeyWordsDouble[3] = { "CourantNumber", "totalTime(s)", "refMach" }, DGOptkeyWordsInt[3] = { "numberOfGaussPoints", "orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[1] = { "writeLog" }, DGOptkeyWordsStr[2] = {"ddtScheme", "limiter"};
+		std::string DGOptkeyWordsDouble[3] = { "CourantNumber", "totalTime(s)", "refMach" }, DGOptkeyWordsInt[2] = {"orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[1] = { "writeLog" }, DGOptkeyWordsStr[2] = {"ddtScheme", "limiter"};
 		double DGOptoutDB[3] = {};
 		int DGOptoutInt[3] = {};
 		bool DGOptoutBool[1] = {};
 		std::string DGOptoutStr[2] = {};
 
-		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 3, 3, 1, 2);
+		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 3, 2, 1, 2);
 		
 		systemVar::CFL = DGOptoutDB[0];
 		systemVar::Ttime = DGOptoutDB[1];
 		refValues::Ma = DGOptoutDB[2];
-		mathVar::nGauss = DGOptoutInt[0];
-		mathVar::orderElem = DGOptoutInt[1];
-		systemVar::wrtI = DGOptoutBool[0];
+		mathVar::orderElem = DGOptoutInt[0];
+		systemVar::wrtI = DGOptoutInt[1]; 
+		systemVar::wrtLog = DGOptoutBool[0];
 
 		if (DGOptoutStr[0].compare("Euler") == 0)
 		{

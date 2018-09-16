@@ -86,17 +86,17 @@ namespace debugTool
 		double rhoVal(math::pointValue(element, 0.0, 0.0, 1, 1)),
 			uVal(math::pointValue(element, 0.0, 0.0, 2, 1)),
 			vVal(math::pointValue(element, 0.0, 0.0, 3, 1)),
-			eVal(math::pointValue(element, 0.0, 0.0, 4, 1)),
+			//eVal(math::pointValue(element, 0.0, 0.0, 4, 1)),
 			pVal(math::pointValue(element, 0.0, 0.0, 5, 1)),
-			TVal(math::pointValue(element, 0.0, 0.0, 6, 1)),
-			muVal(math::pointValue(element, 0.0, 0.0, 7, 1));
+			TVal(math::pointValue(element, 0.0, 0.0, 6, 1));
+			//muVal(math::pointValue(element, 0.0, 0.0, 7, 1));
 		std::cout << "- Element: " << element + meshVar::nelem1D + 1 << std::endl
 			<< "- rho: " << rhoVal << std::endl
 			<< "- u: " << uVal << std::endl
 			<< "- v: " << vVal << std::endl
-			<< "- e: " << eVal << std::endl
+			//<< "- e: " << eVal << std::endl
 			<< "- p: " << pVal << std::endl
-			<< "- T: " << TVal << std::endl
-			<< "- mu: " << muVal << std::endl;
+			<< "- T: " << TVal << std::endl << std::endl;
+			//<< "- mu: " << muVal << std::endl << std::endl;
 	}
 }

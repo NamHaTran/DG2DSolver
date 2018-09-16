@@ -31,6 +31,9 @@ namespace auxUlti
 	/*Function gets (a,b) coordinates of Gauss point on surface*/
 	std::tuple<double, double> getGaussSurfCoor(int edge, int elem, int nG);
 
+	/*Function gets (a,b) coordinates of Gauss point on surface of cell master*/
+	std::tuple<double, double> getGaussSurfCoorMaster(int edge, int elem, int nG);
+
 	/*Function executes file .exe*/
 	void openFileEXE(std::string location);
 
@@ -87,5 +90,11 @@ namespace auxUlti
 
 	/*Function resizes all dynamic arrays, it helps to reduce amount of consumed RAM*/
 	void resizeDGArrays();
+
+	/*Function computes coordinates of Gauss point on all edges*/
+	void mappingEdges();
+
+	//This function supports for inverse coodinates mapping
+	std::vector<std::vector<double>> getVectorGaussSurfCoor(int edge, int elem);
 }
 #endif // DGAUXULTILITIESLIB_H_INCLUDED

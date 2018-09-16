@@ -191,6 +191,19 @@ namespace math
 	//Function computes value of auxilary variables at center of cell
 	double centerAuxValue(int element, int valType, int dir);
 
+	//Function maps point coordinates from standard element to real element
+	std::tuple<double, double> mappingStdToReal(int element, double aCoor, double bCoor);
+
+	//Function maps point coordinates from real element to standard element
+	std::tuple<double, double> mappingRealToStd(int edge, int element, double xCoor, double yCoor);
+
+	/*
+	//Function supports for math::mappingRealToStd
+	double solve_abQuad(int option, double A, double B, double D, double C, double inVar);
+
+	//Function supports for math::mappingRealToStd
+	double solve_abTri(int option, double A, double B, double C, double inVar);*/
+
 	namespace numericalFluxes
 	{
 		/*Function calculates auxilary flux at Gauss point*/

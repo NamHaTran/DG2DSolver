@@ -1,3 +1,5 @@
-﻿  DGMath.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(609): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+﻿  DGController.cpp
+  DGPostProcessLib.cpp
+  DGProcLib.cpp
+  Generating Code...
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Debug\DG2DSolver.exe

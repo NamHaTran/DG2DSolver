@@ -29,7 +29,7 @@ namespace process
 	std::vector<double> calcIniValues(double iniVal, int element);
 
 	/*Function computes RHS of initial condition equation*/
-	std::vector<double> calcIniValuesRHS(int element, int iniVal);
+	std::vector<double> calcIniValuesRHS(int element, double iniVal);
 
 	namespace auxEq
 	{

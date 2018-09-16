@@ -178,7 +178,7 @@ namespace process
 		return iniVector;
 	}
 
-	std::vector<double> calcIniValuesRHS(int element, int iniVal)
+	std::vector<double> calcIniValuesRHS(int element, double iniVal)
 	{
 		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
 		std::vector<std::vector<double>> matrix(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
@@ -958,6 +958,7 @@ namespace process
 			{
 				std::cout << "Negative T is detected at element " << element + meshVar::nelem1D + 1 << std::endl;
 				TVal = iniValues::TIni;
+				system("pause");
 				double rhoVal(math::pointValue(element, xC, yC, 1, 2)),
 					rhouVal(math::pointValue(element, xC, yC, 2, 2)),
 					rhovVal(math::pointValue(element, xC, yC, 3, 2)),

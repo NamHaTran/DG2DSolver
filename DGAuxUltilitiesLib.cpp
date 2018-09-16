@@ -169,6 +169,27 @@ namespace auxUlti
 		double a(0.0), b(0.0);
 		int edgeOrder(auxUlti::findEdgeOrder(elem, edge));
 		int elemType(auxUlti::checkType(elem));
+		bool isMaster(auxUlti::checkMaster(elem, edge));
+
+		if (isMaster)
+		{
+			a = meshVar::edgeGaussPoints_a[edge][nG];
+			b = meshVar::edgeGaussPoints_b[edge][nG];
+		}
+		else
+		{
+			a = meshVar::edgeGaussPoints_a[edge][nG + mathVar::nGauss + 1];
+			b = meshVar::edgeGaussPoints_b[edge][nG + mathVar::nGauss + 1];
+		}
+
+		return std::make_tuple(a, b);
+	}
+
+	std::tuple<double, double> getGaussSurfCoorMaster(int edge, int elem, int nG)
+	{
+		double a(0.0), b(0.0);
+		int edgeOrder(auxUlti::findEdgeOrder(elem, edge));
+		int elemType(auxUlti::checkType(elem));
 
 		if (elemType == 4)  //quad element
 		{
@@ -212,6 +233,17 @@ namespace auxUlti
 			}
 		}
 		return std::make_tuple(a, b);
+	}
+
+	//This function supports for inverse coodinates mapping
+	std::vector<std::vector<double>> getVectorGaussSurfCoor(int edge, int elem)
+	{
+		std::vector<std::vector<double>> vectorGaussPoints(mathVar::nGauss + 1, std::vector<double>(2, 0.0));
+		for (int nG = 0; nG <= mathVar::nGauss; nG++)
+		{
+			std::tie(vectorGaussPoints[nG][0], vectorGaussPoints[nG][1]) = auxUlti::getGaussSurfCoorMaster(edge, elem, nG);
+		}
+		return vectorGaussPoints;
 	}
 
 	double getNormVectorComp(int elem, int edge, int dir)
@@ -487,8 +519,42 @@ namespace auxUlti
 		return std::make_tuple(xC, yC, size);
 	}
 
+	void mappingEdges()
+	{
+		int masterElem(0), servantElem(0), bcType(0);
+		double aMaster(0.0), bMaster(0.0), aServant(0.0), bServant(0.0),
+			xMaster(0.0), yMaster(0.0);
+
+		for (int iedge = 0; iedge < meshVar::inpoedCount; iedge++)
+		{
+			std::tie(masterElem, servantElem) = auxUlti::getMasterServantOfEdge(iedge);
+			bcType = auxUlti::getBCType(iedge);
+			for (int nG = 0; nG <= mathVar::nGauss; nG++)
+			{
+				std::tie(aMaster, bMaster) = auxUlti::getGaussSurfCoorMaster(iedge, masterElem, nG);
+				std::tie(xMaster, yMaster) = math::mappingStdToReal(masterElem, aMaster, bMaster);
+				meshVar::edgeGaussPoints_a[iedge][nG] = aMaster;
+				meshVar::edgeGaussPoints_b[iedge][nG] = bMaster;
+				if (bcType != 0)
+				{
+					aServant = 0.0;
+					bServant = 0.0;
+				}
+				else
+				{
+					std::tie(aServant, bServant) = math::mappingRealToStd(iedge, servantElem, xMaster, yMaster);
+				}
+				meshVar::edgeGaussPoints_a[iedge][nG + mathVar::nGauss + 1] = aServant;
+				meshVar::edgeGaussPoints_b[iedge][nG + mathVar::nGauss + 1] = bServant;
+			}
+		}
+	}
+
 	void resizeDGArrays()
 	{
+		auxUlti::resize2DArray(meshVar::edgeGaussPoints_a, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(meshVar::edgeGaussPoints_b, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+
 		auxUlti::resize2DArray(rho, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhou, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhov, meshVar::nelem2D, mathVar::orderElem + 1);

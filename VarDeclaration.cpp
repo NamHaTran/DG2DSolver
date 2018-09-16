@@ -71,7 +71,7 @@ namespace meshVar
 
 namespace mathVar
 {
-	int nGauss(0), orderElem(0);
+	int nGauss(2), orderElem(0);
 	double wGauss[maxGauss] = {}, xGauss[maxGauss] = {}, wGaussLobatto[maxGauss] = {}, xGaussLobatto[maxGauss] = {};
 	double B[maxOrder] = {}, dBa[maxOrder] = {}, dBb[maxOrder] = {};
 	double BPts[maxOrder][maxGauss][maxGauss] = {}, dBaPts[maxOrder][maxGauss][maxGauss] = {}, dBbPts[maxOrder][maxGauss][maxGauss] = {};

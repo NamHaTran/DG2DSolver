@@ -70,11 +70,11 @@ namespace math
 			{
 				mathVar::B[i] = 1.0;
 			}
-			else if (i==1)
+			else if (i==2)
 			{
 				mathVar::B[i] = (3.0*b + 1.0) / 2.0;
 			}
-			else if (i==2)
+			else if (i==1)
 			{
 				mathVar::B[i] = a * (1 - b);
 			}
@@ -94,12 +94,12 @@ namespace math
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 0;
 			}
-			else if (i == 1)
+			else if (i == 2)
 			{
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 3.0/2.0;
 			}
-			else if (i == 2)
+			else if (i == 1)
 			{
 				mathVar::dBa[i] = 1 - b;
 				mathVar::dBb[i] = -a;
@@ -263,12 +263,12 @@ namespace math
 			{
 				C = -1.0;
 			}
-			else if (edgeIndex == 1)
+			else if (edgeIndex == 2)
 			{
 				C = 1.0;
 			}
-			dx = (1.0 / 4.0)*(-xA + xB - xD + xC) + (1.0 / 4.4)*(xA - xB - xD + xC)*C;
-			dy = (1.0 / 4.0)*(-yA + yB - yD + yC) + (1.0 / 4.4)*(yA - yB - yD + yC)*C;
+			dx = (1.0 / 4.0)*(-xA + xB - xD + xC) + (1.0 / 4.0)*(xA - xB - xD + xC)*C;
+			dy = (1.0 / 4.0)*(-yA + yB - yD + yC) + (1.0 / 4.0)*(yA - yB - yD + yC)*C;
 		}
 		else if ((edgeIndex == 1) || (edgeIndex == 3))  //BC or DA
 		{
@@ -280,8 +280,8 @@ namespace math
 			{
 				C = -1.0;
 			}
-			dx = (1.0 / 4.0)*(-xA - xB + xD + xC) + (1.0 / 4.4)*(xA - xB - xD + xC)*C;
-			dy = (1.0 / 4.0)*(-yA - yB + yD + yC) + (1.0 / 4.4)*(yA - yB - yD + yC)*C;
+			dx = (1.0 / 4.0)*(-xA - xB + xD + xC) + (1.0 / 4.0)*(xA - xB - xD + xC)*C;
+			dy = (1.0 / 4.0)*(-yA - yB + yD + yC) + (1.0 / 4.0)*(yA - yB - yD + yC)*C;
 		}
 
 		jacobi = std::sqrt(pow(dx, 2) + pow(dy, 2));
@@ -303,13 +303,13 @@ namespace math
 				C = -1.0;
 			}
 			dx = C * (xA - xB) / 4.0 + (-xA - xB + 2 * xC) / 4.0;
-			dy = C * (yA - yB) / 4.0 + (-yA - yB + 2 * yC) / 4.0*C;
+			dy = C * (yA - yB) / 4.0 + (-yA - yB + 2 * yC) / 4.0;
 		}
 		else if ((edgeIndex == 0))  //AB
 		{
 			C = -1.0;
 			dx = (1 - C)*(xB - xA) / 4.0;
-			dy = (1 - C)*(yB - yA) / 4.0;;
+			dy = (1 - C)*(yB - yA) / 4.0;
 		}
 
 		jacobi = std::sqrt(pow(dx, 2) + pow(dy, 2));
@@ -726,28 +726,118 @@ namespace math
 		return output;
 	}
 
-	//On working
-	/*
-	std::tuple<double, double> centroidMapping(int element, double xCoor, double yCoor)
+	std::tuple<double, double> mappingStdToReal(int element, double aCoor, double bCoor)
 	{
 		int elemType(auxUlti::checkType(element));
+		double xCoor(0.0), yCoor(0.0), xA(0.0), xB(0.0), xC(0.0),
+			yA(0.0), yB(0.0), yC(0.0);
 
-		double xA(0.0), xB(0.0), xC(0.0), xD(0.0),
-			yA(0.0), yB(0.0), yC(0.0), yD(0.0);
 		std::tie(xA, yA) = auxUlti::getElemCornerCoord(element, 0);
 		std::tie(xB, yB) = auxUlti::getElemCornerCoord(element, 1);
 		std::tie(xC, yC) = auxUlti::getElemCornerCoord(element, 2);
 
-		if (elemType == 3)
+		if (elemType == 3) //Tri element
 		{
-
+			xCoor = 0.25*(1 - aCoor)*(1 - bCoor)*xA + 0.25*(1 + aCoor)*(1 - bCoor)*xB + 0.5*(1 + bCoor)*xC;
+			yCoor = 0.25*(1 - aCoor)*(1 - bCoor)*yA + 0.25*(1 + aCoor)*(1 - bCoor)*yB + 0.5*(1 + bCoor)*yC;
 		}
-		else if (elemType == 4)
+		else if (elemType == 4) //Quad element
 		{
+			double xD(0.0), yD(0.0);
 			std::tie(xD, yD) = auxUlti::getElemCornerCoord(element, 3);
+
+			xCoor = 0.25*(1 - aCoor)*(1 - bCoor)*xA + 0.25*(1 + aCoor)*(1 - bCoor)*xB + 0.25*(1 - aCoor)*(1 + bCoor)*xD + 0.25*(1 + aCoor)*(1 + bCoor)*xC;
+			yCoor = 0.25*(1 - aCoor)*(1 - bCoor)*yA + 0.25*(1 + aCoor)*(1 - bCoor)*yB + 0.25*(1 - aCoor)*(1 + bCoor)*yD + 0.25*(1 + aCoor)*(1 + bCoor)*yC;
 		}
+		return std::make_tuple(xCoor, yCoor);
 	}
-	*/
+
+	std::tuple<double, double> mappingRealToStd(int edge, int element, double xCoor, double yCoor)
+	{
+		double A1(0.0), B1(0.0), C1(0.0), D1(0.0),
+			A2(0.0), B2(0.0), C2(0.0), D2(0.0),
+			xA(0.0), xB(0.0), xC(0.0),
+			yA(0.0), yB(0.0), yC(0.0),
+			aCoor(0.0), bCoor(0.0),
+			xCal(0.0), yCal(0.0), eX(100.0), eY(100.0);
+		int elemType(auxUlti::checkType(element));
+		std::vector<std::vector<double>> vectorGaussPoints(mathVar::nGauss + 1, std::vector<double>(2, 0.0));
+
+		std::tie(xA, yA) = auxUlti::getElemCornerCoord(element, 0);
+		std::tie(xB, yB) = auxUlti::getElemCornerCoord(element, 1);
+		std::tie(xC, yC) = auxUlti::getElemCornerCoord(element, 2);
+
+		vectorGaussPoints = auxUlti::getVectorGaussSurfCoor(edge, element);
+
+		if (elemType==3) //tri
+		{
+			for (int nG = 0; nG <= mathVar::nGauss; nG++)
+			{
+				aCoor = vectorGaussPoints[nG][0];
+				bCoor = vectorGaussPoints[nG][1];
+				xCal = 0.25*(1 - aCoor)*(1 - bCoor)*xA + 0.25*(1 + aCoor)*(1 - bCoor)*xB + 0.5*(1 + bCoor)*xC;
+				yCal = 0.25*(1 - aCoor)*(1 - bCoor)*yA + 0.25*(1 + aCoor)*(1 - bCoor)*yB + 0.5*(1 + bCoor)*yC;
+				eX = fabs(xCal - xCoor) * 100 / xCoor;
+				eY = fabs(yCal - yCoor) * 100 / yCoor;
+				if ((eX < 0.05) && (eY < 0.05))
+				{
+					break;
+				}
+			}
+		}
+		else if (elemType==4) //quad
+		{
+			double xD(0.0), yD(0.0);
+			std::tie(xD, yD) = auxUlti::getElemCornerCoord(element, 3);
+
+			for (int nG = 0; nG <= mathVar::nGauss; nG++)
+			{
+				aCoor = vectorGaussPoints[nG][0];
+				bCoor = vectorGaussPoints[nG][1];
+				xCal = 0.25*(1 - aCoor)*(1 - bCoor)*xA + 0.25*(1 + aCoor)*(1 - bCoor)*xB + 0.25*(1 - aCoor)*(1 + bCoor)*xD + 0.25*(1 + aCoor)*(1 + bCoor)*xC;
+				yCal = 0.25*(1 - aCoor)*(1 - bCoor)*yA + 0.25*(1 + aCoor)*(1 - bCoor)*yB + 0.25*(1 - aCoor)*(1 + bCoor)*yD + 0.25*(1 + aCoor)*(1 + bCoor)*yC;
+				eX = fabs((xCal - xCoor) * 100 / xCoor);
+				eY = fabs((yCal - yCoor) * 100 / yCoor);
+				if ((eX < 0.05) && (eY < 0.05))
+				{
+					break;
+				}
+			}
+		}
+
+		return std::make_tuple(aCoor, bCoor);
+	}
+
+	//Function supports for math::mappingRealToStd
+	/*
+	double solve_abQuad(int option, double A, double B, double D, double C, double inVar)
+	{
+		double outVar(0.0);
+		if (option==1) //a
+		{
+			outVar = (inVar - (A + B + D + C)) / (-A + B - D + C);
+		}
+		else if (option==2) //b
+		{
+			outVar = (inVar - (A + B + D + C)) / (-A - B + D + C);
+		}
+		return outVar;
+	}
+
+	//Function supports for math::mappingRealToStd
+	double solve_abTri(int option, double A, double B, double C, double inVar)
+	{
+		double outVar(0.0);
+		if (option == 1) //a
+		{
+			outVar = (inVar - (A + B + C)) / (-A + B);
+		}
+		else if (option == 2) //b
+		{
+			outVar = (inVar - (A + B + C)) / (-A - B + C);
+		}
+		return outVar;
+	}*/
 
 	namespace numericalFluxes
 	{

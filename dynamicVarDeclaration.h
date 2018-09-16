@@ -3,6 +3,12 @@
 #include "VarDeclaration.h"
 #include <vector>
 
+namespace meshVar
+{
+	/*Gauss points on edges*/
+	extern std::vector<std::vector<double>> edgeGaussPoints_a, edgeGaussPoints_b;
+}
+
 /*Conservative variables declaration
 extern double rho[elements2DArrSize][maxOrder],
 rhou[elements2DArrSize][maxOrder],
