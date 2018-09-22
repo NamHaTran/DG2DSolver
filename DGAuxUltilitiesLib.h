@@ -44,16 +44,6 @@ namespace auxUlti
 	4: rhoE*/
 	std::vector<double> getElementConserValuesOfOrder(int element, int type);
 
-	/*Function gets value of all order of accuracy of primary variables at inputted element and returns output as a vector
-	Type 1: rho
-	2: u
-	3: v
-	4: e
-	5: p
-	6: T
-	7: mu*/
-	std::vector<double> getElementPriValuesOfOrder(int element, int type);
-
 	/*Function gets value of all order of accuracy of auxilary variables at inputted element and returns output as a vector
 	Type 1: drho
 	2: drhou

@@ -9,11 +9,12 @@
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
 Velocity conditions (m/s)
-initialValue			0 0 0
+initialValue			350 0 0
 outlet_back
 {
 	Group 1
 	Type				zeroGradient
+	//value				450 0 0
 }
  
 inlet
@@ -38,7 +39,7 @@ flat_plate
 outlet
 {
 	Group 5
-	Type				fixedValue
-	value				450 0 0
+	Type				zeroGradient
+	//value				450 0 0
 }
  

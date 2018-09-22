@@ -98,7 +98,7 @@ namespace math
 		2: rhou
 		3: rhov
 		4: rhoE*/
-	double pointValueNoLimiter(int element, double a, double b, int valType, int valKind);
+	double pointValueNoLimiter(int element, double a, double b, int valType);
 
 	/*Function calculates dot product of 2 vectors*/
 	double vectorDotProduct(std::vector<double> &a, std::vector<double> &b);
@@ -185,10 +185,10 @@ namespace math
 	//Function solves quadratic equation
 	std::tuple<bool, double, double> solvQuadraticEq(double A, double B, double C);
 
-	//Function computes value of primary and conservative variables at center of cell
+	//Function computes value of primary and conservative variables at center of cell: WARNING THIS BC CAUSES BLOW UP!!!
 	double centerValue(int element, int valType, int valKind);
 
-	//Function computes value of auxilary variables at center of cell
+	//Function computes value of auxilary variables at center of cell: WARNING THIS BC CAUSES BLOW UP!!!
 	double centerAuxValue(int element, int valType, int dir);
 
 	//Function maps point coordinates from standard element to real element
@@ -259,24 +259,6 @@ namespace math
 
 	namespace limiter
 	{
-		/*Function calculates mean value of input valType of quad element
-		Available of valType
-		valType 1: rho
-		2: rhou
-		3: rhov
-		4: rhoE
-		*/
-		double calcMeanConsvVarQuad(int element, int valType);
-
-		/*Function calculates mean value of input valType of tri element
-		Available of valType
-		valType 1: rho
-		2: rhou
-		3: rhov
-		4: rhoE
-		*/
-		double calcMeanConsvVarTri(int element, int valType);
-
 		//Function calculates minimum value of rho of quad element
 		double calcMinRhoQuad(int element);
 
@@ -287,7 +269,7 @@ namespace math
 		double calcMinPTri(int element);
 
 		//Function calculates modified value of Rho at abitrary point (for calculating theta2)
-		double calcRhoModified(int element, double a, double b, double theta1, double rhoMean);
+		double calcRhoModified(int element, double a, double b, double theta1);
 
 		/*Function computes value of conservative variables at abitrary point with applying limiter
 		valType:
@@ -317,6 +299,12 @@ namespace math
 
 		//Function computes centroid of quad elements, for tri elements, centroid is coincident with geometric center
 		std::tuple<double, double> calcQuadCentroid(int element, double xCG, double yCG, double area);
+	}
+
+	namespace residualManipulation
+	{
+		//Function calculates normalized coefficients for residuals
+		void calcNormResidual(double rhoRes, double rhouRes, double rhovRes, double rhoERes);
 	}
 }
 

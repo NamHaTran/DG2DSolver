@@ -19,6 +19,13 @@ namespace systemVar
 	int ddtScheme(1);
 	int limiter(1);
 	double epsilon(1e-13);
+
+	int iterCount(0);
+	std::vector<double> rhoResNormVector(5, 0.0),
+		rhouResNormVector(5, 0.0),
+		rhovResNormVector(5, 0.0),
+		rhoEResNormVector(5, 0.0);
+	double rhoResNorm(1.0), rhouResNorm(1.0), rhovResNorm(1.0), rhoEResNorm(1.0);
 }
 
 namespace meshVar

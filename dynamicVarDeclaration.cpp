@@ -68,10 +68,3 @@ rhoEY(1, std::vector<double>(1, 0.0));
 std::vector<double>
 theta1Arr(1, 1.0),
 theta2Arr(1, 1.0);
-
-/*Mean values
-row1: mean rho
-row2: mean rhou
-row3: mean rhov
-row4: mean rhoE*/
-std::vector<std::vector<double>> meanVals(1, std::vector<double>(4, 0.0));

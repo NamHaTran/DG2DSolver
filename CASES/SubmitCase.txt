@@ -11,5 +11,5 @@
 
 SubmitCase
 {
-	caseName Test5
+	caseName flatplate
 }

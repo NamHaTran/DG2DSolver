@@ -9,11 +9,12 @@
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
 Temperature conditions (K)
-initialValue				293
+initialValue				400
 outlet_back
 {
 	Group				1
 	Type				zeroGradient
+	//value				293
 }
  
 inlet
@@ -38,7 +39,7 @@ flat_plate
 outlet
 {
 	Group				5
-	Type				fixedValue
-	value				293
+	Type				zeroGradient
+	//value				293
 }
  

@@ -306,62 +306,6 @@ namespace auxUlti
 		return Out;
 	}
 
-	std::vector<double> getElementPriValuesOfOrder(int element, int type)
-	{
-		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
-		if (type == 1)  //rho
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = rho[element][iorder];
-			}
-		}
-		else if (type == 2)  //u
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = u[element][iorder];
-			}
-		}
-		else if (type == 3)  //v
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = v[element][iorder];
-			}
-		}
-		else if (type == 4)  //e
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = e[element][iorder];
-			}
-		}
-		else if (type == 5)  //p
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = p[element][iorder];
-			}
-		}
-		else if (type == 6)  //T
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = T[element][iorder];
-			}
-		}
-		else if (type == 7)  //mu
-		{
-			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
-			{
-				Out[iorder] = mu[element][iorder];
-			}
-		}
-
-		return Out;
-	}
-
 	std::vector<double> getElementAuxValuesOfOrder(int element, int type, int dir)
 	{
 		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
@@ -584,7 +528,5 @@ namespace auxUlti
 
 		theta1Arr.resize(meshVar::nelem2D);
 		theta2Arr.resize(meshVar::nelem2D);
-
-		auxUlti::resize2DArray(meanVals, meshVar::nelem2D, 4);
 	}
 }

@@ -9,11 +9,12 @@
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
 Pressure conditions (Pa)
-initialValue				101325
+initialValue				151325
 outlet_back
 {
 	Group 1
 	Type				zeroGradient
+	//value 				101325
 }
  
 inlet
@@ -38,7 +39,7 @@ flat_plate
 outlet
 {
 	Group 5
-	Type				fixedValue
-	value				101325
+	Type				zeroGradient
+	//value				101325
 }
  

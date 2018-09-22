@@ -48,7 +48,4 @@ extern double dt, runTime;
 extern std::vector<double>
 theta1Arr,
 theta2Arr;
-
-//Mean values
-extern std::vector<std::vector<double>> meanVals;
 #endif // DYNAMICVARDECLARATION_H_INCLUDED

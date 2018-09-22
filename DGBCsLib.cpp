@@ -257,10 +257,10 @@ namespace advectionBCs
 		std::vector <double> noSlipAdiabatic(int method, int element, int edgeGrp, double rhoP, double rhouP, double rhovP, double rhoEP)
 		{
 			std::vector<double> MinusVal(4, 0.0);
-			double rhoBC(math::centerValue(element, 1, 2)),
+			double rhoBC(rhoP),
 				rhouBC(0.0),
 				rhovBC(0.0),
-				rhoEBC(math::centerValue(element, 4, 2));
+				rhoEBC(rhoEP);
 
 			if (method == 1)  //weak Riemann
 			{
@@ -424,8 +424,8 @@ namespace advectionBCs
 			return MinusVal;
 		}
 
-		/*
-		std::vector <double> zeroGradient(double rhoP, double rhouP, double rhovP, double rhoEP)
+		
+		std::vector <double> zeroGradient(int element, double rhoP, double rhouP, double rhovP, double rhoEP)
 		{
 			std::vector<double> MinusVal(4, 0.0);
 			MinusVal[0] = rhoP;
@@ -434,8 +434,9 @@ namespace advectionBCs
 			MinusVal[3] = rhoEP;
 			return MinusVal;
 		}
-		*/
+		
 
+		/*
 		std::vector <double> zeroGradient(int element, double rhoP, double rhouP, double rhovP, double rhoEP)
 		{
 			std::vector<double> MinusVal(4, 0.0);
@@ -450,6 +451,7 @@ namespace advectionBCs
 			MinusVal[3] = 2 * rhoEBC - rhoEP;
 			return MinusVal;
 		}
+		*/
 	}
 }
 

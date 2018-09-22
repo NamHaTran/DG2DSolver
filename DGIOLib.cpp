@@ -1,4 +1,5 @@
 #include "DGIOLib.h"
+#include "DGMath.h"
 #include "DGMessagesLib.h"
 #include "ConstDeclaration.h"
 #include "VarDeclaration.h"
@@ -902,11 +903,32 @@ namespace IO
 
 	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes)
 	{
+		systemVar::iterCount++;
+		if (systemVar::iterCount <= 5)
+		{
+			math::residualManipulation::calcNormResidual(rhoRes, rhouRes, rhovRes, rhoERes);
+		}
+
+		if (systemVar::iterCount == 1)
+		{
+			rhoRes = 1.0;
+			rhouRes = 1.0;
+			rhovRes = 1.0;
+			rhoERes = 1.0;
+		}
+		else
+		{
+			rhoRes /= systemVar::rhoResNorm;
+			rhouRes /= systemVar::rhouResNorm;
+			rhovRes /= systemVar::rhovResNorm;
+			rhoERes /= systemVar::rhoEResNorm;
+		}
+
+		std::cout << "Iteration " << systemVar::iterCount << std::endl;
 		if (systemVar::ddtScheme == 1)
 		{
 			std::cout << "Time step: " << dt << std::endl;
 		}
 		std::cout << "Residuals: ddt(rho)=" << rhoRes << ", ddt(rhou)=" << rhouRes << ", ddt(rhov)=" << rhovRes << ", ddt(rhoE)=" << rhoERes << std::endl << std::endl;
-
 	}
 }

@@ -70,6 +70,7 @@ namespace meshParam
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					mathVar::BPts[order][na][nb] = mathVar::B[order];
+
 					mathVar::dBaPts[order][na][nb] = mathVar::dBa[order];
 					mathVar::dBbPts[order][na][nb] = mathVar::dBb[order];
 				}
@@ -555,7 +556,7 @@ namespace process
 				timeStepArr[nelement] = process::Euler::localTimeStep(nelement);
 			}
 			runTime += dt;
-			dt = *std::min_element(timeStepArr.begin(), timeStepArr.end());  //find min value of vector\
+			dt = *std::min_element(timeStepArr.begin(), timeStepArr.end());  //find min value of vector
 
 			std::tie(rhoRes, rhouRes, rhovRes, rhoERes) = process::Euler::globalErrorEstimate(rhoError, rhouError, rhovError, rhoEError);
 			IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
@@ -1046,11 +1047,11 @@ namespace process
 
 				//Find theta1
 				minRho = math::limiter::calcMinRhoQuad(element);
-				meanRho = math::limiter::calcMeanConsvVarQuad(element, 1);
+				meanRho = rho[element][0];
 
-				meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
-				meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
-				meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
+				meanRhou = rhou[element][0];
+				meanRhov = rhov[element][0];
+				meanRhoE = rhoE[element][0];
 				double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
 				double meanP(math::CalcP(meanT, meanRho));
 				
@@ -1060,16 +1061,6 @@ namespace process
 				//Find theta2
 				std::vector<double> vectort(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
 				int index(0);
-
-				//meanRhou = math::limiter::calcMeanConsvVarQuad(element, 2);
-				//meanRhov = math::limiter::calcMeanConsvVarQuad(element, 3);
-				//meanRhoE = math::limiter::calcMeanConsvVarQuad(element, 4);
-
-				//Save mean values to arrays
-				meanVals[element][0] = meanRho;
-				meanVals[element][1] = meanRhou;
-				meanVals[element][2] = meanRhov;
-				meanVals[element][3] = meanRhoE;
 
 				for (int na = 0; na <= mathVar::nGauss; na++)
 				{

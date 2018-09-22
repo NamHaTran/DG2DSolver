@@ -513,19 +513,11 @@ namespace math
 		return out;
 	}
 
-	double pointValueNoLimiter(int element, double a, double b, int valType, int valKind)
+	double pointValueNoLimiter(int element, double a, double b, int valType)
 	{
 		double out(0.0);
 		std::vector<double> Value(mathVar::orderElem + 1, 0.0);
-
-		if (valKind == 1)  //primary variables
-		{
-			Value = auxUlti::getElementPriValuesOfOrder(element, valType);
-		}
-		else if (valKind == 2)  //conservative variables
-		{
-			Value = auxUlti::getElementConserValuesOfOrder(element, valType);
-		}
+		Value = auxUlti::getElementConserValuesOfOrder(element, valType);
 
 		math::basisFc(a, b);
 		for (int order = 0; order <= mathVar::orderElem; order++)
@@ -1153,31 +1145,6 @@ namespace math
 
 	namespace limiter
 	{
-		//Function calculates mean value of conservative variables of quad element
-		double calcMeanConsvVarQuad(int element, int valType)
-		{
-			double meanVal(0.0);
-
-			meanVal += math::pointValueNoLimiter(element, -1.0, -1.0, valType, 2);
-			meanVal += math::pointValueNoLimiter(element, -1.0, 1.0, valType, 2);
-			meanVal += math::pointValueNoLimiter(element, 1.0, -1.0, valType, 2);
-			meanVal += math::pointValueNoLimiter(element, 1.0, 1.0, valType, 2);
-			meanVal = meanVal / 4.0;
-			return meanVal;
-		}
-
-		//Function calculates mean value of conservative variables of tri element
-		double calcMeanConsvVarTri(int element, int valType)
-		{
-			double meanVal(0.0);
-
-			meanVal += math::pointValueNoLimiter(element, -1.0, -1.0, valType, 2);
-			meanVal += math::pointValueNoLimiter(element, -1.0, 1.0, valType, 2);
-			meanVal += math::pointValueNoLimiter(element, 1.0, -1.0, valType, 2);
-			meanVal = meanVal / 3.0;
-			return meanVal;
-		}
-
 		//Function calculates minimum value of rho of quad element
 		double calcMinRhoQuad(int element)
 		{
@@ -1194,9 +1161,9 @@ namespace math
 					aGL = mathVar::GaussLobattoPts[na][nb][0];
 					bGL = mathVar::GaussLobattoPts[na][nb][1];
 
-					vectorRho[index] = math::pointValueNoLimiter(element, aG, bGL, 1, 1);
+					vectorRho[index] = math::pointValueNoLimiter(element, aG, bGL, 1);
 					index++;
-					vectorRho[index] = math::pointValueNoLimiter(element, aGL, bG, 1, 1);
+					vectorRho[index] = math::pointValueNoLimiter(element, aGL, bG, 1);
 					index++;
 				}
 			}
@@ -1210,9 +1177,9 @@ namespace math
 			std::vector<double> vectorRho(3, 0.0);
 			double minVal(0.0);
 
-			vectorRho[0] = math::pointValueNoLimiter(element, -1.0, -1.0, 1, 2);
-			vectorRho[1] = math::pointValueNoLimiter(element, -1.0, 1.0, 1, 2);
-			vectorRho[2] = math::pointValueNoLimiter(element, 1.0, -1.0, 1, 2);
+			vectorRho[0] = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
+			vectorRho[1] = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
+			vectorRho[2] = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
 			minVal = *std::min_element(vectorRho.begin(), vectorRho.end());
 			return minVal;
 		}
@@ -1224,24 +1191,24 @@ namespace math
 			std::vector<double> vectorP(3, 0.0);
 			double minVal(0.0);
 
-			rhoVal = math::pointValueNoLimiter(element, -1.0, -1.0, 1, 2);
-			rhouVal = math::pointValueNoLimiter(element, -1.0, -1.0, 2, 2);
-			rhovVal = math::pointValueNoLimiter(element, -1.0, -1.0, 3, 2);
-			rhoEVal = math::pointValueNoLimiter(element, -1.0, -1.0, 4, 2);
+			rhoVal = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
+			rhouVal = math::pointValueNoLimiter(element, -1.0, -1.0, 2);
+			rhovVal = math::pointValueNoLimiter(element, -1.0, -1.0, 3);
+			rhoEVal = math::pointValueNoLimiter(element, -1.0, -1.0, 4);
 			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			vectorP[0] = math::CalcP(TVal, rhoVal);
 
-			rhoVal = math::pointValueNoLimiter(element, -1.0, 1.0, 1, 2);
-			rhouVal = math::pointValueNoLimiter(element, -1.0, 1.0, 2, 2);
-			rhovVal = math::pointValueNoLimiter(element, -1.0, 1.0, 3, 2);
-			rhoEVal = math::pointValueNoLimiter(element, -1.0, 1.0, 4, 2);
+			rhoVal = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
+			rhouVal = math::pointValueNoLimiter(element, -1.0, 1.0, 2);
+			rhovVal = math::pointValueNoLimiter(element, -1.0, 1.0, 3);
+			rhoEVal = math::pointValueNoLimiter(element, -1.0, 1.0, 4);
 			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			vectorP[1] = math::CalcP(TVal, rhoVal);
 
-			rhoVal = math::pointValueNoLimiter(element, 1.0, -1.0, 1, 2);
-			rhouVal = math::pointValueNoLimiter(element, 1.0, -1.0, 2, 2);
-			rhovVal = math::pointValueNoLimiter(element, 1.0, -1.0, 3, 2);
-			rhoEVal = math::pointValueNoLimiter(element, 1.0, -1.0, 4, 2);
+			rhoVal = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
+			rhouVal = math::pointValueNoLimiter(element, 1.0, -1.0, 2);
+			rhovVal = math::pointValueNoLimiter(element, 1.0, -1.0, 3);
+			rhoEVal = math::pointValueNoLimiter(element, 1.0, -1.0, 4);
 			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			vectorP[2] = math::CalcP(TVal, rhoVal);
 
@@ -1250,10 +1217,18 @@ namespace math
 		}
 
 		//Function calculates modified value of Rho at abitrary point (for calculating theta2)
-		double calcRhoModified(int element, double a, double b, double theta1, double rhoMean)
+		double calcRhoModified(int element, double a, double b, double theta1)
 		{
-			double rhoOrigin(math::pointValueNoLimiter(element, a, b, 1, 1)), rhoMod(0.0);
-			rhoMod = theta1*(rhoOrigin - rhoMean) + rhoMean;
+			double rhoMod(0.0);
+			std::vector<double> Value(mathVar::orderElem + 1, 0.0);
+
+			Value = auxUlti::getElementConserValuesOfOrder(element, 1);
+			math::basisFc(a, b);
+			for (int order = 1; order <= mathVar::orderElem; order++)
+			{
+				rhoMod += Value[order] * mathVar::B[order] * theta1;
+			}
+			rhoMod += Value[0];
 			return rhoMod;
 		}
 
@@ -1271,10 +1246,21 @@ namespace math
 
 			//Compute value at point (a, b) without limiter
 			math::basisFc(a, b);
-			for (int order = 0; order <= mathVar::orderElem; order++)
+			if (valType == 1)  //rho
 			{
-				out += Value[order] * mathVar::B[order];
+				for (int order = 1; order <= mathVar::orderElem; order++)
+				{
+					out += Value[order] * mathVar::B[order] * theta1Arr[element] * theta2Arr[element];
+				}
 			}
+			else
+			{
+				for (int order = 1; order <= mathVar::orderElem; order++)
+				{
+					out += Value[order] * mathVar::B[order] * theta2Arr[element];
+				}
+			}
+			out += Value[0];
 
 			/*1st approaching:
 			In this approaching, we follow instruction shown on Zhang's paper exactly, this means we need to check limiter condition at each time 
@@ -1303,17 +1289,8 @@ namespace math
 
 			/*2nd approaching:
 			In this approaching, we compute values of theta1 and theta2 of every element, by limiting roots of quadratic equation of coefficient t, value of theta2
-			always fall into 0-1 segment. Limiter is applied at all elements, whatever that element is needed to limited or not. because of that, limiting condition
+			always fall into 0-1 segment. Limiter is applied at all elements, whatever that element is needed to limit or not. because of that, limiting condition
 			is not needed to be checked any more*/
-			
-			//Limit value at point (a, b)
-			//rho is limited 2 times, other variables are limited 1 time
-			if (valType == 1)  //rho
-			{
-				out = theta1Arr[element] * (out - meanVals[element][valType - 1]) + meanVals[element][valType - 1];
-			}
-			out = theta2Arr[element] * (out - meanVals[element][valType - 1]) + meanVals[element][valType - 1];
-
 			return out;
 		}
 
@@ -1323,14 +1300,13 @@ namespace math
 			double rhoVal(0.0), pVal(0.0), TVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0);
 			bool needLimiter(false);
 
-			rhoVal = math::pointValueNoLimiter(element, a, b, 1, 2);
+			rhoVal = math::pointValueNoLimiter(element, a, b, 1);
 
 			//Modify rho
-			rhoVal = theta1Arr[element] * (rhoVal - meanVals[element][0]) + meanVals[element][0];
-
-			rhouVal = math::pointValueNoLimiter(element, a, b, 2, 2);
-			rhovVal = math::pointValueNoLimiter(element, a, b, 3, 2);
-			rhoEVal = math::pointValueNoLimiter(element, a, b, 4, 2);
+			rhoVal = math::limiter::calcRhoModified(element, a, b, theta1Arr[element]);
+			rhouVal = math::pointValueNoLimiter(element, a, b, 2);
+			rhovVal = math::pointValueNoLimiter(element, a, b, 3);
+			rhoEVal = math::pointValueNoLimiter(element, a, b, 4);
 
 			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			pVal = math::CalcP(TVal, rhoVal);
@@ -1382,16 +1358,16 @@ namespace math
 			switch (dir)
 			{
 			case 1:
-				rhoMod = math::limiter::calcRhoModified(element, aG, bGL, theta1, meanRho);
-				rhouOrigin = math::pointValueNoLimiter(element, aG, bGL, 2, 2);
-				rhovOrigin = math::pointValueNoLimiter(element, aG, bGL, 3, 2);
-				rhoEOrigin = math::pointValueNoLimiter(element, aG, bGL, 4, 2);
+				rhoMod = math::limiter::calcRhoModified(element, aG, bGL, theta1);
+				rhouOrigin = math::pointValueNoLimiter(element, aG, bGL, 2);
+				rhovOrigin = math::pointValueNoLimiter(element, aG, bGL, 3);
+				rhoEOrigin = math::pointValueNoLimiter(element, aG, bGL, 4);
 				break;
 			case 2:
-				rhoMod = math::limiter::calcRhoModified(element, aGL, bG, theta1, meanRho);
-				rhouOrigin = math::pointValueNoLimiter(element, aGL, bG, 2, 2);
-				rhovOrigin = math::pointValueNoLimiter(element, aGL, bG, 3, 2);
-				rhoEOrigin = math::pointValueNoLimiter(element, aGL, bG, 4, 2);
+				rhoMod = math::limiter::calcRhoModified(element, aGL, bG, theta1);
+				rhouOrigin = math::pointValueNoLimiter(element, aGL, bG, 2);
+				rhovOrigin = math::pointValueNoLimiter(element, aGL, bG, 3);
+				rhoEOrigin = math::pointValueNoLimiter(element, aGL, bG, 4);
 				break;
 			}
 
@@ -1508,6 +1484,22 @@ namespace math
 			xC = xC / area;
 			yC = yC / area;
 			return std::make_tuple(xC, yC);
+		}
+	}
+
+	namespace residualManipulation
+	{
+		void calcNormResidual(double rhoRes, double rhouRes, double rhovRes, double rhoERes)
+		{
+			systemVar::rhoResNormVector[systemVar::iterCount - 1] = rhoRes;
+			systemVar::rhouResNormVector[systemVar::iterCount - 1] = rhouRes;
+			systemVar::rhovResNormVector[systemVar::iterCount - 1] = rhovRes;
+			systemVar::rhoEResNormVector[systemVar::iterCount - 1] = rhoERes;
+
+			systemVar::rhoResNorm = *std::max_element(systemVar::rhoResNormVector.begin(), systemVar::rhoResNormVector.end());  //find min value of vector
+			systemVar::rhouResNorm = *std::max_element(systemVar::rhouResNormVector.begin(), systemVar::rhouResNormVector.end());
+			systemVar::rhovResNorm = *std::max_element(systemVar::rhovResNormVector.begin(), systemVar::rhovResNormVector.end());
+			systemVar::rhoEResNorm = *std::max_element(systemVar::rhoEResNormVector.begin(), systemVar::rhoEResNormVector.end());
 		}
 	}
 }//end of namespace math

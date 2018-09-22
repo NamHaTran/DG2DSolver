@@ -14,21 +14,21 @@ outlet_back
 {
 	Group				1
 	Type				patch
-	Method				strongBCs
+	Method				weakRiemann
 }
  
 inlet
 {
 	Group				2
 	Type				patch
-	Method				strongBCs
+	Method				weakPrescribed
 }
  
 front
 {
 	Group				3
 	Type				patch
-	Method				strongBCs
+	//Method				strongBCs
 }
  
 flat_plate
@@ -42,6 +42,6 @@ outlet
 {
 	Group				5
 	Type				patch
-	Method				strongBCs
+	Method				weakRiemann
 }
  

@@ -40,6 +40,13 @@ namespace systemVar
 
 	//constant for limiter
 	extern double epsilon;
+
+	extern int iterCount;
+	extern std::vector<double> rhoResNormVector,
+		rhouResNormVector,
+		rhovResNormVector,
+		rhoEResNormVector;
+	extern double rhoResNorm, rhouResNorm, rhovResNorm, rhoEResNorm;
 }
 
 namespace meshVar
