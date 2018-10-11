@@ -503,6 +503,11 @@ namespace auxUlti
 		auxUlti::resize2DArray(rhou, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhov, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhoE, meshVar::nelem2D, mathVar::orderElem + 1);
+		
+		auxUlti::resize2DArray(weakPrescribedBCVal::rhoBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(weakPrescribedBCVal::rhouBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(weakPrescribedBCVal::rhovBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(weakPrescribedBCVal::rhoEBc, mathVar::nGauss + 1, meshVar::numBCEdges);
 
 		auxUlti::resize2DArray(rhoN, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhouN, meshVar::nelem2D, mathVar::orderElem + 1);
@@ -528,5 +533,21 @@ namespace auxUlti
 
 		theta1Arr.resize(meshVar::nelem2D);
 		theta2Arr.resize(meshVar::nelem2D);
+
+		meshVar::adressOfBCVals.resize(meshVar::numBCEdges);
+	}
+
+	int getAdressOfBCEdgesOnBCValsArray(int edge)
+	{
+		int locate(0);
+		for (int i = 0; i < meshVar::numBCEdges; i++)
+		{
+			if (edge == meshVar::adressOfBCVals[i])
+			{
+				locate = i;
+				break;
+			}
+		}
+		return locate;
 	}
 }

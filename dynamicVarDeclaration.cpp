@@ -8,6 +8,9 @@ namespace meshVar
 	std::vector<std::vector<double>>
 		edgeGaussPoints_a(1, std::vector<double>(1, 0.0)),
 		edgeGaussPoints_b(1, std::vector<double>(1, 0.0));
+
+	/*Vector contents BC edges name and location of them on BC values arrays*/
+	std::vector<int>adressOfBCVals(1, 0);
 }
 
 /*Conservative variables declaration
@@ -68,3 +71,11 @@ rhoEY(1, std::vector<double>(1, 0.0));
 std::vector<double>
 theta1Arr(1, 1.0),
 theta2Arr(1, 1.0);
+
+namespace weakPrescribedBCVal
+{
+	std::vector<std::vector<double>> rhoBc(1, std::vector<double>(1, 0.0)),
+		rhouBc(1, std::vector<double>(1, 0.0)),
+		rhovBc(1, std::vector<double>(1, 0.0)),
+		rhoEBc(1, std::vector<double>(1, 0.0));
+}

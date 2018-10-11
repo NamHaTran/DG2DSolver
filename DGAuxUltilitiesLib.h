@@ -86,5 +86,8 @@ namespace auxUlti
 
 	//This function supports for inverse coodinates mapping
 	std::vector<std::vector<double>> getVectorGaussSurfCoor(int edge, int elem);
+
+	//Function returns location of input edge on BC values array
+	int getAdressOfBCEdgesOnBCValsArray(int edge);
 }
 #endif // DGAUXULTILITIESLIB_H_INCLUDED

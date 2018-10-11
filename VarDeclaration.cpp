@@ -74,6 +74,8 @@ namespace meshVar
 
 	std::vector<std::vector<double>> geoCenter(elements2DArrSize, std::vector<double>(2, 0.0));
 	std::vector<double> cellSize(elements2DArrSize, 0.0);
+
+	int numBCEdges(0);
 }
 
 namespace mathVar
@@ -124,3 +126,10 @@ namespace refValues
 //time step
 double dt(1e-7);
 double runTime(0.0);
+
+namespace limitVal
+{
+	double TUp(5000), TDwn(200);
+	double rhoUp(12.5), rhoDwn(0.1);
+	double rhoEUp(0.0), rhoEDwn(0.0);  //computed at initialValue function
+}

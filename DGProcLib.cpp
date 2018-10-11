@@ -165,6 +165,10 @@ namespace process
 				rhoE[nelement][i] = iniRhoE[i];
 			}
 		}
+
+		//Calculate limit of rhoE
+		limitVal::rhoEUp = material::Cv*limitVal::TUp*limitVal::rhoUp;
+		limitVal::rhoEDwn = material::Cv*limitVal::TDwn*limitVal::rhoDwn;
 	}
 
 	std::vector<double> calcIniValues(double iniVal, int element)
@@ -919,7 +923,7 @@ namespace process
 			std::tie(dUYPlus[3], dUYMinus[3]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, 4, 2);  //drhoEx
 			
 			/*Calculate fluxes*/
-			Fluxes = math::numericalFluxes::NSFEqFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
+			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
 			return Fluxes;
 		}
 
@@ -955,7 +959,7 @@ namespace process
 			double uVal(math::pointValue(element, xC, yC, 2, 1)),
 				vVal(math::pointValue(element, xC, yC, 3, 1)), velocity(0.0),
 				TVal(math::pointValue(element, xC, yC, 6, 1)), aSound(0.0), LocalMach(0.0);
-			if (TVal<=0 || TVal != TVal)
+			if (TVal<=0) // || TVal != TVal
 			{
 				std::cout << "Negative T is detected at element " << element + meshVar::nelem1D + 1 << std::endl;
 				TVal = iniValues::TIni;

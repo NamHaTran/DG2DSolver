@@ -7,7 +7,7 @@
 |   This program uses Discontinous Galerkin method to solve 2D problems  |
 |   on structural and unstructural mesh.                                 |
 +------------------------------------------------------------------------+
-	Program ran at (d-m-y_h-m-s) 18-09-2018_23-38-07
+	Program ran at (d-m-y_h-m-s) 29-09-2018_17-27-00
 
 	inpoed array
 

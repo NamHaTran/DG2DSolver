@@ -371,6 +371,15 @@ namespace IO
 		{
 			systemVar::ddtScheme = 1;
 		}
+		else if (DGOptoutStr[0].compare("TVDRK2") == 0)
+		{
+			systemVar::ddtScheme = 2;
+		}
+		else if (DGOptoutStr[0].compare("TVDRK3") == 0)
+		{
+			systemVar::ddtScheme = 3;
+		}
+
 		if (DGOptoutStr[1].compare("PositivityPreserving") == 0)
 		{
 			systemVar::limiter = 1;
@@ -518,22 +527,18 @@ namespace IO
 	{
 		/*NOTES:
 		Boundary conditions compatibility
-		|U					|T					|p					||advectionBC		|diffusionBC		|auxilaryBC			|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|1. inOutFlow		|1. inOutFlow		|1. inOutFlow		||inOutFlow			|interiorExtrapolate|inOutFlow			|
-		|	Value u v w		|	Value T			|	Value p			||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|2. noSlip			|2. WallIsothermal	|2. zeroGradient	||noSlipIsoThermal	|interiorExtrapolate|noSlipIsoThermal	|
-		|					|	Value T			|					||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|2. noSlip			|3. WallAdiabatic	|2. zeroGradient	||noSlipAdiabatic	|interiorExtrapolate|noSlipAdiabatic	|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|3.	fixedValue		|4. fixedValue		|3. fixedValue		||fixedValues		|interiorExtrapolate|fixedValues		|
-		|	Value u v w		|	Value T			|	Value p			||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|4.	zeroGradient	|5. zeroGradient	|2. zeroGradient	||zeroGradient		|interiorExtrapolate|zeroGradient		|
-		|	value u v w		|	value T			|	value p			||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
+		|U					|T					|p					|
+		+-------------------+-------------------+-------------------+
+		|1. inOutFlow		|1. inOutFlow		|1. inOutFlow		|
+		|	Value u v w		|	Value T			|	Value p			|
+		+-------------------+-------------------+-------------------+
+		|2. noSlip			|2. WallIsothermal	|2. zeroGradient	|
+		|					|	Value T			|					|
+		+-------------------+-------------------+-------------------+
+		|2. noSlip			|3. WallAdiabatic	|2. zeroGradient	|
+		+-------------------+-------------------+-------------------+
+		|7.	symmetry		|7. symmetry		|7. symmetry		|
+		+-------------------+-------------------+-------------------+
 		*/
 
 		std::string fileName("U.txt"), tempStr("");
@@ -669,22 +674,18 @@ namespace IO
 	{
 		/*NOTES:
 		Boundary conditions compatibility
-		|U					|T					|p					||advectionBC		|diffusionBC		|auxilaryBC			|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|1. inOutFlow		|1. inOutFlow		|1. inOutFlow		||inOutFlow			|interiorExtrapolate|inOutFlow			|
-		|	Value u v w		|	Value T			|	Value p			||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|2. noSlip			|2. WallIsothermal	|2. zeroGradient	||noSlipIsoThermal	|interiorExtrapolate|noSlipIsoThermal	|
-		|					|	Value T			|					||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|2. noSlip			|3. WallAdiabatic	|2. zeroGradient	||noSlipAdiabatic	|interiorExtrapolate|noSlipAdiabatic	|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|3.	fixedValue		|4. fixedValue		|3. fixedValue		||fixedValues		|interiorExtrapolate|fixedValues		|
-		|	Value u v w		|	Value T			|	Value p			||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
-		|4.	zeroGradient	|5. zeroGradient	|2. zeroGradient	||zeroGradient		|interiorExtrapolate|zeroGradient		|
-		|	value u v w		|	value T			|	value p			||					|					|					|
-		+-------------------+-------------------+-------------------++------------------+-------------------+-------------------+
+		|U					|T					|p					|
+		+-------------------+-------------------+-------------------+
+		|1. inOutFlow		|1. inOutFlow		|1. inOutFlow		|
+		|	Value u v w		|	Value T			|	Value p			|
+		+-------------------+-------------------+-------------------+
+		|2. noSlip			|2. WallIsothermal	|2. zeroGradient	|
+		|					|	Value T			|					|
+		+-------------------+-------------------+-------------------+
+		|2. noSlip			|3. WallAdiabatic	|2. zeroGradient	|
+		+-------------------+-------------------+-------------------+
+		|7.	symmetry		|7. symmetry		|7. symmetry		|
+		+-------------------+-------------------+-------------------+
 		*/
 
 		fileName = fileName + ".txt";
@@ -738,7 +739,7 @@ namespace IO
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
 							{
-								if ((str0.compare("fixedValue") == 0))  //Type inOutZeroGrad
+								if ((str0.compare("symmetry") == 0))  //Type inOutZeroGrad
 								{
 									bcValues::pBcType[bcGrp - 1] = 3;
 									std::getline(FileFlux, line);
@@ -844,7 +845,7 @@ namespace IO
 									std::istringstream Stream(line);
 									Stream >> tempStr >> bcValues::TBC[bcGrp - 1];
 								}
-								else if ((str0.compare("fixedValue") == 0))
+								else if ((str0.compare("symmetry") == 0))
 								{
 									bcValues::TBcType[bcGrp - 1] = 4;
 									std::getline(FileFlux, line);

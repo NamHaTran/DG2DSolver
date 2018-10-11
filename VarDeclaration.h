@@ -95,6 +95,8 @@ namespace meshVar
 
 	extern std::vector<std::vector<double>> geoCenter;
 	extern std::vector<double> cellSize;
+
+	extern int numBCEdges;
 }
 
 namespace mathVar
@@ -145,4 +147,11 @@ namespace refValues
 //time step
 extern double dt;
 extern double runTime;
+
+namespace limitVal
+{
+	extern double TUp, TDwn;
+	extern double rhoUp, rhoDwn;
+	extern double rhoEUp, rhoEDwn;
+}
 #endif // VARDECLARATION_H_INCLUDED

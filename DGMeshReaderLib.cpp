@@ -2,6 +2,7 @@
 #include "DGIOLib.h"
 #include "ConstDeclaration.h"
 #include "VarDeclaration.h"
+#include "dynamicVarDeclaration.h"
 #include <fstream>
 #include <iostream>
 #include <math.h>
@@ -613,6 +614,9 @@ namespace MshReader
 				if (BcGroup != 0)  //Edge is not belong to internal group
 				{
 					meshVar::inpoed[3][ninpoed] = meshVar::BoundaryType[BcGroup - 1][1];  //Get boundary type
+					meshVar::adressOfBCVals[meshVar::numBCEgdes] = iedge;
+					meshVar::numBCEgdes++;
+					break;
 				}
 			}
 		}

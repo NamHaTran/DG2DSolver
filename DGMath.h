@@ -215,8 +215,8 @@ namespace math
 		/*Function calculates diffusive flux*/
 		double diffusiveFlux(double MinusVal, double PlusVar, double vectorComp);
 
-		/*Function calculates fluxes of all inviscid terms of NSF equation from conservative variables*/
-		std::vector<std::vector<double>> NSFEqFluxFromConserVars(std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector);
+		/*Function calculates fluxes of all advective and diffusive terms of NSF equation from conservative variables*/
+		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector);
 
 		/*Function calculates constant C for advective flux*/
 		double constantC(double uMagP, double uMagM, double aP, double aM);

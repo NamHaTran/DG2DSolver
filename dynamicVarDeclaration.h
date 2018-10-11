@@ -7,6 +7,9 @@ namespace meshVar
 {
 	/*Gauss points on edges*/
 	extern std::vector<std::vector<double>> edgeGaussPoints_a, edgeGaussPoints_b;
+	
+	/*Vector contents BC edges name and location of them on BC values arrays*/
+	extern std::vector<int>adressOfBCVals;
 }
 
 /*Conservative variables declaration
@@ -48,4 +51,9 @@ extern double dt, runTime;
 extern std::vector<double>
 theta1Arr,
 theta2Arr;
+
+namespace weakPrescribedBCVal
+{
+	extern std::vector<std::vector<double>> rhoBc, rhouBc, rhovBc, rhoEBc;
+}
 #endif // DYNAMICVARDECLARATION_H_INCLUDED
