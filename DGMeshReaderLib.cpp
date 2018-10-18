@@ -614,8 +614,9 @@ namespace MshReader
 				if (BcGroup != 0)  //Edge is not belong to internal group
 				{
 					meshVar::inpoed[3][ninpoed] = meshVar::BoundaryType[BcGroup - 1][1];  //Get boundary type
-					meshVar::adressOfBCVals[meshVar::numBCEgdes] = iedge;
-					meshVar::numBCEgdes++;
+					//meshVar::adressOfBCVals[meshVar::numBCEdges] = iedge;
+					meshVar::adressOfBCVals.push_back(iedge);
+					meshVar::numBCEdges++;
 					break;
 				}
 			}

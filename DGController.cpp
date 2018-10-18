@@ -70,19 +70,6 @@ void Processing()
 
 		//APPLY LIMITER
 		process::limiter::limiter();
-
-		/*
-		debugTool::checkPointValue(9);
-		debugTool::checkPointValue(2338);
-		debugTool::checkPointValue(2254);
-		debugTool::checkPointValue(2221);
-		debugTool::checkPointValue(2231);
-		debugTool::checkPointValue(2193);
-		debugTool::checkPointValue(2212);
-		//debugTool::checkPointValue(5538);
-		*/
-		//debugTool::checkPointValue(2240);
-		//debugTool::checkPointValue(2241);
 	}
 }
 
@@ -117,7 +104,6 @@ void PreProcessing()
 	auxUlti::resizeDGArrays();
 
 	auxUlti::mappingEdges();
-	//debugTool::checkElemInfor(2029);
 }
 
 void PostProcessing()

@@ -27,8 +27,8 @@ inlet
 front
 {
 	Group				3
-	Type				patch
-	//Method				strongBCs
+	Type				wall
+	Type				symmetry
 }
  
 flat_plate

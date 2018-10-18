@@ -534,7 +534,7 @@ namespace auxUlti
 		theta1Arr.resize(meshVar::nelem2D);
 		theta2Arr.resize(meshVar::nelem2D);
 
-		meshVar::adressOfBCVals.resize(meshVar::numBCEdges);
+		//meshVar::adressOfBCVals.resize(meshVar::numBCEdges);
 	}
 
 	int getAdressOfBCEdgesOnBCValsArray(int edge)

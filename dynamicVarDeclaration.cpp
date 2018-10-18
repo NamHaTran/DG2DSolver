@@ -10,7 +10,7 @@ namespace meshVar
 		edgeGaussPoints_b(1, std::vector<double>(1, 0.0));
 
 	/*Vector contents BC edges name and location of them on BC values arrays*/
-	std::vector<int>adressOfBCVals(1, 0);
+	std::vector<int>adressOfBCVals(0, 0);
 }
 
 /*Conservative variables declaration

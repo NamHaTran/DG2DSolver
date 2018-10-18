@@ -288,6 +288,9 @@ namespace process
 				rhoESurfIntOx(mathVar::orderElem + 1, 0.0),
 				rhoESurfIntOy(mathVar::orderElem + 1, 0.0);
 
+			/*NOTICE!!!
+			ALWAYS COMPUTE IN OX DIRECTION FIRSTLY
+			*/
 			/*1. Calculate volume integral term*/
 			//Ox direction
 			process::auxEq::calcVolumeIntegralTerms(element, rhoVolIntOx, rhouVolIntOx, rhovVolIntOx, rhoEVolIntOx, 1);
@@ -457,7 +460,7 @@ namespace process
 				{
 					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
 					{
-						Flux = auxEqBCsImplement(element, edgeName, nGauss, nVectorComp);
+						Flux = auxEqBCsImplement(element, edgeName, nGauss, dir);
 						rhoFlux[nGauss][nface] = Flux[0];
 						rhouFlux[nGauss][nface] = Flux[1];
 						rhovFlux[nGauss][nface] = Flux[2];
@@ -959,7 +962,7 @@ namespace process
 			double uVal(math::pointValue(element, xC, yC, 2, 1)),
 				vVal(math::pointValue(element, xC, yC, 3, 1)), velocity(0.0),
 				TVal(math::pointValue(element, xC, yC, 6, 1)), aSound(0.0), LocalMach(0.0);
-			if (TVal<=0) // || TVal != TVal
+			if (TVal<=0 || TVal != TVal) //   
 			{
 				std::cout << "Negative T is detected at element " << element + meshVar::nelem1D + 1 << std::endl;
 				TVal = iniValues::TIni;
