@@ -24,7 +24,7 @@ Boundary conditions compatibility
 std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG);
 
 /*Function applies auxilary boundary conditions to edges in auxilary equation, it returns values of auxiraly flux at Gauss point*/
-std::vector<double> auxEqBCsImplement(int element, int edge, int nG, int dir);
+std::vector<std::vector<double>> auxEqBCsImplement(int element, int edge, int nG, double nx, double ny);
 
 namespace NSFEqBCs
 {
@@ -43,26 +43,26 @@ namespace NSFEqBCs
 		{
 			/*Function computes numerical flux at inflow/outflow by using weakRiemann approach*/
 			std::vector <std::vector<double>> inOutFlow(int element, int edge, int edgeGrp, int nG);
-
-			/*Function computes numerical flux at symmetry BC by using weakRiemann approach*/
-			std::vector <std::vector<double>> Symmetry(int element, int edge, int edgeGrp, int nG);
 		}
-	}
 
+		/*Function computes numerical flux at symmetry BC by using weakRiemann approach*/
+		std::vector <std::vector<double>> Symmetry(int element, int edge, int edgeGrp, int nG);
+	}
+	
 	namespace weakPrescribed
 	{
 		namespace wall
 		{
-			/*Function computes numerical flux at isothermal wall by using weakPrescribed approach*/
+			//Function computes numerical flux at isothermal wall by using weakPrescribed approach
 			std::vector <std::vector<double>> noSlipIsoThermal(int element, int edge, int nG);
 
-			/*Function computes numerical flux at adiabatic wall by using weakPrescribed approach*/
+			//Function computes numerical flux at adiabatic wall by using weakPrescribed approach
 			std::vector <std::vector<double>> noSlipAdiabatic(int element, int edge, int nG);
 		}
 
 		namespace patch
 		{
-			/*Function computes numerical flux at inflow/outflow by using weakPrescribed approach*/
+			//Function computes numerical flux at inflow/outflow by using weakPrescribed approach
 			std::vector <std::vector<double>> inOutFlow(int element, int edge, int nG);
 		}
 	}
@@ -70,11 +70,11 @@ namespace NSFEqBCs
 
 namespace auxilaryBCs
 {
-	/*Function computes numerical flux of auxilary variables at all BC except Symmetry by using weakPrescribed approach*/
-	std::vector <double> auxFluxesAtBC(int element, int edge, int nG, int dir);
+	/*Function computes numerical flux of auxilary variables at in/out flow using weakPrescribed approach*/
+	std::vector <std::vector<double>> auxFluxesAtBC(int element, int edge, int nG, double nx, double ny);
 
 	/*Function computes numerical flux of auxilary variables at symmetry BC by using weakRiemann approach*/
-	std::vector <double> Symmetry(int element, int edge, int edgeGrp, int nG, int dir);
+	std::vector <std::vector<double>> Symmetry(int element, int edge, int nG, double nx, double ny);
 }
 
 namespace BCSupportFncs

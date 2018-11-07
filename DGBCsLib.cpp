@@ -34,7 +34,6 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 	std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
 	int edgeGrp(auxUlti::getGrpOfEdge(edge));
 	int UType(bcValues::UBcType[edgeGrp - 1]), TType(bcValues::TBcType[edgeGrp - 1]), pType(bcValues::pBcType[edgeGrp - 1]), method(meshVar::BoundaryType[edgeGrp - 1][2]);
-
 	if (UType == 1 && TType == 1 && pType == 1)
 	{
 		switch (method)
@@ -79,7 +78,7 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 	}
 	else if (UType == 7 && TType == 7 && pType == 7)
 	{
-		Fluxes = NSFEqBCs::weakRiemann::patch::Symmetry(element, edge, edgeGrp, nG);
+		Fluxes = NSFEqBCs::weakRiemann::Symmetry(element, edge, edgeGrp, nG);
 	}
 	else
 	{
@@ -89,47 +88,39 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 	return Fluxes;
 }
 
-std::vector<double> auxEqBCsImplement(int element, int edge, int nG, int dir)
+std::vector<std::vector<double>> auxEqBCsImplement(int element, int edge, int nG, double nx, double ny)
 {
-	std::vector<double> Fluxes(4, 0.0);
+	std::vector<std::vector<double>> gaussVector(4, std::vector<double>(2, 0.0));
 	int edgeGrp(auxUlti::getGrpOfEdge(edge));
 	int UType(bcValues::UBcType[edgeGrp - 1]), TType(bcValues::TBcType[edgeGrp - 1]), pType(bcValues::pBcType[edgeGrp - 1]), method(meshVar::BoundaryType[edgeGrp - 1][2]);
 
-	if ((UType == 1 && TType == 1 && pType == 1) || (UType == 2 && TType == 2 && pType == 2) || (UType == 2 && TType == 3 && pType == 2))
+	if ((UType == 1 && TType == 1 && pType == 1) || (UType == 2 && TType == 2 && pType == 2)|| (UType == 2 && TType == 3 && pType == 2))
 	{
-		switch (dir) //this part of code is run only 1 time for each edge
+		//Calculate BC values
+		if (UType == 1 && TType == 1 && pType == 1)
 		{
-		case 1:
+			BCSupportFncs::weakPrescribedFluxes::calcInOutFlowBCVals(element, edge, edgeGrp, nG);
+		}
+		else if (UType == 2 && TType == 2 && pType == 2)
 		{
-			if (UType == 1 && TType == 1 && pType == 1)
-			{
-				BCSupportFncs::weakPrescribedFluxes::calcInOutFlowBCVals(element, edge, edgeGrp, nG);
-			}
-			else if (UType == 2 && TType == 2 && pType == 2)
-			{
-				BCSupportFncs::weakPrescribedFluxes::calcWallIsothermalBCVals(element, edge, edgeGrp, nG);
-			}
-			else if (UType == 2 && TType == 3 && pType == 2)
-			{
-				BCSupportFncs::weakPrescribedFluxes::calcWallIsothermalBCVals(element, edge, edgeGrp, nG);
-			}
-			break;
+			BCSupportFncs::weakPrescribedFluxes::calcWallIsothermalBCVals(element, edge, edgeGrp, nG);
 		}
-		default:
-			break;
+		else if (UType == 2 && TType == 3 && pType == 2)
+		{
+			BCSupportFncs::weakPrescribedFluxes::calcWallAdiabaticBCVals(element, edge, edgeGrp, nG);
 		}
-		Fluxes = auxilaryBCs::auxFluxesAtBC(element, edge, nG, dir);
+		gaussVector = auxilaryBCs::auxFluxesAtBC(element, edge, nG, nx, ny);
 	}
 	else if (UType == 7 && TType == 7 && pType == 7)
 	{
-		Fluxes = auxilaryBCs::Symmetry(element, edge, edgeGrp, nG, dir);
+		gaussVector = auxilaryBCs::Symmetry(element, edge, nG, nx, ny);
 	}
 	else
 	{
 		std::string errorStr = message::BcCompatibleError(edgeGrp);
 		message::writeLog(systemVar::pwd, systemVar::caseName, errorStr);
 	}
-	return Fluxes;
+	return gaussVector;
 }
 
 namespace BCSupportFncs
@@ -169,6 +160,7 @@ namespace BCSupportFncs
 		return std::make_tuple(vBCx, vBCy);
 	}
 
+	
 	namespace weakPrescribedFluxes
 	{
 		std::vector<std::vector<double>> NSFEqFluxes_Wall(std::vector<double> &UBc, std::vector<double> &dUXBc, std::vector<double> &dUYBc, std::vector<double> &norm)
@@ -181,8 +173,8 @@ namespace BCSupportFncs
 				vBc(rhovBc / rhoBc),
 				totalEBc(rhoEBc / rhoBc),
 				TBc(math::CalcTFromConsvVar(rhoBc, rhouBc, rhovBc, rhoEBc)),
-				pBc(math::CalcP(TBc, rhoBc)),
-				muBc(math::CalcVisCoef(TBc));
+				pBc(math::CalcP(TBc, rhoBc));
+				//muBc(math::CalcVisCoef(TBc));
 
 			double
 				termX1Bc(0.0),  //(rho*u)					or 0
@@ -195,7 +187,7 @@ namespace BCSupportFncs
 				termY3Bc(0.0),  //(rho*v^2 + p)				or tauyy
 				termY4Bc(0.0);  //(rho*totalE + p)*v		or tauxy*u + tauyy*v + Qy
 
-			/*calculate advective terms*/
+			//calculate advective terms
 			std::tie(termX1Bc, termX2Bc, termX3Bc, termX4Bc) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoBc, uBc, vBc, totalEBc, pBc, 1);
 			std::tie(termY1Bc, termY2Bc, termY3Bc, termY4Bc) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoBc, uBc, vBc, totalEBc, pBc, 2);
 			Fluxes[0][0] = termX1Bc * norm[0] + termY1Bc * norm[1];
@@ -203,10 +195,10 @@ namespace BCSupportFncs
 			Fluxes[2][0] = termX3Bc * norm[0] + termY3Bc * norm[1];
 			Fluxes[3][0] = termX4Bc * norm[0] + termY4Bc * norm[1];
 
-			/*calculate diffusive terms*/
+			//calculate diffusive terms
 			std::vector<std::vector<double>> StressHeatBc(2, std::vector<double>(3, 0.0));
 
-			StressHeatBc = math::viscousTerms::calcStressTensorAndHeatFlux(muBc, UBc, dUXBc, dUYBc);
+			StressHeatBc = math::viscousTerms::calcStressTensorAndHeatFlux(UBc, dUXBc, dUYBc);
 			std::tie(termX1Bc, termX2Bc, termX3Bc, termX4Bc) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatBc, uBc, vBc, 1);
 			std::tie(termY1Bc, termY2Bc, termY3Bc, termY4Bc) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatBc, uBc, vBc, 2);
 			Fluxes[0][1] = termX1Bc * norm[0] + termY1Bc * norm[1];
@@ -267,7 +259,7 @@ namespace BCSupportFncs
 				VBc = 0.5*(RPlus + RMinus);
 				cBc = 0.25*(material::gamma - 1)*(RPlus - RMinus);
 				SBc = pow(cExternal, 2) / (material::gamma*pow(rhoExternal, material::gamma - 1));
-				rhoBc = (pow(cBc, 2)) / (material::gamma*SBc);
+				rhoBc = pow((pow(cBc, 2)) / (material::gamma*SBc),1/(material::gamma - 1));
 				pBc = rhoBc * pow(cBc, 2) / material::gamma;
 				TBc = pBc / (rhoBc*material::R);
 				std::tie(uBc, vBc) = BCSupportFncs::calcInOutFlowVelocity(uExternal, vExternal, nx, ny, VBc);
@@ -286,16 +278,16 @@ namespace BCSupportFncs
 				VBc = 0.5*(RPlus + RMinus);
 				cBc = 0.25*(material::gamma - 1)*(RPlus - RMinus);
 				SBc = pow(cInternal, 2) / (material::gamma*pow(UPlus[0], material::gamma - 1));
-				rhoBc = (pow(cBc, 2)) / (material::gamma*SBc);
+				rhoBc = pow((pow(cBc, 2)) / (material::gamma*SBc),1/(material::gamma - 1));
 				pBc = rhoBc * pow(cBc, 2) / material::gamma;
 				TBc = pBc / (rhoBc*material::R);
 				std::tie(uBc, vBc) = BCSupportFncs::calcInOutFlowVelocity(uPlus, vPlus, nx, ny, VBc);
 			}
 			int loc(auxUlti::getAdressOfBCEdgesOnBCValsArray(edge));
-			weakPrescribedBCVal::rhoBc[nG][loc] = rhoBc;
-			weakPrescribedBCVal::rhouBc[nG][loc] = rhoBc * uBc;
-			weakPrescribedBCVal::rhovBc[nG][loc] = rhoBc * vBc;
-			weakPrescribedBCVal::rhoEBc[nG][loc] = rhoBc * (material::Cv*TBc + 0.5*(pow(uBc, 2) + pow(vBc, 2)));
+			SurfaceBCFields::rhoBc[nG][loc] = rhoBc;
+			SurfaceBCFields::rhouBc[nG][loc] = rhoBc * uBc;
+			SurfaceBCFields::rhovBc[nG][loc] = rhoBc * vBc;
+			SurfaceBCFields::rhoEBc[nG][loc] = rhoBc * (material::Cv*TBc + 0.5*(pow(uBc, 2) + pow(vBc, 2)));
 		}
 
 		void calcWallIsothermalBCVals(int element, int edge, int edgeGrp, int nG)
@@ -303,10 +295,10 @@ namespace BCSupportFncs
 			double a(0.0), b(0.0);
 			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
 			int loc(auxUlti::getAdressOfBCEdgesOnBCValsArray(edge));
-			weakPrescribedBCVal::rhoBc[nG][loc] = math::pointValue(element, a, b, 1, 2);
-			weakPrescribedBCVal::rhouBc[nG][loc] = 0;
-			weakPrescribedBCVal::rhovBc[nG][loc] = 0;
-			weakPrescribedBCVal::rhoEBc[nG][loc] = weakPrescribedBCVal::rhoBc[nG][loc] * (material::R*bcValues::TBC[edgeGrp - 1]) / (material::gamma - 1);
+			SurfaceBCFields::rhoBc[nG][loc] = math::pointValue(element, a, b, 1, 2);
+			SurfaceBCFields::rhouBc[nG][loc] = 0;
+			SurfaceBCFields::rhovBc[nG][loc] = 0;
+			SurfaceBCFields::rhoEBc[nG][loc] = SurfaceBCFields::rhoBc[nG][loc] * (material::R*bcValues::TBC[edgeGrp - 1]) / (material::gamma - 1);
 		}
 
 		void calcWallAdiabaticBCVals(int element, int edge, int edgeGrp, int nG)
@@ -323,20 +315,20 @@ namespace BCSupportFncs
 			}
 			double TP(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3]));
 			int loc(auxUlti::getAdressOfBCEdgesOnBCValsArray(edge));
-			weakPrescribedBCVal::rhoBc[nG][loc] = math::pointValue(element, a, b, 1, 2);
-			weakPrescribedBCVal::rhouBc[nG][loc] = 0;
-			weakPrescribedBCVal::rhovBc[nG][loc] = 0;
-			weakPrescribedBCVal::rhoEBc[nG][loc] = UBc[0] * material::R*TP / (material::gamma - 1);
+			SurfaceBCFields::rhoBc[nG][loc] = math::pointValue(element, a, b, 1, 2);
+			SurfaceBCFields::rhouBc[nG][loc] = 0;
+			SurfaceBCFields::rhovBc[nG][loc] = 0;
+			SurfaceBCFields::rhoEBc[nG][loc] = SurfaceBCFields::rhoBc[nG][loc] * material::R*TP / (material::gamma - 1);
 		}
 
 		std::vector<double> distributeBCValsToArray(int nG, int edge)
 		{
 			std::vector<double> Arr(4, 0.0);
 			int loc(auxUlti::getAdressOfBCEdgesOnBCValsArray(edge));
-			Arr[0] = weakPrescribedBCVal::rhoBc[nG][loc];
-			Arr[1] = weakPrescribedBCVal::rhouBc[nG][loc];
-			Arr[2] = weakPrescribedBCVal::rhovBc[nG][loc];
-			Arr[3] = weakPrescribedBCVal::rhoEBc[nG][loc];
+			Arr[0] = SurfaceBCFields::rhoBc[nG][loc];
+			Arr[1] = SurfaceBCFields::rhouBc[nG][loc];
+			Arr[2] = SurfaceBCFields::rhovBc[nG][loc];
+			Arr[3] = SurfaceBCFields::rhoEBc[nG][loc];
 			return Arr;
 		}
 	}
@@ -361,7 +353,7 @@ namespace NSFEqBCs
 				norm[0] = nx;
 				norm[1] = ny;
 
-				//A2 approach
+				//A1 approach
 				for (int i = 0; i < 4; i++)
 				{
 					UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
@@ -370,8 +362,8 @@ namespace NSFEqBCs
 				}
 
 				UMinus[0] = UPlus[0];
-				UMinus[1] = 0;
-				UMinus[2] = 0;
+				UMinus[1] = -UPlus[1];
+				UMinus[2] = -UPlus[2];
 				UMinus[3] = UPlus[0] * (material::Cv*bcValues::TBC[edgeGrp - 1]);
 				//with isothermal BC, dUXMinus = dUXPlus, dUYMinus = dUYPlus
 				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
@@ -391,7 +383,7 @@ namespace NSFEqBCs
 				norm[0] = nx;
 				norm[1] = ny;
 
-				//A2 approach
+				//A1 approach
 				for (int i = 0; i < 4; i++)
 				{
 					UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
@@ -400,15 +392,14 @@ namespace NSFEqBCs
 					dUXMinus[i] = dUXPlus[i];
 					dUYMinus[i] = dUYPlus[i];
 				}
-				//zero normal temperature gradient
-				dUXMinus[3] = -dUXMinus[3];
-				dUYMinus[3] = -dUYMinus[3];
+				//zero normal temperature gradient (sua lai theo cach tong quat)
+				dUXMinus[3] = 0;
+				dUYMinus[3] = 0;
 
-				double TP(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3]));
-				UMinus[0] = math::pointValue(element, a, b, 1, 2);
-				UMinus[1] = 0;
-				UMinus[2] = 0;
-				UMinus[3] = UPlus[0] * (material::Cv*TP);
+				UMinus[0] = UPlus[0];
+				UMinus[1] = -UPlus[1];
+				UMinus[2] = -UPlus[2];
+				UMinus[3] = UPlus[3];
 
 				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
 				return Fluxes;
@@ -444,7 +435,7 @@ namespace NSFEqBCs
 				if (inflow == true)
 				{
 					//Apply weak Riemann infinite value
-					UMinus[0] = bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]);
+					UMinus[0] = (bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]));
 					UMinus[1] = UMinus[0] * bcValues::uBC[edgeGrp - 1];
 					UMinus[2] = UMinus[0] * bcValues::vBC[edgeGrp - 1];
 					UMinus[3] = UMinus[0] * (bcValues::TBC[edgeGrp - 1] * material::Cv + 0.5*(pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2)));
@@ -512,44 +503,49 @@ namespace NSFEqBCs
 				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
 				return Fluxes;
 			}
+		}
 
-			std::vector <std::vector<double>> Symmetry(int element, int edge, int edgeGrp, int nG)
+		std::vector <std::vector<double>> Symmetry(int element, int edge, int edgeGrp, int nG)
+		{
+			//test thu zerogradient
+			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+			std::vector<double>
+				UPlus(4, 0.0),
+				UMinus(4, 0.0),
+				dUXPlus(4, 0.0),
+				dUYPlus(4, 0.0),
+				dUXMinus(4, 0.0),
+				dUYMinus(4, 0.0),
+				norm(2, 0.0);
+			double a(0.0), b(0.0), nx(auxUlti::getNormVectorComp(element, edge, 1)), ny(auxUlti::getNormVectorComp(element, edge, 2));
+			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
+			norm[0] = nx;
+			norm[1] = ny;
+
+			for (int i = 0; i < 4; i++)
 			{
-				std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
-				std::vector<double>
-					UPlus(4, 0.0),
-					UMinus(4, 0.0),
-					dUXPlus(4, 0.0),
-					dUYPlus(4, 0.0),
-					dUXMinus(4, 0.0),
-					dUYMinus(4, 0.0),
-					norm(2, 0.0);
-				double a(0.0), b(0.0), nx(auxUlti::getNormVectorComp(element, edge, 1)), ny(auxUlti::getNormVectorComp(element, edge, 2)), rhoEBC(0);
-				std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
-				norm[0] = nx;
-				norm[1] = ny;
-
-				for (int i = 0; i < 4; i++)
-				{
-					UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
-					dUXPlus[i] = math::pointAuxValue(element, a, b, i + 1, 1);
-					dUYPlus[i] = math::pointAuxValue(element, a, b, i + 1, 2);
-					dUXMinus[i] = -dUXPlus[i];
-					dUYMinus[i] = -dUYPlus[i];
-				}
-
-				double uP(UPlus[1] / UPlus[0]), vP(UPlus[2] / UPlus[0]), tx(-ny), ty(nx), uPn(0.0), uPt(0.0);
-				uPn = uP * (-nx) + vP * (-ny);
-				uPt = uP * tx + vP * ty;
-
-				UMinus[0] = math::pointValue(element, a, b, 1, 2);
-				UMinus[1] = UMinus[0] * (uPn*nx + uPt * tx);
-				UMinus[2] = UMinus[0] * (uPn*ny + uPt * ty);
-				UMinus[3] = math::pointValue(element, a, b, 4, 2);
-
-				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
-				return Fluxes;
+				UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
+				UMinus[i] = UPlus[i];
+				dUXPlus[i] = math::pointAuxValue(element, a, b, i + 1, 1);
+				dUYPlus[i] = math::pointAuxValue(element, a, b, i + 1, 2);
+				dUXMinus[i] = dUXPlus[i];
+				//dUYMinus[i] = -dUYPlus[i];
+				dUYMinus[i] = dUYPlus[i];
 			}
+			/*
+			double uP(UPlus[1] / UPlus[0]), vP(UPlus[2] / UPlus[0]), tx(-ny), ty(nx), uPn(0.0), uPt(0.0);
+			uPn = uP * (-nx) + vP * (-ny);
+			uPt = uP * tx + vP * ty;
+
+			UMinus[0] = math::pointValue(element, a, b, 1, 2);
+			UMinus[1] = UPlus[1] * (ny*ny - nx * nx) + UPlus[2] * (-2 * nx*ny);
+			UMinus[2] = UPlus[1] * (-2 * nx*ny) + UPlus[2] * (nx*nx - ny * ny);
+			//UMinus[1] = UMinus[0] * (uPn*nx + uPt * tx);
+			//UMinus[2] = UMinus[0] * (uPn*ny + uPt * ty);
+			UMinus[3] = math::pointValue(element, a, b, 4, 2);
+			*/
+			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
+			return Fluxes;
 		}
 	}
 
@@ -642,58 +638,214 @@ namespace NSFEqBCs
 
 namespace auxilaryBCs
 {
-	std::vector <double> auxFluxesAtBC(int element, int edge, int nG, int dir)
+	/*
+	namespace wall
 	{
+		std::vector <std::vector<double>> noslipIsoThermal(int element, int edge, int edgeGrp, int nG, double nx, double ny)
+		{
+			//columns 0, 1 are plus, minus values
+			std::vector<std::vector<double>> gaussVector(4, std::vector<double>(2, 0.0)), Fluxes(4, std::vector<double>(2, 0.0));
+			double a(0.0), b(0.0);
+			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
+			double muM(math::CalcVisCoef(bcValues::TBC[edgeGrp - 1])), muP(0.0);
+			for (int i = 0; i < 4; i++)
+			{
+				gaussVector[i][0] = math::pointValue(element, a, b, i + 1, 2);
+			}
+			muP = math::CalcVisCoef(math::CalcTFromConsvVar(gaussVector[0][0], gaussVector[1][0], gaussVector[2][0], gaussVector[3][0]));
+
+			gaussVector[0][1] = gaussVector[0][0];
+			gaussVector[1][1] = -gaussVector[1][0];
+			gaussVector[2][1] = -gaussVector[2][0];
+			gaussVector[3][1] = gaussVector[0][1] * (material::Cv*bcValues::TBC[edgeGrp - 1]);
+
+			for (int i = 0; i < 4; i++)
+			{
+				gaussVector[i][0] = gaussVector[i][0] * muP;
+				gaussVector[i][1] = gaussVector[i][1] * muM;
+				Fluxes[i][0] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], nx);
+				Fluxes[i][1] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], ny);
+			}
+			return Fluxes;
+		}
+
+		std::vector <std::vector<double>> noslipAdiabatic(int element, int edge, int edgeGrp, int nG, double nx, double ny)
+		{
+			//columns 0, 1 are plus, minus values
+			std::vector<std::vector<double>> gaussVector(4, std::vector<double>(2, 0.0)), Fluxes(4, std::vector<double>(2, 0.0));
+			double a(0.0), b(0.0), muP(0.0), muM(0.0);
+			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
+
+			for (int i = 0; i < 4; i++)
+			{
+				gaussVector[i][0] = math::pointValue(element, a, b, i + 1, 2);
+			}
+			muP = math::CalcVisCoef(math::CalcTFromConsvVar(gaussVector[0][0], gaussVector[1][0], gaussVector[2][0], gaussVector[3][0]));
+			muM = muP;
+			gaussVector[0][1] = gaussVector[0][0];
+			gaussVector[1][1] = -gaussVector[1][0];
+			gaussVector[2][1] = -gaussVector[2][0];
+			gaussVector[3][1] = gaussVector[3][0];
+
+			for (int i = 0; i < 4; i++)
+			{
+				gaussVector[i][0] = gaussVector[i][0] * muP;
+				gaussVector[i][1] = gaussVector[i][1] * muM;
+				Fluxes[i][0] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], nx);
+				Fluxes[i][1] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], ny);
+			}
+			return Fluxes;
+		}
+	}
+	*/
+	std::vector <std::vector<double>> auxFluxesAtBC(int element, int edge, int nG, double nx, double ny)
+	{
+		/*
+		//columns 0, 1 are plus, minus values
+		std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0)), gaussVector(4, std::vector<double>(2, 0.0));
+		double a(0.0), b(0.0);
+		std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
+
+		for (int i = 0; i < 4; i++)
+		{
+			gaussVector[i][0] = math::pointValue(element, a, b, i + 1, 2);
+		}
+
+		double uPlus(gaussVector[1][0] / gaussVector[0][0]), vPlus(gaussVector[2][0] / gaussVector[0][0]),
+			TP(math::CalcTFromConsvVar(gaussVector[0][0],gaussVector[1][0], gaussVector[2][0], gaussVector[3][0]));
+		bool inflow(BCSupportFncs::checkInflow(uPlus, vPlus, nx, ny));
+		double muP(math::CalcVisCoef(TP)), muM(0.0);
+
+		if (inflow == true)
+		{
+			//Apply weak Riemann infinite value
+			muM = math::CalcVisCoef(bcValues::TBC[edgeGrp - 1]);
+			gaussVector[0][1] = muM * bcValues::pBC[edgeGrp - 1] / (material::R*bcValues::TBC[edgeGrp - 1]);
+			gaussVector[1][1] = muM * gaussVector[0][1] * bcValues::uBC[edgeGrp - 1];
+			gaussVector[2][1] = muM * gaussVector[0][1] * bcValues::vBC[edgeGrp - 1];
+			gaussVector[3][1] = muM * gaussVector[0][1] * (bcValues::TBC[edgeGrp - 1] * material::Cv + 0.5*(pow(bcValues::uBC[edgeGrp - 1], 2) + pow(bcValues::vBC[edgeGrp - 1], 2)));
+		}
+		else if (inflow == false)
+		{
+			//Apply PNR (2), R (1)
+			int implementation(1);
+			switch (implementation)
+			{
+			case 1: //R
+			{
+				gaussVector[0][1] = gaussVector[0][0] * muP;
+				gaussVector[1][1] = gaussVector[1][0] * muP;
+				gaussVector[2][1] = gaussVector[2][0] * muP;
+				switch (refValues::subsonic)
+				{
+				case true:
+				{
+
+					gaussVector[3][1] = bcValues::pBC[edgeGrp - 1] / (material::gamma - 1) + 0.5*gaussVector[0][1] * (pow(uPlus, 2) + pow(vPlus, 2)); //KHONG DUOC DUNG
+					break;
+				}
+				case false:
+				{
+					gaussVector[3][1] = gaussVector[3][0] * muP;
+					break;
+				}
+				}
+				break;
+			}
+			case 2: //PNR
+			{
+				double TInternal(math::CalcTFromConsvVar(gaussVector[0][0], gaussVector[1][0], gaussVector[2][0], gaussVector[3][0]));
+				double pInternal(gaussVector[0][0] * material::R*TInternal);
+
+				gaussVector[0][1] = gaussVector[0][0] * muP;
+				gaussVector[1][1] = gaussVector[1][0] * muP;
+				gaussVector[2][1] = gaussVector[2][0] * muP;
+				switch (refValues::subsonic)
+				{
+				case true:
+				{
+					gaussVector[3][1] = (2 * bcValues::pBC[edgeGrp - 1] - pInternal) / (material::gamma - 1) + 0.5*gaussVector[0][0] * (pow(uPlus, 2) + pow(vPlus, 2)); //KHONG DUOC DUNG
+					break;
+				}
+				case false:
+				{
+					gaussVector[3][1] = gaussVector[3][0] * muP;
+					break;
+				}
+				}
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			gaussVector[i][0] = gaussVector[i][0] * muP;
+			Fluxes[i][0] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], nx);
+			Fluxes[i][1] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], ny);
+		}
+		*/
 		//General formulae: hS_BC = UBc*n
-		std::vector<double> Fluxes(4, 0.0), UBc(4, 0.0);
-		double n(auxUlti::getNormVectorComp(element, edge, dir)), TBc(0.0),muBc(0.0);
+		std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+		std::vector<double> UBc(4, 0.0);
+		double TBc(0.0), muBc(0.0);
 		UBc = BCSupportFncs::weakPrescribedFluxes::distributeBCValsToArray(nG, edge);
 		TBc = math::CalcTFromConsvVar(UBc[0], UBc[1], UBc[2], UBc[3]);
 		muBc = math::CalcVisCoef(TBc);
 		for (int i = 0; i < 4; i++)
 		{
-			Fluxes[i] = UBc[i] * n*muBc;
+			Fluxes[i][0] = UBc[i] * nx*muBc;
+			Fluxes[i][1] = UBc[i] * ny*muBc;
 		}
 		return Fluxes;
 	}
 
-	std::vector <double> Symmetry(int element, int edge, int edgeGrp, int nG, int dir)
+	std::vector <std::vector<double>> Symmetry(int element, int edge, int nG, double nx, double ny)
 	{
-		std::vector<double> Fluxes(4, 0.0),
-			UPlus(4, 0.0),
-			UMinus(4, 0.0);
-		double a(0.0), b(0.0), nx(auxUlti::getNormVectorComp(element, edge, 1)), ny(auxUlti::getNormVectorComp(element, edge, 2)), rhoEBC(0), n(0.0), muP(0.0);
+		/*
+		//test zeroGradient
+		//columns 0, 1 are plus, minus values
+		std::vector<std::vector<double>> gaussVector(4, std::vector<double>(2, 0.0)), Fluxes(4, std::vector<double>(2, 0.0));
+		double a(0.0), b(0.0), muP(0.0);
 		std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
+
+		for (int i = 0; i < 4; i++)
+		{
+			gaussVector[i][0] = math::pointValue(element, a, b, i + 1, 2);
+		}
+		muP = math::CalcVisCoef(math::CalcTFromConsvVar(gaussVector[0][0], gaussVector[1][0], gaussVector[2][0], gaussVector[3][0]));
+		gaussVector[0][1] = gaussVector[0][0];
+		gaussVector[1][1] = gaussVector[1][0];
+		gaussVector[2][1] = gaussVector[2][0];
+		gaussVector[3][1] = gaussVector[3][0];
+		for (int i = 0; i < 4; i++)
+		{
+			gaussVector[i][0] = gaussVector[i][0] * muP;
+			gaussVector[i][1] = gaussVector[i][1] * muP;
+			Fluxes[i][0] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], nx);
+			Fluxes[i][1] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], ny);
+		}
+		*/
+		std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+		std::vector<double>
+			UPlus(4, 0.0),
+			norm(2, 0.0);
+		double a(0.0), b(0.0);
+		std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
+		norm[0] = nx;
+		norm[1] = ny;
 
 		for (int i = 0; i < 4; i++)
 		{
 			UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
 		}
 
-		double uP(UPlus[1] / UPlus[0]), vP(UPlus[2] / UPlus[0]), tx(-ny), ty(nx), uPn(0.0), uPt(0.0);
-		uPn = uP * (-nx) + vP * (-ny);
-		uPt = uP * tx + vP * ty;
-
-		UMinus[0] = math::pointValue(element, a, b, 1, 2);
-		UMinus[1] = UMinus[0] * (uPn*nx + uPt * tx);
-		UMinus[2] = UMinus[0] * (uPn*ny + uPt * ty);
-		UMinus[3] = math::pointValue(element, a, b, 4, 2);
-		
-		muP = math::CalcVisCoef(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3]));
-		switch (dir)
-		{
-		case 1:
-			n = nx;
-			break;
-		case 2:
-			n = ny;
-			break;
-		default:
-			break;
-		}
+		double muP(math::CalcVisCoef(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3])));
 		for (int i = 0; i < 4; i++)
 		{
-			Fluxes[i] = 0.5*(UPlus[i] + UMinus[i])*n*muP; //at symmetry plane, muPlus = muMinus
+			Fluxes[i][0] = UPlus[i]*nx*muP; //at symmetry plane, muPlus = muMinus
+			Fluxes[i][1] = UPlus[i]*ny*muP;
 		}
 		return Fluxes;
 	}

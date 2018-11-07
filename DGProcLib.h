@@ -40,21 +40,21 @@ namespace process
 		void CalcRHSTerm(int element, std::vector<double> &rhoRHSOx, std::vector<double> &rhoRHSOy, std::vector<double> &rhouRHSOx, std::vector<double> &rhouRHSOy, std::vector<double> &rhovRHSOx, std::vector<double> &rhovRHSOy, std::vector<double> &rhoERHSOx, std::vector<double> &rhoERHSOy);
 
 		/*Function calculates volume integral terms of element*/
-		void calcVolumeIntegralTerms(int element, std::vector<double> &rhoRHSTerm, std::vector<double> &rhouRHSTerm, std::vector<double> &rhovRHSTerm, std::vector<double> &rhoERHSTerm, int dir);
+		void calcVolumeIntegralTerms(int element, std::vector<double> &rhoVolIntX, std::vector<double> &rhouVolIntX, std::vector<double> &rhovVolIntX, std::vector<double> &rhoEVolIntX, std::vector<double> &rhoVolIntY, std::vector<double> &rhouVolIntY, std::vector<double> &rhovVolIntY, std::vector<double> &rhoEVolIntY);
 
 		/*Function calculates surface integral terms of element*/
-		void calcSurfaceIntegralTerms(int element, std::vector<double> &rhoSurfInt, std::vector<double> &rhouSurfInt, std::vector<double> &rhovSurfInt, std::vector<double> &rhoESurfInt, int dir);
+		void calcSurfaceIntegralTerms(int element, std::vector<double> &rhoSurfIntX, std::vector<double> &rhouSurfIntX, std::vector<double> &rhovSurfIntX, std::vector<double> &rhoESurfIntX, std::vector<double> &rhoSurfIntY, std::vector<double> &rhouSurfIntY, std::vector<double> &rhovSurfIntY, std::vector<double> &rhoESurfIntY);
 
 		/*Function returns matrix content Gauss values of <valType> conservative variable at all Gauss points in element volume,
 		use only for auxilary equation*/
 		std::vector<std::vector<double>> getGaussMatrixOfConserVar(int element, int valType);
 
 		/*Function returns vector of flux of all conservative variables at all faces of element*/
-		void getGaussVectorOfConserVar(int element, std::vector<std::vector<double>> &rhoFlux, std::vector<std::vector<double>> &rhouFlux, std::vector<std::vector<double>> &rhovFlux, std::vector<std::vector<double>> &rhoEFlux, int dir);
+		void getGaussVectorOfConserVar(int element, std::vector<std::vector<double>> &rhoFluxX, std::vector<std::vector<double>> &rhouFluxX, std::vector<std::vector<double>> &rhovFluxX, std::vector<std::vector<double>> &rhoEFluxX, std::vector<std::vector<double>> &rhoFluxY, std::vector<std::vector<double>> &rhouFluxY, std::vector<std::vector<double>> &rhovFluxY, std::vector<std::vector<double>> &rhoEFluxY);
 
-		/*Function returns vector content Gauss values of flux of <valType> conservative variable at all Gauss points on the edge,
+		/*Function returns vector content Gauss values of all conservative variable at all Gauss points on the edge,
 		use only for auxilary equation*/
-		std::vector<double> getVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nVectorComp);
+		std::vector<std::vector<double>> getVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nx, double ny);
 	}
 
 	namespace NSFEq
@@ -95,6 +95,8 @@ namespace process
 
 	namespace Euler
 	{
+		void calcGlobalTimeStep();
+
 		/*Function computes local time step*/
 		double localTimeStep(int element);
 

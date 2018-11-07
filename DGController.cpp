@@ -54,11 +54,14 @@ void Processing()
 	//std::cout << meshVar::BoundaryType;
 	std::cout << " \n" << "Simulation is started\n";
 
-	//Calculate initial limiter coefficients
-	process::limiter::limiter();
-
 	while (process::checkRunningCond())
 	{
+		//APPLY LIMITER
+		process::limiter::limiter();
+
+		//CALCULATE TIME STEP
+		process::Euler::calcGlobalTimeStep();
+
 		//SOLVE AUXILARY EQUATION
 		process::auxEq::solveAuxEquation();
 
@@ -68,8 +71,11 @@ void Processing()
 		//UPDATE VARIABLES
 		process::NSFEq::updateVariables();
 
-		//APPLY LIMITER
-		process::limiter::limiter();
+		if (limitVal::limitTOrNot)
+		{
+			std::cout << "Warning!!! Bounding T\n" << std::endl;
+			limitVal::limitTOrNot = false;
+		}
 	}
 }
 

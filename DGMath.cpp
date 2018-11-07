@@ -71,13 +71,13 @@ namespace math
 			{
 				mathVar::B[i] = 1.0;
 			}
-			else if (i==1)
+			else if (i==2)
 			{
 				mathVar::B[i] = (3.0*b + 1.0) / 2.0;
 			}
-			else if (i==2)
+			else if (i==1)
 			{
-				mathVar::B[i] = a * (1 - b);
+				mathVar::B[i] = a * (1 - b) / 2.0;
 			}
 			else if (i==3)
 			{
@@ -95,15 +95,15 @@ namespace math
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 0;
 			}
-			else if (i == 1)
+			else if (i == 2)
 			{
 				mathVar::dBa[i] = 0;
 				mathVar::dBb[i] = 3.0/2.0;
 			}
-			else if (i == 2)
+			else if (i == 1)
 			{
-				mathVar::dBa[i] = 1 - b;
-				mathVar::dBb[i] = -a;
+				mathVar::dBa[i] = (1 - b)*0.5;
+				mathVar::dBb[i] = -0.5*a;
 			}
 			else if (i == 3)
 			{
@@ -387,10 +387,12 @@ namespace math
 	{
 		double T((material::gamma - 1)*(rhoE - 0.5*(pow(rhou, 2) + pow(rhov, 2)) / rho) / (material::R*rho));
 		//limit
-		if (T < 0)
+		if ((T <= 0) || (T != T))
 		{
-			std::cout << "Warning!!! limiting T " << T <<std::endl;
+			//std::cout << "Warning!!! limiting T " << T <<std::endl;
 			T = limitVal::TDwn;
+			limitVal::limitTOrNot = true;
+			//system("pause");
 		}
 		return T;
 	}
@@ -660,7 +662,7 @@ namespace math
 		{
 			out += Value[order] * mathVar::B[order];
 		}
-		out = out / muVal;
+		//out = out / muVal;
 		return out;
 	}
 
@@ -784,7 +786,7 @@ namespace math
 				yCal = 0.25*(1 - aCoor)*(1 - bCoor)*yA + 0.25*(1 + aCoor)*(1 - bCoor)*yB + 0.5*(1 + bCoor)*yC;
 				eX = fabs(xCal - xCoor) * 100 / xCoor;
 				eY = fabs(yCal - yCoor) * 100 / yCoor;
-				if ((eX < 0.05) && (eY < 0.05))
+				if ((eX < 0.005) && (eY < 0.005))
 				{
 					break;
 				}
@@ -868,10 +870,10 @@ namespace math
 				TMinus(0.0),
 
 				pPlus(0.0),
-				pMinus(0.0),
+				pMinus(0.0);
 
-				muPlus(0.0),
-				muMinus(0.0);
+				//muPlus(0.0),
+				//muMinus(0.0);
 
 			double
 				termX1P(0.0), termX1M(0.0),  //(rho*u)					or 0
@@ -900,8 +902,8 @@ namespace math
 			TMinus = math::CalcTFromConsvVar(rhoMinus, rhouMinus, rhovMinus, rhoEMinus);
 			pPlus = math::CalcP(TPlus, rhoPlus);
 			pMinus = math::CalcP(TMinus, rhoMinus);
-			muPlus = math::CalcVisCoef(TPlus);
-			muMinus = math::CalcVisCoef(TMinus);
+			//muPlus = math::CalcVisCoef(TPlus);
+			//muMinus = math::CalcVisCoef(TMinus);
 
 			/*calculate speed of sound*/
 			aP = math::CalcSpeedOfSound(TPlus);
@@ -925,11 +927,11 @@ namespace math
 
 			/*VISCOUS TERMS*/
 			/*calculate inviscid terms*/
-			StressHeatP = math::viscousTerms::calcStressTensorAndHeatFlux(muPlus, UPlus, dUXPlus, dUYPlus);
+			StressHeatP = math::viscousTerms::calcStressTensorAndHeatFlux(UPlus, dUXPlus, dUYPlus);
 			std::tie(termX1P, termX2P, termX3P, termX4P) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uPlus, vPlus, 1);
 			std::tie(termY1P, termY2P, termY3P, termY4P) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uPlus, vPlus, 2);
 
-			StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(muMinus, UMinus, dUXMinus, dUYMinus);
+			StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(UMinus, dUXMinus, dUYMinus);
 			std::tie(termX1M, termX2M, termX3M, termX4M) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uMinus, vMinus, 1);
 			std::tie(termY1M, termY2M, termY3M, termY4M) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uMinus, vMinus, 2);
 
@@ -937,7 +939,7 @@ namespace math
 			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, ny);
 			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, ny);
 			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, ny);
-			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, ny);
+			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, ny);
 
 			return Fluxes;
 		}
@@ -979,7 +981,7 @@ namespace math
 
 	namespace viscousTerms
 	{
-		std::vector<std::vector<double>> calcStressTensorAndHeatFlux(double muVal, std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy)
+		std::vector<std::vector<double>> calcStressTensorAndHeatFlux(std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy)
 		{
 			/*Output matrix has form:
 			[tauXx		tauXy		Qx]
@@ -1033,15 +1035,15 @@ namespace math
 					index = 10 * (i + 1) + (j + 1);
 					if (index == 11)  //x normal stress (tau_xx)
 					{
-						OutputMatrix[i][j] = math::viscousTerms::calcStressComponent(index, muVal, dux, dvy);
+						OutputMatrix[i][j] = math::viscousTerms::calcStressComponent(index, dux, dvy);
 					}
 					else if (index == 22)  //y normal stress (tau_yy)
 					{
-						OutputMatrix[i][j] = math::viscousTerms::calcStressComponent(index, muVal, dvy, dux);
+						OutputMatrix[i][j] = math::viscousTerms::calcStressComponent(index, dvy, dux);
 					}
 					else  //shear stress (tau_xy)
 					{
-						OutputMatrix[i][j] = math::viscousTerms::calcStressComponent(index, muVal, duy, dvx);
+						OutputMatrix[i][j] = math::viscousTerms::calcStressComponent(index, duy, dvx);
 					}
 				}
 			}
@@ -1049,7 +1051,8 @@ namespace math
 			/*calculate heat flux*/
 			dTx = math::calcTDeriv(dEx, dux, dvx, uVal, vVal);
 			dTy = math::calcTDeriv(dEy, duy, dvy, uVal, vVal);
-			k = math::calcThermalConductivity(muVal);
+			//k = math::calcThermalConductivity(muVal);
+			k = material::Cp / material::Pr;
 			std::tie(Qx, Qy) = math::viscousTerms::calcHeatFluxTerms(dTx, dTy, k);
 
 			OutputMatrix[0][2] = Qx;
@@ -1057,7 +1060,7 @@ namespace math
 			return OutputMatrix;
 		}
 
-		double calcStressComponent(int index, double muVal, double fstDeriv, double sndDeriv)
+		double calcStressComponent(int index, double fstDeriv, double sndDeriv)
 		{
 			/*Formular of stress
 			tau_xx = -mu((4/3)*du/dx - (2/3)*dv/dy)
@@ -1073,11 +1076,11 @@ namespace math
 			double tau(0.0);
 			if (index == 11 || index == 22)
 			{
-				tau = -muVal * ((4.0 / 3.0)*fstDeriv - (2.0 / 3.0)*sndDeriv);
+				tau = -((4.0 / 3.0)*fstDeriv - (2.0 / 3.0)*sndDeriv);
 			}
 			else if (index == 12 || index == 21)
 			{
-				tau = -muVal * (fstDeriv + sndDeriv);
+				tau = -(fstDeriv + sndDeriv);
 			}
 			return tau;
 		}
@@ -1279,9 +1282,9 @@ namespace math
 			{
 			case 4:
 			{
-				if (out < 0)
+				if (out <= 0 || out != out)
 				{
-					double rhouVal(math::pointValue(element, a, b, 2, 2)), rhovVal(math::pointValue(element, a, b, 2, 3)), rhoVal(math::pointValue(element, a, b, 2, 1));
+					double rhouVal(math::pointValue(element, a, b, 2, 2)), rhovVal(math::pointValue(element, a, b, 3, 2)), rhoVal(math::pointValue(element, a, b, 1, 2));
 					out = material::Cv*limitVal::TDwn*rhoVal + 0.5*(pow(rhouVal, 2) + pow(rhovVal, 2)) / rhoVal;
 				}
 				break;
@@ -1382,7 +1385,7 @@ namespace math
 			A4 = rhoEOrigin - meanRhoE;
 
 			ACoef = A4 * A1 - 0.5*(A2*A2 + A3 * A3);
-			BCoef = A4 * A1 + A1 * rhoEOrigin - A2 * rhouOrigin - A3 * rhovOrigin - omega * A1 / (material::gamma - 1);
+			BCoef = A4 * rhoMod + A1 * rhoEOrigin - A2 * rhouOrigin - A3 * rhovOrigin - omega * A1 / (material::gamma - 1);
 			CCoef = rhoEOrigin * rhoMod - 0.5*(pow(rhouOrigin, 2) + pow(rhovOrigin, 2)) - omega * rhoMod / (material::gamma - 1);
 
 			std::tie(realRoot, root1, root2) = math::solvQuadraticEq(ACoef, BCoef, CCoef);
@@ -1506,5 +1509,30 @@ namespace math
 			systemVar::rhovResNorm = *std::max_element(systemVar::rhovResNormVector.begin(), systemVar::rhovResNormVector.end());
 			systemVar::rhoEResNorm = *std::max_element(systemVar::rhoEResNormVector.begin(), systemVar::rhoEResNormVector.end());
 		}
+	}
+
+	double calcMaxT(int element)
+	{
+		std::vector<double> vectorT(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
+		double aG(0.0), bG(0.0), aGL(0.0), bGL(0.0), min(0.0);
+		int index(0);
+		for (int na = 0; na <= mathVar::nGauss; na++)
+		{
+			for (int nb = 0; nb <= mathVar::nGauss; nb++)
+			{
+				aG = mathVar::GaussPts[na][nb][0];
+				bG = mathVar::GaussPts[na][nb][1];
+
+				aGL = mathVar::GaussLobattoPts[na][nb][0];
+				bGL = mathVar::GaussLobattoPts[na][nb][1];
+
+				vectorT[index] = math::pointValue(element, aG, bGL, 6, 1);
+				index++;
+				vectorT[index] = math::pointValue(element, aGL, bG, 6, 1);
+				index++;
+			}
+		}
+		min = *std::max_element(vectorT.begin(), vectorT.end());  //find min value of vector
+		return min;
 	}
 }//end of namespace math

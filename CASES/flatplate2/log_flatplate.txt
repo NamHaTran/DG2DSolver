@@ -1,0 +1,4 @@
+log was created at time
+Cannot open file <D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\flatplate\flatplate.unv> located at D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\flatplate
+log was created at 17-10-2018_14-03-10
+Boundary incompatibility error is detected, please check condition of boundary group 4 in folder /0/. This is considered as fatal error.

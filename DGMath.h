@@ -242,13 +242,13 @@ namespace math
 		22 (tau_yy)		dv/dy			du/dx
 		12 (tau_xy)		du/dy			dv/dx
 		*/
-		double calcStressComponent(int index, double mu, double fstDeriv, double sndDeriv);
+		double calcStressComponent(int index, double fstDeriv, double sndDeriv);
 
 		/*Function calculates stress tensor from viscosity, conservative variables and derivative of conservative variables, stress tensor has form:
 		[tau_xx	    tau_xy		Qx]
 		[tau_yx	    tau_yy		Qy]
 		*/
-		std::vector<std::vector<double>> calcStressTensorAndHeatFlux(double muVal, std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy);
+		std::vector<std::vector<double>> calcStressTensorAndHeatFlux(std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy);
 
 		/*Function calculates heat flux terms Qx, Qy*/
 		std::tuple<double, double> calcHeatFluxTerms(double dTx, double dTy, double k);
@@ -306,6 +306,8 @@ namespace math
 		//Function calculates normalized coefficients for residuals
 		void calcNormResidual(double rhoRes, double rhouRes, double rhovRes, double rhoERes);
 	}
+
+	double calcMaxT(int element);
 }
 
 #endif // DGMATH_H_INCLUDED

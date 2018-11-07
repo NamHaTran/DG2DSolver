@@ -8,40 +8,38 @@
 |   on structural and unstructural mesh.                                 |
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
-  
-Boundary condition definitions:
-outlet_back
-{
-	Group				1
-	Type				patch
-	Method				strongBCs
-}
- 
+Temperature conditions (K)
+initialValue				293
 inlet
 {
-	Group				2
-	Type				patch
-	Method				strongBCs
+	Group				1
+	Type				inOutFlow
+	value				293
 }
  
 front
 {
-	Group				3
-	Type				patch
-	Method				strongBCs
+	Group				2
+	Type				symmetry
 }
  
 flat_plate
 {
+	Group				3
+	Type				WallAdiabatic
+}
+ 
+outlet_back
+{
 	Group				4
-	Type				wall
-	Method				weakPrescribed
+	Type				inOutFlow
+	value				293
 }
  
 outlet
 {
 	Group				5
-	Type				patch
-	Method				strongBCs
+	Type				inOutFlow
+	value				293
 }
  

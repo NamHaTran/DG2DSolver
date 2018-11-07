@@ -14,6 +14,6 @@ Material Properties
 	gammaRatio					1.4
 	gasConstant					287
 	PrandtlNumber				0.72
-	SutherlandAs				1.46e-6
-	SutherlandTs				110.4
+	SutherlandAs				1.486e-6
+	SutherlandTs				110.6
 }

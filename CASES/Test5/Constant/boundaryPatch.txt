@@ -21,7 +21,7 @@ inlet
 {
 	Group				2
 	Type				patch
-	Method				weakPrescribed
+	Method				weakRiemann
 }
  
 front
@@ -35,7 +35,7 @@ flat_plate
 {
 	Group				4
 	Type				wall
-	Method				weakPrescribed
+	Method				weakRiemann
 }
  
 outlet

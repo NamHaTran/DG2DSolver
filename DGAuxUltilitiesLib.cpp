@@ -14,11 +14,10 @@ namespace auxUlti
 		int order(0);
 		int pt1(meshVar::inpoed[0][edge]), pt2(meshVar::inpoed[1][edge]);
 		int typeElem(checkType(element));
-		int maxEdge(0), ABpt1(0), ABpt2(0), BCpt1(0), BCpt2(0), CDpt1(0), CDpt2(0), DApt1(0), DApt2(0), CApt1(0), CApt2(0);
+		int ABpt1(0), ABpt2(0), BCpt1(0), BCpt2(0), CDpt1(0), CDpt2(0), DApt1(0), DApt2(0), CApt1(0), CApt2(0);
 
 		if (typeElem==4)  //Quad element
 		{
-			maxEdge = 4;
 			ABpt1 = meshVar::Elements2D[element][0];
 			ABpt2 = meshVar::Elements2D[element][1];
 
@@ -31,33 +30,25 @@ namespace auxUlti
 			DApt1 = CDpt2;
 			DApt2 = ABpt1;
 
-			for (int iedge = 0; iedge < maxEdge; iedge++)
+			if ((pt1 == ABpt1 && pt2 == ABpt2) || (pt1 == ABpt2 && pt2 == ABpt1))
 			{
-				if ((pt1 == ABpt1 && pt2 == ABpt2) || (pt1 == ABpt2 && pt2 == ABpt1))
-				{
-					order = 0;
-					break;
-				}
-				else if ((pt1 == BCpt1 && pt2 == BCpt2) || (pt1 == BCpt2 && pt2 == BCpt1))
-				{
-					order = 1;
-					break;
-				}
-				else if ((pt1 == CDpt1 && pt2 == CDpt2) || (pt1 == CDpt2 && pt2 == CDpt1))
-				{
-					order = 2;
-					break;
-				}
-				else if ((pt1 == DApt1 && pt2 == DApt2) || (pt1 == DApt2 && pt2 == DApt1))
-				{
-					order = 3;
-					break;
-				}
+				order = 0;
+			}
+			else if ((pt1 == BCpt1 && pt2 == BCpt2) || (pt1 == BCpt2 && pt2 == BCpt1))
+			{
+				order = 1;
+			}
+			else if ((pt1 == CDpt1 && pt2 == CDpt2) || (pt1 == CDpt2 && pt2 == CDpt1))
+			{
+				order = 2;
+			}
+			else if ((pt1 == DApt1 && pt2 == DApt2) || (pt1 == DApt2 && pt2 == DApt1))
+			{
+				order = 3;
 			}
 		}
 		else if (typeElem == 3)  //Tri element
 		{
-			maxEdge = 3;
 			ABpt1 = meshVar::Elements2D[element][0];
 			ABpt2 = meshVar::Elements2D[element][1];
 
@@ -67,23 +58,17 @@ namespace auxUlti
 			CApt1 = BCpt2;
 			CApt2 = ABpt1;
 
-			for (int iedge = 0; iedge < maxEdge; iedge++)
+			if ((pt1 == ABpt1 && pt2 == ABpt2) || (pt1 == ABpt2 && pt2 == ABpt1))
 			{
-				if ((pt1 == ABpt1 && pt2 == ABpt2) || (pt1 == ABpt2 && pt2 == ABpt1))
-				{
-					order = 0;
-					break;
-				}
-				else if ((pt1 == BCpt1 && pt2 == BCpt2) || (pt1 == BCpt2 && pt2 == BCpt1))
-				{
-					order = 1;
-					break;
-				}
-				else if ((pt1 == CApt1 && pt2 == CApt2) || (pt1 == CApt2 && pt2 == CApt1))
-				{
-					order = 2;
-					break;
-				}
+				order = 0;
+			}
+			else if ((pt1 == BCpt1 && pt2 == BCpt2) || (pt1 == BCpt2 && pt2 == BCpt1))
+			{
+				order = 1;
+			}
+			else if ((pt1 == CApt1 && pt2 == CApt2) || (pt1 == CApt2 && pt2 == CApt1))
+			{
+				order = 2;
 			}
 		}
 		return order;
@@ -504,10 +489,10 @@ namespace auxUlti
 		auxUlti::resize2DArray(rhov, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhoE, meshVar::nelem2D, mathVar::orderElem + 1);
 		
-		auxUlti::resize2DArray(weakPrescribedBCVal::rhoBc, mathVar::nGauss + 1, meshVar::numBCEdges);
-		auxUlti::resize2DArray(weakPrescribedBCVal::rhouBc, mathVar::nGauss + 1, meshVar::numBCEdges);
-		auxUlti::resize2DArray(weakPrescribedBCVal::rhovBc, mathVar::nGauss + 1, meshVar::numBCEdges);
-		auxUlti::resize2DArray(weakPrescribedBCVal::rhoEBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(SurfaceBCFields::rhoBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(SurfaceBCFields::rhouBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(SurfaceBCFields::rhovBc, mathVar::nGauss + 1, meshVar::numBCEdges);
+		auxUlti::resize2DArray(SurfaceBCFields::rhoEBc, mathVar::nGauss + 1, meshVar::numBCEdges);
 
 		auxUlti::resize2DArray(rhoN, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhouN, meshVar::nelem2D, mathVar::orderElem + 1);

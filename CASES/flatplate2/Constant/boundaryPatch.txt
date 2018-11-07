@@ -8,16 +8,39 @@
 |   on structural and unstructural mesh.                                 |
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
-	Note: all parameter are in SI unit.
-DGoptions
+  
+Boundary condition definitions:
+inlet
 {
-	numberOfGaussPoints			2
-	orderOfAccuracy				2
-	CourantNumber				0.2
-	totalTime(s)				10
-	writeInterval				100
-	writeLog					true
-	ddtScheme					Euler
-	limiter						PositivityPreserving
-	refMach						1.31
+	Group				1
+	Type				patch
+	Method				weakPrescribed
 }
+ 
+front
+{
+	Group				2
+	Type				symmetry
+}
+ 
+flat_plate
+{
+	Group				3
+	Type				wall
+	Method				weakPrescribed
+}
+ 
+outlet_back
+{
+	Group				4
+	Type				patch
+	Method				weakRiemann
+}
+ 
+outlet
+{
+	Group				5
+	Type				patch
+	Method				weakRiemann
+}
+ 

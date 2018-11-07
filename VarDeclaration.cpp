@@ -124,12 +124,13 @@ namespace refValues
 }
 
 //time step
-double dt(1e-7);
+double dt(1e-20);
 double runTime(0.0);
 
 namespace limitVal
 {
-	double TUp(5000), TDwn(100);
-	double rhoUp(12.5), rhoDwn(0.1);
+	double TUp(5000), TDwn(1);
+	double rhoUp(12.5), rhoDwn(0.0001);
 	double rhoEUp(0.0), rhoEDwn(0.0);  //computed at initialValue function
+	bool limitTOrNot(false);
 }

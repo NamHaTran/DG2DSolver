@@ -52,7 +52,7 @@ extern std::vector<double>
 theta1Arr,
 theta2Arr;
 
-namespace weakPrescribedBCVal
+namespace SurfaceBCFields
 {
 	extern std::vector<std::vector<double>> rhoBc, rhouBc, rhovBc, rhoEBc;
 }

@@ -153,5 +153,6 @@ namespace limitVal
 	extern double TUp, TDwn;
 	extern double rhoUp, rhoDwn;
 	extern double rhoEUp, rhoEDwn;
+	extern bool limitTOrNot;
 }
 #endif // VARDECLARATION_H_INCLUDED
