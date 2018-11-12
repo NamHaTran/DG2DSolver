@@ -2,6 +2,7 @@
 #include "VarDeclaration.h"
 #include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
+#include "DGMessagesLib.h"
 #include <math.h>
 #include <tuple>  //Include this for returning multiple values in function
 #include <algorithm>
@@ -390,7 +391,7 @@ namespace math
 		if ((T <= 0) || (T != T))
 		{
 			//std::cout << "Warning!!! limiting T " << T <<std::endl;
-			T = limitVal::TDwn;
+			//T = limitVal::TDwn;
 			limitVal::limitTOrNot = true;
 			//system("pause");
 		}
@@ -467,11 +468,6 @@ namespace math
 			if (valType == 1)  //rho
 			{
 				out= limiter::calcConsvVarWthLimiter(element, a, b, valType);
-				//limit
-				if (out < 0)
-				{
-					out = limitVal::rhoDwn;
-				}
 			}
 			else if (valType == 2)  //u
 			{
@@ -509,6 +505,11 @@ namespace math
 					rhovVal(limiter::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(limiter::calcConsvVarWthLimiter(element, a, b, 4));
 				out = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				if (out < 0)
+				{
+					std::cout << "Negative T at cell " << element << std::endl;
+					system("pause");
+				}
 			}
 			else if (valType == 7)  //mu
 			{
@@ -733,7 +734,7 @@ namespace math
 		return output;
 	}
 
-	std::tuple<double, double> mappingStdToReal(int element, double aCoor, double bCoor)
+	std::tuple<double, double> directMapping(int element, double aCoor, double bCoor)
 	{
 		int elemType(auxUlti::checkType(element));
 		double xCoor(0.0), yCoor(0.0), xA(0.0), xB(0.0), xC(0.0),
@@ -812,6 +813,70 @@ namespace math
 			}
 		}
 
+		return std::make_tuple(aCoor, bCoor);
+	}
+
+	std::tuple<double, double> inverseMapping(int element, double xCoor, double yCoor)
+	{
+		int elemType(auxUlti::checkType(element));
+		double aCoor(0.0), bCoor(0.0), xA(0.0), xB(0.0), xC(0.0),
+			yA(0.0), yB(0.0), yC(0.0),
+			Ax(0.0), Bx(0.0), Cx(0.0), Dx(0.0),
+			Ay(0.0), By(0.0), Cy(0.0), Dy(0.0), AA(0.0), BB(0.0), CC(0.0);
+		bool realRoot(true);
+
+		std::tie(xA, yA) = auxUlti::getElemCornerCoord(element, 0);
+		std::tie(xB, yB) = auxUlti::getElemCornerCoord(element, 1);
+		std::tie(xC, yC) = auxUlti::getElemCornerCoord(element, 2);
+
+		if (elemType == 3) //Tri element
+		{
+			Ax = (xA - xB) / 4.0;
+			Bx = (xB - xA) / 4.0;
+			Cx = (2 * xC - xA - xB) / 4.0;
+			Dx = (2 * xC + xA + xB) / 4.0 - xCoor;
+			Ay = (yA - yB) / 4.0;
+			By = (yB - yA) / 4.0;
+			Cy = (2 * yC - yA - yB) / 4.0;
+			Dy = (2 * yC + yA + yB) / 4.0 - yCoor;
+		}
+		else if (elemType == 4) //Quad element
+		{
+			double xD(0.0), yD(0.0);
+			std::tie(xD, yD) = auxUlti::getElemCornerCoord(element, 3);
+
+			Ax = (xA - xB - xD + xC) / 4.0;
+			Bx = (- xA + xB - xD + xC) / 4.0;
+			Cx = (- xA - xB + xD + xC) / 4.0;
+			Dx = (xA + xB + xD + xC) / 4.0 - xCoor;
+			Ay = (yA - yB - yD + yC) / 4.0;
+			By = (-yA + yB - yD + yC) / 4.0;
+			Cy = (-yA - yB + yD + yC) / 4.0;
+			Dy = (yA + yB + yD + yC) / 4.0 - yCoor;
+		}
+		AA = -Ax * By + Ay * Bx;
+		BB = -Ax * Dy + Bx * Cy - Cx * By + Ay * Dx;
+		CC = Dx * Cy - Cx * Dy;
+		std::vector<double> vectorRoot(2,0.0);
+		std::tie(realRoot, vectorRoot[0], vectorRoot[1]) = math::solvQuadraticEq(AA, BB, CC);
+		if (realRoot)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				double error(fabs(fabs(vectorRoot[i]) - 1) * 100);
+				if ((fabs(vectorRoot[i]<=1)) || (error<=0.00001))
+				{
+					aCoor = vectorRoot[i];
+					break;
+				}
+			}
+		}
+		else
+		{
+			std::string str("mapping error occured");
+			exitDG(str);
+		}
+		bCoor = -(aCoor*By + Dy) / (aCoor*Ay + Cy);
 		return std::make_tuple(aCoor, bCoor);
 	}
 
@@ -1146,9 +1211,9 @@ namespace math
 					aGL = mathVar::GaussLobattoPts[na][nb][0];
 					bGL = mathVar::GaussLobattoPts[na][nb][1];
 
-					vectorRho[index] = math::pointValueNoLimiter(element, aG, bGL, 1);
+					vectorRho[index] = math::pointValue(element, aG, bGL, 1, 2);
 					index++;
-					vectorRho[index] = math::pointValueNoLimiter(element, aGL, bG, 1);
+					vectorRho[index] = math::pointValue(element, aGL, bG, 1, 2);
 					index++;
 				}
 			}
@@ -1235,7 +1300,7 @@ namespace math
 			{
 				for (int order = 1; order <= mathVar::orderElem; order++)
 				{
-					out += Value[order] * mathVar::B[order] * theta1Arr[element] * theta2Arr[element];
+					out += Value[order] * mathVar::B[order] * theta2Arr[element];
 				}
 			}
 			else
@@ -1277,22 +1342,23 @@ namespace math
 			always fall into 0-1 segment. Limiter is applied at all elements, whatever that element is needed to limit or not. because of that, limiting condition
 			is not needed to be checked any more*/
 
-			//limit rhoE
+			/*limit rhoE
 			switch (valType)
 			{
 			case 4:
 			{
 				if (out <= 0 || out != out)
 				{
-					double rhouVal(math::pointValue(element, a, b, 2, 2)), rhovVal(math::pointValue(element, a, b, 3, 2)), rhoVal(math::pointValue(element, a, b, 1, 2));
-					out = material::Cv*limitVal::TDwn*rhoVal + 0.5*(pow(rhouVal, 2) + pow(rhovVal, 2)) / rhoVal;
+					//double rhouVal(math::pointValue(element, a, b, 2, 2)), rhovVal(math::pointValue(element, a, b, 3, 2)), rhoVal(math::pointValue(element, a, b, 1, 2));
+					//out = material::Cv*limitVal::TDwn*rhoVal + 0.5*(pow(rhouVal, 2) + pow(rhovVal, 2)) / rhoVal;
+					std::cout << "rhoE negative\n";
 				}
 				break;
 			}
 			default:
 				break;
 			}
-
+			*/
 			return out;
 		}
 
@@ -1344,7 +1410,7 @@ namespace math
 		//Function computes theta2 at 1 Gauss point in input direction
 		double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega ,double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir)
 		{
-			double theta2(0.0);
+			double theta2(0.0), pTemp(0.0);
 			//coefficients of t equation
 			double A1(0.0), A2(0.0), A3(0.0), A4(0.0), B1(0.0), B2(0.0), B3(0.0), B4(0.0), ACoef(0.0), BCoef(0.0), CCoef(0.0);
 			bool realRoot(true);
@@ -1362,42 +1428,55 @@ namespace math
 			case 1:
 			{
 				rhoMod = math::limiter::calcRhoModified(element, aG, bGL, theta1);
-				rhouOrigin = math::pointValueNoLimiter(element, aG, bGL, 2);
-				rhovOrigin = math::pointValueNoLimiter(element, aG, bGL, 3);
-				rhoEOrigin = math::pointValueNoLimiter(element, aG, bGL, 4);
+				rhouOrigin = math::pointValue(element, aG, bGL, 2, 2);
+				rhovOrigin = math::pointValue(element, aG, bGL, 3, 2);
+				rhoEOrigin = math::pointValue(element, aG, bGL, 4, 2);
 				break;
 			}
 			case 2:
 			{
 				rhoMod = math::limiter::calcRhoModified(element, aGL, bG, theta1);
-				rhouOrigin = math::pointValueNoLimiter(element, aGL, bG, 2);
-				rhovOrigin = math::pointValueNoLimiter(element, aGL, bG, 3);
-				rhoEOrigin = math::pointValueNoLimiter(element, aGL, bG, 4);
+				rhouOrigin = math::pointValue(element, aGL, bG, 2, 2);
+				rhovOrigin = math::pointValue(element, aGL, bG, 3, 2);
+				rhoEOrigin = math::pointValue(element, aGL, bG, 4, 2);
 				break;
 			}
 			default:
 				break;
 			}
 
-			A1 = rhoMod - meanRho;
-			A2 = rhouOrigin - meanRhou;
-			A3 = rhovOrigin - meanRhov;
-			A4 = rhoEOrigin - meanRhoE;
-
-			ACoef = A4 * A1 - 0.5*(A2*A2 + A3 * A3);
-			BCoef = A4 * rhoMod + A1 * rhoEOrigin - A2 * rhouOrigin - A3 * rhovOrigin - omega * A1 / (material::gamma - 1);
-			CCoef = rhoEOrigin * rhoMod - 0.5*(pow(rhouOrigin, 2) + pow(rhovOrigin, 2)) - omega * rhoMod / (material::gamma - 1);
-
-			std::tie(realRoot, root1, root2) = math::solvQuadraticEq(ACoef, BCoef, CCoef);
-			if (realRoot)
+			pTemp = math::CalcP(math::CalcTFromConsvVar(rhoMod, rhouOrigin, rhovOrigin, rhoEOrigin), rhoMod);
+			if (pTemp < omega)
 			{
-				if ((root1>0.0) & (root1<1.0))
+				if (limitVal::limitFlagLocal==false)
 				{
-					theta2 = root1;
+					limitVal::limitFlagLocal = true;
 				}
-				else if ((root2>0.0) & (root2<1.0))
+				
+				A1 = rhoMod - meanRho;
+				A2 = rhouOrigin - meanRhou;
+				A3 = rhovOrigin - meanRhov;
+				A4 = rhoEOrigin - meanRhoE;
+
+				ACoef = A4 * A1 - 0.5*(A2*A2 + A3 * A3);
+				BCoef = A4 * rhoMod + A1 * rhoEOrigin - A2 * rhouOrigin - A3 * rhovOrigin - omega * A1 / (material::gamma - 1);
+				CCoef = rhoEOrigin * rhoMod - 0.5*(pow(rhouOrigin, 2) + pow(rhovOrigin, 2)) - omega * rhoMod / (material::gamma - 1);
+
+				std::tie(realRoot, root1, root2) = math::solvQuadraticEq(ACoef, BCoef, CCoef);
+				if (realRoot)
 				{
-					theta2 = root2;
+					if ((root1 > 0.0) & (root1 < 1.0))
+					{
+						theta2 = root1;
+					}
+					else if ((root2 > 0.0) & (root2 < 1.0))
+					{
+						theta2 = root2;
+					}
+					else
+					{
+						theta2 = 1.0;
+					}
 				}
 				else
 				{
@@ -1408,6 +1487,7 @@ namespace math
 			{
 				theta2 = 1.0;
 			}
+			
 			return theta2;
 		}
 	}

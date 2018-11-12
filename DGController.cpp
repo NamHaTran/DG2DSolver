@@ -4,7 +4,6 @@
 #include "DGMeshReaderLib.h"
 #include "DGPostProcessLib.h"
 #include "VarDeclaration.h"
-#include "VarDeclaration.h"
 #include "CommandCheck.h"
 #include "DGProcLib.h"
 #include "DGAuxUltilitiesLib.h"
@@ -57,6 +56,7 @@ void Processing()
 	while (process::checkRunningCond())
 	{
 		//APPLY LIMITER
+		limitVal::numOfLimitCell = 0;
 		process::limiter::limiter();
 
 		//CALCULATE TIME STEP

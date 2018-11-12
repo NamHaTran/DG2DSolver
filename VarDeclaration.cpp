@@ -132,5 +132,6 @@ namespace limitVal
 	double TUp(5000), TDwn(1);
 	double rhoUp(12.5), rhoDwn(0.0001);
 	double rhoEUp(0.0), rhoEDwn(0.0);  //computed at initialValue function
-	bool limitTOrNot(false);
+	bool limitTOrNot(false), limitFlagLocal(false), limitFlagGlobal(false);
+	int numOfLimitCell(0);
 }

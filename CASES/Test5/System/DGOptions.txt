@@ -12,8 +12,8 @@
 DGoptions
 {
 	numberOfGaussPoints			2
-	orderOfAccuracy				2
-	CourantNumber				0.5
+	orderOfAccuracy				0
+	CourantNumber				0.05
 	totalTime(s)				10
 	writeInterval				100
 	writeLog					true

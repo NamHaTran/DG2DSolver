@@ -461,7 +461,7 @@ namespace auxUlti
 			for (int nG = 0; nG <= mathVar::nGauss; nG++)
 			{
 				std::tie(aMaster, bMaster) = auxUlti::getGaussSurfCoorMaster(iedge, masterElem, nG);
-				std::tie(xMaster, yMaster) = math::mappingStdToReal(masterElem, aMaster, bMaster);
+				std::tie(xMaster, yMaster) = math::directMapping(masterElem, aMaster, bMaster);
 				meshVar::edgeGaussPoints_a[iedge][nG] = aMaster;
 				meshVar::edgeGaussPoints_b[iedge][nG] = bMaster;
 				if (bcType != 0)
@@ -471,7 +471,7 @@ namespace auxUlti
 				}
 				else
 				{
-					std::tie(aServant, bServant) = math::mappingRealToStd(iedge, servantElem, xMaster, yMaster);
+					std::tie(aServant, bServant) = math::inverseMapping(servantElem, xMaster, yMaster);
 				}
 				meshVar::edgeGaussPoints_a[iedge][nG + mathVar::nGauss + 1] = aServant;
 				meshVar::edgeGaussPoints_b[iedge][nG + mathVar::nGauss + 1] = bServant;

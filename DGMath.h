@@ -192,10 +192,13 @@ namespace math
 	double centerAuxValue(int element, int valType, int dir);
 
 	//Function maps point coordinates from standard element to real element
-	std::tuple<double, double> mappingStdToReal(int element, double aCoor, double bCoor);
+	std::tuple<double, double>directMapping(int element, double aCoor, double bCoor);
 
 	//Function maps point coordinates from real element to standard element
 	std::tuple<double, double> mappingRealToStd(int edge, int element, double xCoor, double yCoor);
+
+	//Function maps point coordinates from real element to standard element
+	std::tuple<double, double> inverseMapping(int element, double xCoor, double yCoor);
 
 	/*
 	//Function supports for math::mappingRealToStd

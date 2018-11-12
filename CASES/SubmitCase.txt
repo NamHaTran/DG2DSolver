@@ -12,6 +12,6 @@
 SubmitCase
 {
 	//caseName backWardStep2
-	caseName Test6
+	caseName Test5
 	//caseName flatplate
 }

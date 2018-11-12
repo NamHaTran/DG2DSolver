@@ -107,7 +107,7 @@ initialValue			0 0 0
 	{
 		std::string Str(" ");
 		std::string bcGrpStr(std::to_string(bcGrp));
-		Str = "Boundary condition of group " + bcGrpStr + " in file U is slip, but in file T it is not temperatureJump. This is considered as fatal error.";
+		Str = "Boundary condition of group " + bcGrpStr + " in file U is slip, but in file T it is not temperatureJump. This is considered as a fatal error.";
 		return Str;
 	}
 
@@ -121,7 +121,7 @@ initialValue			0 0 0
 	{
 		std::string Str(" ");
 		std::string bcGrpStr(std::to_string(edgeGrp));
-		Str = "Boundary incompatibility error is detected, please check condition of boundary group " + bcGrpStr + " in folder /0/. This is considered as fatal error.";
+		Str = "Boundary incompatibility error is detected, please check condition of boundary group " + bcGrpStr + " in folder /0/. This is considered as a fatal error.";
 		return Str;
 	}
 
@@ -161,4 +161,12 @@ To convert unv mesh format to DG2D readable format, do following task step by st
 )";
 		std::cout << Str;
 	}
+}
+
+void exitDG(std::string str)
+{
+	std::cout << "ERROR: " << str << ". This is considered as fatal error." << std::endl;
+	std::cout << "DGSolver will exit after you hit return.\n";
+	system("pause");
+	exit(EXIT_FAILURE);
 }

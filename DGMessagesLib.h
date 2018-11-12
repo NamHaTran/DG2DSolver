@@ -41,4 +41,7 @@ namespace message
 	/*Function display help for boundary conditions*/
 	void BCsHelp();
 }
+
+/*Function displays error message and exit program*/
+void exitDG(std::string str);
 #endif // DGMESSAGESLIB_H_INCLUDED

@@ -1023,14 +1023,15 @@ namespace process
 	{
 		void limiter()
 		{
-			double theta1(0.0), theta2(0.0);
 			if (systemVar::limiter==1)  //positivity preserving
 			{
 				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 				{
-					std::tie(theta1, theta2) = limiter::Pp::calcPpLimiterCoef(nelem);
-					theta1Arr[nelem] = theta1;
-					theta2Arr[nelem] = theta2;
+					std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::calcPpLimiterCoef(nelem);
+				}
+				if (limitVal::numOfLimitCell>0)
+				{
+					std::cout << "Limiter is applied at " << limitVal::numOfLimitCell << std::endl;
 				}
 			}
 			else if (systemVar::limiter == 0)  //No limiter
@@ -1084,8 +1085,13 @@ namespace process
 						index++;
 					}
 				}
+				if (limitVal::limitFlagLocal == true)
+				{
+					limitVal::numOfLimitCell++;
+				}
 				theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
-
+				//Reset limit flag
+				limitVal::limitFlagLocal = false;
 				return std::make_tuple(theta1, theta2);
 			}
 		}

@@ -1,9 +1,12 @@
 #include "DGPostProcessLib.h"
 #include "VarDeclaration.h"
+#include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
 #include "DGMath.h"
+#include "DGMessagesLib.h"
 #include <string>
 #include <iostream>
+#include <fstream>
 
 namespace debugTool
 {
@@ -98,5 +101,136 @@ namespace debugTool
 			<< "- p: " << pVal << std::endl
 			<< "- T: " << TVal << std::endl << std::endl;
 			//<< "- mu: " << muVal << std::endl << std::endl;
+	}
+}
+
+namespace DG2Matlab
+{
+	void createMatlabCode()
+	{
+		std::string fileName("MeshPlot.m"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\matlabFile");
+		std::string meshPlotLoc(Loc + "\\" + fileName);
+		std::ofstream meshPlotFlux(meshPlotLoc.c_str());
+		std::string code(" ");
+		code = R"(
+clear;
+clc;
+inpoed=dlmread('inpoed.txt',' ',13,1);
+points=dlmread('Points.txt');
+nedge=size(inpoed,2);
+figure;
+hold on;
+for iedge=1:nedge
+    point1=inpoed(1,iedge);
+    point2=inpoed(2,iedge);
+    XCoor=[points(point1+1,2) points(point2+1,2)];
+    YCoor=[points(point1+1,3) points(point2+1,3)];
+    plot(XCoor,YCoor,'-b');
+end
+axis equal;
+)";
+		if (meshPlotFlux)
+		{
+			meshPlotFlux << code;
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("MeshPlot.m", meshPlotLoc));
+		}
+	}
+
+	void exportData()
+	{
+		std::string fileName("rhoOrder.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\matlabFile");
+		std::string rhoLoc(Loc + "\\" + fileName);
+		std::ofstream rhoFlux(rhoLoc.c_str());
+		if (rhoFlux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				for (int j = 0; j <= mathVar::orderElem; j++)
+				{
+					rhoFlux << rho[i][j] << " ";
+				}
+				rhoFlux << math::pointValue(i, 0, 0, 1, 2) << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rho.txt", rhoLoc));
+		}
+		fileName = "rhou.txt";
+		std::string rhouLoc(Loc + "\\" + fileName);
+		std::ofstream rhouFlux(rhouLoc.c_str());
+		if (rhouFlux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				for (int j = 0; j <= mathVar::orderElem; j++)
+				{
+					rhouFlux << rhou[i][j] << " ";
+				}
+				rhouFlux << math::pointValue(i, 0, 0, 2, 2) << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhou.txt", rhoLoc));
+		}
+		fileName = "rhov.txt";
+		std::string rhovLoc(Loc + "\\" + fileName);
+		std::ofstream rhovFlux(rhovLoc.c_str());
+		if (rhovFlux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				for (int j = 0; j <= mathVar::orderElem; j++)
+				{
+					rhovFlux << rhov[i][j] << " ";
+				}
+				rhovFlux << math::pointValue(i, 0, 0, 3, 2) << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhov.txt", rhoLoc));
+		}
+		fileName = "rhoE.txt";
+		std::string rhoELoc(Loc + "\\" + fileName);
+		std::ofstream rhoEFlux(rhoELoc.c_str());
+		if (rhoEFlux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				for (int j = 0; j <= mathVar::orderElem; j++)
+				{
+					rhoEFlux << rhoE[i][j] << " ";
+				}
+				rhoEFlux << math::pointValue(i, 0, 0, 4, 2) << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhoE.txt", rhoLoc));
+		}
+
+		fileName = "cellCentroid.txt"; 
+		std::string cellCentroidLoc(Loc + "\\" + fileName);
+		std::ofstream cellCentroidFlux(cellCentroidLoc.c_str());
+		if (cellCentroidFlux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				for (int j = 0; j < 2; j++)
+				{
+					cellCentroidFlux << meshVar::geoCenter[i][j] << " ";
+				}
+				cellCentroidFlux << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("cellCentroid.txt", cellCentroidLoc));
+		}
 	}
 }
