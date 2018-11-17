@@ -1,8 +1,11 @@
 ﻿  DGController.cpp
+  DGMath.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(624): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1303): warning C4553: '==': result of expression not used; did you intend '='?
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
   Generating code
-  2 of 954 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+  28 of 973 functions ( 2.9%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+    14 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Release\DG2DSolver.exe

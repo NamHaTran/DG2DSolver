@@ -262,34 +262,60 @@ namespace math
 
 	namespace limiter
 	{
-		//Function calculates minimum value of rho of quad element
-		double calcMinRhoQuad(int element);
+		namespace triangleCell
+		{
+			//Function calculates minimum value of rho of tri element
+			double calcMinRho(int element);
 
-		//Function calculates minimum value of rho of tri element
-		double calcMinRhoTri(int element);
+			//Function computes theta1 coefficient and omega for Pp limiter
+			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
 
-		//Function calculates minimum value of p of tri element
-		double calcMinPTri(int element);
+			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
+			double calcRhoModified(int element, double a, double b, double theta1);
 
-		//Function calculates modified value of Rho at abitrary point (for calculating theta2)
-		double calcRhoModified(int element, double a, double b, double theta1);
+			//Function checks condition of running limiter
+			bool checkLimiter(int element, double theta1, double omega);
+
+			//Function supports for computing limiter
+			std::tuple<double, double> calcXYBySigma(double sigma, double xi, double yi, double xC, double yC);
+			//Function supports for computing limiter
+			double calcP(int element, double x, double y, double theta1);
+
+			//Function computes theta2 for Pp limiter
+			double calcTheta2Coeff(int element, double theta1, double omega);
+		}
+
+		namespace quadratureCell
+		{
+			//Function calculates minimum value of rho of quad element
+			double calcMinRhoQuad(int element);
+
+			//Function calculates minimum value of rho of tri element
+			double calcMinRhoTri(int element);
+
+			//Function calculates minimum value of p of tri element
+			double calcMinPTri(int element);
+
+			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
+			double calcRhoModified(int element, double a, double b, double theta1);
+
+			//Function returns true if element is needed to limit, and value of rho which applied first time limiter
+			std::tuple<bool, double> checkLimiterForQuad(int element, double a, double b);
+
+			//Function computes theta1 coefficient and omega for Pp limiter
+			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
+
+			//Function computes theta2 at 1 Gauss point in input direction
+			double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir);
+		}
 
 		/*Function computes value of conservative variables at abitrary point with applying limiter
-		valType:
-		1: rho
-		2: rhou
-		3: rhov
-		4: rhoE*/
+			valType:
+			1: rho
+			2: rhou
+			3: rhov
+			4: rhoE*/
 		double calcConsvVarWthLimiter(int element, double a, double b, int valType);
-
-		//Function returns true if element is needed to limit, and value of rho which applied first time limiter
-		std::tuple<bool, double> checkLimiterForQuad(int element, double a, double b);
-
-		//Function computes theta1 coefficient and omega for Pp limiter
-		std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
-
-		//Function computes theta2 at 1 Gauss point in input direction
-		double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir);
 	}
 
 	namespace geometricOp

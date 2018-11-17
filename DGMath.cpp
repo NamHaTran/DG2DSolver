@@ -387,7 +387,7 @@ namespace math
 	double CalcTFromConsvVar(double rho, double rhou, double rhov, double rhoE)
 	{
 		double T((material::gamma - 1)*(rhoE - 0.5*(pow(rhou, 2) + pow(rhov, 2)) / rho) / (material::R*rho));
-		//limit
+		/*limit
 		if ((T <= 0) || (T != T))
 		{
 			//std::cout << "Warning!!! limiting T " << T <<std::endl;
@@ -395,6 +395,7 @@ namespace math
 			limitVal::limitTOrNot = true;
 			//system("pause");
 		}
+		*/
 		return T;
 	}
 
@@ -519,6 +520,12 @@ namespace math
 					rhoEVal(limiter::calcConsvVarWthLimiter(element, a, b, 4));
 				double TVal(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal));
 				out = math::CalcVisCoef(TVal);
+				out = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				if (out < 0 || out != out)
+				{
+					std::cout << "Negative T at cell " << element << std::endl;
+					system("pause");
+				}
 			}
 		}
 		else if (valKind==2)  //conservative variables
@@ -876,7 +883,23 @@ namespace math
 			std::string str("mapping error occured");
 			exitDG(str);
 		}
-		bCoor = -(aCoor*By + Dy) / (aCoor*Ay + Cy);
+
+		if (fabs(aCoor*Ay + Cy) == 0)
+		{
+			if (fabs((aCoor*By + Dy) - (aCoor*Ay + Cy)) < 1e-16)
+			{
+				bCoor = 2;
+			}
+			else
+			{
+				std::string str("mapping error occured");
+				exitDG(str);
+			}
+		}
+		else
+		{
+			bCoor = -(aCoor*By + Dy) / (aCoor*Ay + Cy);
+		}
 		return std::make_tuple(aCoor, bCoor);
 	}
 
@@ -1195,99 +1218,402 @@ namespace math
 
 	namespace limiter
 	{
-		//Function calculates minimum value of rho of quad element
-		double calcMinRhoQuad(int element)
+		namespace triangleCell
 		{
-			std::vector<double> vectorRho(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
-			double aG(0.0), bG(0.0), aGL(0.0), bGL(0.0), min(0.0);
-			int index(0);
-			for (int na = 0; na <= mathVar::nGauss; na++)
+			double calcMinRho(int element)
 			{
-				for (int nb = 0; nb <= mathVar::nGauss; nb++)
+				std::vector<double>vectorRho(3, 0.0);
+				vectorRho[0] = math::pointValue(element, -1.0, -1.0, 1, 2);
+				vectorRho[1] = math::pointValue(element, 1.0, -1.0, 1, 2);
+				vectorRho[2] = math::pointValue(element, -1.0, 1.0, 1, 2);
+				double min(*std::min_element(vectorRho.begin(), vectorRho.end()));
+				return min;
+			}
+
+			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP)
+			{
+				double temp1(0.0), theta1(0.0);
+				std::vector<double> vectorOmega(3, 0.0);
+				vectorOmega[0] = systemVar::epsilon;
+				vectorOmega[1] = meanP;
+				vectorOmega[2] = meanRho;
+				double omega(*std::min_element(vectorOmega.begin(), vectorOmega.end()));  //find min value of vector
+
+				temp1 = (meanRho - omega) / (meanRho - minRho);
+				if (temp1 < 1.0)
 				{
-					aG = mathVar::GaussPts[na][nb][0];
-					bG = mathVar::GaussPts[na][nb][1];
-
-					aGL = mathVar::GaussLobattoPts[na][nb][0];
-					bGL = mathVar::GaussLobattoPts[na][nb][1];
-
-					vectorRho[index] = math::pointValue(element, aG, bGL, 1, 2);
-					index++;
-					vectorRho[index] = math::pointValue(element, aGL, bG, 1, 2);
-					index++;
+					theta1 = temp1;
 				}
+				else
+				{
+					theta1 = 1.0;
+				}
+				return std::make_tuple(theta1, omega);
 			}
-			min = *std::min_element(vectorRho.begin(), vectorRho.end());  //find min value of vector
-			return min;
-		}
 
-		//Function calculates minimum value of rho of tri element
-		double calcMinRhoTri(int element)
-		{
-			std::vector<double> vectorRho(3, 0.0);
-			double minVal(0.0);
-
-			vectorRho[0] = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
-			vectorRho[1] = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
-			vectorRho[2] = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
-			minVal = *std::min_element(vectorRho.begin(), vectorRho.end());
-			return minVal;
-		}
-
-		//Function calculates minimum value of p of tri element
-		double calcMinPTri(int element)
-		{
-			double rhoVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0), TVal(0.0);
-			std::vector<double> vectorP(3, 0.0);
-			double minVal(0.0);
-
-			rhoVal = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
-			rhouVal = math::pointValueNoLimiter(element, -1.0, -1.0, 2);
-			rhovVal = math::pointValueNoLimiter(element, -1.0, -1.0, 3);
-			rhoEVal = math::pointValueNoLimiter(element, -1.0, -1.0, 4);
-			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-			vectorP[0] = math::CalcP(TVal, rhoVal);
-
-			rhoVal = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
-			rhouVal = math::pointValueNoLimiter(element, -1.0, 1.0, 2);
-			rhovVal = math::pointValueNoLimiter(element, -1.0, 1.0, 3);
-			rhoEVal = math::pointValueNoLimiter(element, -1.0, 1.0, 4);
-			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-			vectorP[1] = math::CalcP(TVal, rhoVal);
-
-			rhoVal = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
-			rhouVal = math::pointValueNoLimiter(element, 1.0, -1.0, 2);
-			rhovVal = math::pointValueNoLimiter(element, 1.0, -1.0, 3);
-			rhoEVal = math::pointValueNoLimiter(element, 1.0, -1.0, 4);
-			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-			vectorP[2] = math::CalcP(TVal, rhoVal);
-
-			minVal = *std::min_element(vectorP.begin(), vectorP.end());
-			return minVal;
-		}
-
-		//Function calculates modified value of Rho at abitrary point (for calculating theta2)
-		double calcRhoModified(int element, double a, double b, double theta1)
-		{
-			double rhoMod(0.0);
-			std::vector<double> Value(mathVar::orderElem + 1, 0.0);
-
-			Value = auxUlti::getElementConserValuesOfOrder(element, 1);
-			math::basisFc(a, b);
-			for (int order = 1; order <= mathVar::orderElem; order++)
+			double calcRhoModified(int element, double a, double b, double theta1)
 			{
-				rhoMod += Value[order] * mathVar::B[order] * theta1;
+				double rhoMod(0.0);
+				std::vector<double> Value(mathVar::orderElem + 1, 0.0);
+
+				Value = auxUlti::getElementConserValuesOfOrder(element, 1);
+				math::basisFc(a, b);
+				for (int order = 1; order <= mathVar::orderElem; order++)
+				{
+					rhoMod += Value[order] * mathVar::B[order] * theta1;
+				}
+				rhoMod += Value[0];
+				return rhoMod;
 			}
-			rhoMod += Value[0];
-			return rhoMod;
+
+			bool checkLimiter(int element, double theta1, double omega)
+			{
+				double TTemp(0.0), rhoMod(0.0), rhouOrg(0.0), rhovOrg(0.0), rhoEOrg(0.0);
+				std::vector<double> vectorP(3, 0.0),
+					aCoors = {-1.0, 1.0, -1.0}, bCoors = { -1.0, -1.0, 1.0 };
+				bool out(true);
+
+				for (int i = 0; i < 3; i++)
+				{
+					rhoMod = math::limiter::triangleCell::calcRhoModified(element, aCoors[i], bCoors[i], theta1);
+					rhouOrg = math::pointValue(element, aCoors[i], bCoors[i], 2, 2);
+					rhovOrg = math::pointValue(element, aCoors[i], bCoors[i], 3, 2);
+					rhoEOrg = math::pointValue(element, aCoors[i], bCoors[i], 4, 2);
+					TTemp = math::CalcTFromConsvVar(rhoMod, rhouOrg, rhovOrg, rhoEOrg);
+					vectorP[i] = math::CalcP(TTemp, rhoMod);
+				}
+				double minP(*std::min_element(vectorP.begin(), vectorP.end()));
+				if (minP>=omega)
+				{
+					out = false;
+				}
+				return out;
+			}
+
+			//Function computes theta2 for Pp limiter
+			double calcTheta2Coeff(int element, double theta1, double omega)
+			{
+				double theta2(0.0);
+				bool needLimiter(math::limiter::triangleCell::checkLimiter(element, theta1, omega));
+				
+				if (needLimiter)
+				{
+					if (limitVal::limitFlagLocal == false)
+					{
+						limitVal::limitFlagLocal == true;
+					}
+
+					double pTemp1(0.0), pTemp2(0.0), pTemp3(0.0),
+						rhouOrigin1(0.0), rhovOrigin1(0.0), rhoEOrigin1(0.0), rhoMod1(0.0),
+						rhouOrigin2(0.0), rhovOrigin2(0.0), rhoEOrigin2(0.0), rhoMod2(0.0),
+						rhouOrigin3(0.0), rhovOrigin3(0.0), rhoEOrigin3(0.0), rhoMod3(0.0),
+						sigma1(0.0), sigma2(0.0), sigma3(0.0), sigma(0.0), 
+						xC(0.0), yC(0.0), xi(0.0), yi(0.0),
+						xTemp1(0.0), yTemp1(0.0), xTemp2(0.0), yTemp2(0.0), xTemp3(0.0), yTemp3(0.0),
+						a1(0.0), b1(0.0), a2(0.0), b2(0.0), a3(0.0), b3(0.0);
+					std::vector<double> vectorSigma(3, 0.0);
+					std::tie(xC, yC) = auxUlti::getCellCentroid(element);
+					for (int iNode = 0; iNode < 3; iNode++)
+					{
+						double error(1.0);
+						//Solve sigma by Bisection
+						std::tie(xi, yi) = auxUlti::getElemCornerCoord(element, iNode);
+						sigma1 = 0.0;
+						sigma2 = 1.0;
+						sigma3 = (sigma1 + sigma2) / 2;
+						while (error>1e-6)
+						{
+							sigma = sigma3;
+							std::tie(xTemp1, yTemp1) = math::limiter::triangleCell::calcXYBySigma(sigma1, xi, yi, xC, yC);
+							std::tie(xTemp2, yTemp2) = math::limiter::triangleCell::calcXYBySigma(sigma2, xi, yi, xC, yC);
+							std::tie(xTemp3, yTemp3) = math::limiter::triangleCell::calcXYBySigma(sigma3, xi, yi, xC, yC);
+
+							/*1. Compute p*/
+							pTemp1 = math::limiter::triangleCell::calcP(element, xTemp1, yTemp1, theta1) - omega;
+							pTemp2 = math::limiter::triangleCell::calcP(element, xTemp2, yTemp2, theta1) - omega;
+							pTemp3 = math::limiter::triangleCell::calcP(element, xTemp3, yTemp3, theta1) - omega;
+							
+							std::cout << "Element " <<element<<std::endl << "sigma: " << sigma1 << " " << sigma2 << " " << sigma3 << std::endl;
+							std::cout << "P: " << pTemp1 << " " << pTemp2 << " " << pTemp3 << std::endl;
+
+							/*2. Choose new section*/
+							if (pTemp1*pTemp3 < 0)
+							{
+								sigma2 = sigma3;
+							}
+							else if (pTemp2*pTemp3 < 0)
+							{
+								sigma1 = sigma3;
+							}
+							else
+							{
+								std::string str("limiting error occured, limiter cannot be solved sucessfully");
+								exitDG(str);
+							}
+							sigma3 = (sigma1 + sigma2) / 2;
+							/*3. Compute error*/
+							error = fabs(sigma - sigma3) * 100 / sigma;
+						}
+						vectorSigma[iNode] = sigma3;
+					}
+					theta2 = *std::min_element(vectorSigma.begin(), vectorSigma.end());
+				}
+				else
+				{
+					theta2 = 1;
+				}
+				return theta2;
+			}
+
+			std::tuple<double, double> calcXYBySigma(double sigma, double xi, double yi, double xC, double yC)
+			{
+				double x = sigma * xi + (1 - sigma)*xC,
+					y = sigma * yi + (1 - sigma)*yC;
+				return std::make_tuple(x, y);
+			}
+
+			double calcP(int element, double x, double y, double theta1)
+			{
+				double a(0.0), b(0.0), rhouOrigin(0.0), rhovOrigin(0.0), rhoEOrigin(0.0), rhoMod(0.0), p(0.0);
+				std::tie(a, b) = math::inverseMapping(element, x, y);
+				if (b==2)
+				{
+					std::cout << "At element" << element << "b=2\n";
+				}
+				rhoMod = math::limiter::triangleCell::calcRhoModified(element, a, b, theta1);
+				rhouOrigin = math::pointValue(element, a, b, 2, 2);
+				rhovOrigin = math::pointValue(element, a, b, 3, 2);
+				rhoEOrigin = math::pointValue(element, a, b, 4, 2);
+				p = math::CalcP(math::CalcTFromConsvVar(rhoMod, rhouOrigin, rhovOrigin, rhoEOrigin), rhoMod);
+				return p;
+			}
+		}
+
+		namespace quadratureCell
+		{
+			//Function calculates minimum value of rho of quad element
+			double calcMinRhoQuad(int element)
+			{
+				std::vector<double> vectorRho(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
+				double aG(0.0), bG(0.0), aGL(0.0), bGL(0.0), min(0.0);
+				int index(0);
+				for (int na = 0; na <= mathVar::nGauss; na++)
+				{
+					for (int nb = 0; nb <= mathVar::nGauss; nb++)
+					{
+						aG = mathVar::GaussPts[na][nb][0];
+						bG = mathVar::GaussPts[na][nb][1];
+
+						aGL = mathVar::GaussLobattoPts[na][nb][0];
+						bGL = mathVar::GaussLobattoPts[na][nb][1];
+
+						vectorRho[index] = math::pointValue(element, aG, bGL, 1, 2);
+						index++;
+						vectorRho[index] = math::pointValue(element, aGL, bG, 1, 2);
+						index++;
+					}
+				}
+				min = *std::min_element(vectorRho.begin(), vectorRho.end());  //find min value of vector
+				return min;
+			}
+
+			//Function calculates minimum value of rho of tri element
+			double calcMinRhoTri(int element)
+			{
+				std::vector<double> vectorRho(3, 0.0);
+				double minVal(0.0);
+
+				vectorRho[0] = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
+				vectorRho[1] = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
+				vectorRho[2] = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
+				minVal = *std::min_element(vectorRho.begin(), vectorRho.end());
+				return minVal;
+			}
+
+			//Function calculates minimum value of p of tri element
+			double calcMinPTri(int element)
+			{
+				double rhoVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0), TVal(0.0);
+				std::vector<double> vectorP(3, 0.0);
+				double minVal(0.0);
+
+				rhoVal = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
+				rhouVal = math::pointValueNoLimiter(element, -1.0, -1.0, 2);
+				rhovVal = math::pointValueNoLimiter(element, -1.0, -1.0, 3);
+				rhoEVal = math::pointValueNoLimiter(element, -1.0, -1.0, 4);
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				vectorP[0] = math::CalcP(TVal, rhoVal);
+
+				rhoVal = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
+				rhouVal = math::pointValueNoLimiter(element, -1.0, 1.0, 2);
+				rhovVal = math::pointValueNoLimiter(element, -1.0, 1.0, 3);
+				rhoEVal = math::pointValueNoLimiter(element, -1.0, 1.0, 4);
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				vectorP[1] = math::CalcP(TVal, rhoVal);
+
+				rhoVal = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
+				rhouVal = math::pointValueNoLimiter(element, 1.0, -1.0, 2);
+				rhovVal = math::pointValueNoLimiter(element, 1.0, -1.0, 3);
+				rhoEVal = math::pointValueNoLimiter(element, 1.0, -1.0, 4);
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				vectorP[2] = math::CalcP(TVal, rhoVal);
+
+				minVal = *std::min_element(vectorP.begin(), vectorP.end());
+				return minVal;
+			}
+
+			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
+			double calcRhoModified(int element, double a, double b, double theta1)
+			{
+				double rhoMod(0.0);
+				std::vector<double> Value(mathVar::orderElem + 1, 0.0);
+
+				Value = auxUlti::getElementConserValuesOfOrder(element, 1);
+				math::basisFc(a, b);
+				for (int order = 1; order <= mathVar::orderElem; order++)
+				{
+					rhoMod += Value[order] * mathVar::B[order] * theta1;
+				}
+				rhoMod += Value[0];
+				return rhoMod;
+			}
+
+			//Function returns true if element is needed to limit
+			std::tuple<bool, double> checkLimiterForQuad(int element, double a, double b)
+			{
+				double rhoVal(0.0), pVal(0.0), TVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0);
+				bool needLimiter(false);
+
+				rhoVal = math::pointValueNoLimiter(element, a, b, 1);
+
+				//Modify rho
+				rhoVal = math::limiter::quadratureCell::calcRhoModified(element, a, b, theta1Arr[element]);
+				rhouVal = math::pointValueNoLimiter(element, a, b, 2);
+				rhovVal = math::pointValueNoLimiter(element, a, b, 3);
+				rhoEVal = math::pointValueNoLimiter(element, a, b, 4);
+
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				pVal = math::CalcP(TVal, rhoVal);
+
+				if (pVal < systemVar::epsilon)
+				{
+					needLimiter = true;
+				}
+				return std::make_tuple(needLimiter, rhoVal);
+			}
+
+			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP)
+			{
+				double temp1(0.0), theta1(0.0);
+				std::vector<double> vectorOmega(3, 0.0);
+				vectorOmega[0] = systemVar::epsilon;
+				vectorOmega[1] = meanP;
+				vectorOmega[2] = meanRho;
+				double omega(*std::min_element(vectorOmega.begin(), vectorOmega.end()));  //find min value of vector
+
+				temp1 = (meanRho - omega) / (meanRho - minRho);
+				if (temp1 < 1.0)
+				{
+					theta1 = temp1;
+				}
+				else
+				{
+					theta1 = 1.0;
+				}
+				return std::make_tuple(theta1, omega);
+			}
+
+			//Function computes theta2 at 1 Gauss point in input direction
+			double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir)
+			{
+				double theta2(0.0), pTemp(0.0);
+				//coefficients of t equation
+				double A1(0.0), A2(0.0), A3(0.0), A4(0.0), B1(0.0), B2(0.0), B3(0.0), B4(0.0), ACoef(0.0), BCoef(0.0), CCoef(0.0);
+				bool realRoot(true);
+				double root1(0.0), root2(0.0), rhouOrigin(0.0), rhovOrigin(0.0), rhoEOrigin(0.0), rhoMod(0.0),
+					aG(0.0), bG(0.0), aGL(0.0), bGL(0.0), min(0.0);
+
+				aG = mathVar::GaussPts[na][nb][0];
+				bG = mathVar::GaussPts[na][nb][1];
+
+				aGL = mathVar::GaussLobattoPts[na][nb][0];
+				bGL = mathVar::GaussLobattoPts[na][nb][1];
+
+				switch (dir)
+				{
+				case 1:
+				{
+					rhoMod = math::limiter::quadratureCell::calcRhoModified(element, aG, bGL, theta1);
+					rhouOrigin = math::pointValue(element, aG, bGL, 2, 2);
+					rhovOrigin = math::pointValue(element, aG, bGL, 3, 2);
+					rhoEOrigin = math::pointValue(element, aG, bGL, 4, 2);
+					break;
+				}
+				case 2:
+				{
+					rhoMod = math::limiter::quadratureCell::calcRhoModified(element, aGL, bG, theta1);
+					rhouOrigin = math::pointValue(element, aGL, bG, 2, 2);
+					rhovOrigin = math::pointValue(element, aGL, bG, 3, 2);
+					rhoEOrigin = math::pointValue(element, aGL, bG, 4, 2);
+					break;
+				}
+				default:
+					break;
+				}
+
+				pTemp = math::CalcP(math::CalcTFromConsvVar(rhoMod, rhouOrigin, rhovOrigin, rhoEOrigin), rhoMod);
+				if (pTemp < omega)
+				{
+					if (limitVal::limitFlagLocal == false)
+					{
+						limitVal::limitFlagLocal = true;
+					}
+
+					A1 = rhoMod - meanRho;
+					A2 = rhouOrigin - meanRhou;
+					A3 = rhovOrigin - meanRhov;
+					A4 = rhoEOrigin - meanRhoE;
+
+					ACoef = A4 * A1 - 0.5*(A2*A2 + A3 * A3);
+					BCoef = A4 * rhoMod + A1 * rhoEOrigin - A2 * rhouOrigin - A3 * rhovOrigin - omega * A1 / (material::gamma - 1);
+					CCoef = rhoEOrigin * rhoMod - 0.5*(pow(rhouOrigin, 2) + pow(rhovOrigin, 2)) - omega * rhoMod / (material::gamma - 1);
+
+					std::tie(realRoot, root1, root2) = math::solvQuadraticEq(ACoef, BCoef, CCoef);
+					if (realRoot)
+					{
+						if ((root1 > 0.0) & (root1 < 1.0))
+						{
+							theta2 = root1;
+						}
+						else if ((root2 > 0.0) & (root2 < 1.0))
+						{
+							theta2 = root2;
+						}
+						else
+						{
+							theta2 = 1.0;
+						}
+					}
+					else
+					{
+						theta2 = 1.0;
+					}
+				}
+				else
+				{
+					theta2 = 1.0;
+				}
+
+				return theta2;
+			}
 		}
 
 		/*Function computes value of conservative variables at abitrary point with applying limiter
-		valType:
-		1: rho
-		2: rhou
-		3: rhov
-		4: rhoE*/
+			valType:
+			1: rho
+			2: rhou
+			3: rhov
+			4: rhoE*/
 		double calcConsvVarWthLimiter(int element, double a, double b, int valType)
 		{
 			double out(0.0), rhoVal(0.0);
@@ -1311,184 +1637,7 @@ namespace math
 				}
 			}
 			out += Value[0];
-
-			/*1st approaching:
-			In this approaching, we follow instruction shown on Zhang's paper exactly, this means we need to check limiter condition at each time 
-			we compute value of conservative variables. So this approaching leads to low computing performance. To improve performace, we use 2nd approaching.
-			//Check limiter condition
-			bool needLimiter(false);
-			std::tie(needLimiter, rhoVal) = math::limiter::checkLimiterForQuad(element, a, b);
-
-			if (needLimiter)
-			{
-				//Limit value at point (a, b)
-				//rho is limited 2 times, other variables are limited 1 time
-				if (valType == 1)  //rho
-				{
-					//Limit rho second time
-					out = theta2Arr[element] * (rhoVal - meanVals[element][valType - 1]) + meanVals[element][valType - 1];
-				}
-				else
-				{
-					//Limit other value second time
-					out = theta2Arr[element] * (out - meanVals[element][valType - 1]) + meanVals[element][valType - 1];
-				}
-				
-			}
-			*/
-
-			/*2nd approaching:
-			In this approaching, we compute values of theta1 and theta2 of every element, by limiting roots of quadratic equation of coefficient t, value of theta2
-			always fall into 0-1 segment. Limiter is applied at all elements, whatever that element is needed to limit or not. because of that, limiting condition
-			is not needed to be checked any more*/
-
-			/*limit rhoE
-			switch (valType)
-			{
-			case 4:
-			{
-				if (out <= 0 || out != out)
-				{
-					//double rhouVal(math::pointValue(element, a, b, 2, 2)), rhovVal(math::pointValue(element, a, b, 3, 2)), rhoVal(math::pointValue(element, a, b, 1, 2));
-					//out = material::Cv*limitVal::TDwn*rhoVal + 0.5*(pow(rhouVal, 2) + pow(rhovVal, 2)) / rhoVal;
-					std::cout << "rhoE negative\n";
-				}
-				break;
-			}
-			default:
-				break;
-			}
-			*/
 			return out;
-		}
-
-		//Function returns true if element is needed to limit
-		std::tuple<bool, double> checkLimiterForQuad(int element, double a, double b)
-		{
-			double rhoVal(0.0), pVal(0.0), TVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0);
-			bool needLimiter(false);
-
-			rhoVal = math::pointValueNoLimiter(element, a, b, 1);
-
-			//Modify rho
-			rhoVal = math::limiter::calcRhoModified(element, a, b, theta1Arr[element]);
-			rhouVal = math::pointValueNoLimiter(element, a, b, 2);
-			rhovVal = math::pointValueNoLimiter(element, a, b, 3);
-			rhoEVal = math::pointValueNoLimiter(element, a, b, 4);
-
-			TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-			pVal = math::CalcP(TVal, rhoVal);
-
-			if (pVal < systemVar::epsilon)
-			{
-				needLimiter = true;
-			}
-			return std::make_tuple(needLimiter, rhoVal);
-		}
-
-		std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP)
-		{
-			double temp1(0.0), theta1(0.0);
-			std::vector<double> vectorOmega(3, 0.0);
-			vectorOmega[0] = systemVar::epsilon;
-			vectorOmega[1] = meanP;
-			vectorOmega[2] = meanRho;
-			double omega(*std::min_element(vectorOmega.begin(), vectorOmega.end()));  //find min value of vector
-
-			temp1 = (meanRho - omega) / (meanRho - minRho);
-			if (temp1 < 1.0)
-			{
-				theta1 = temp1;
-			}
-			else
-			{
-				theta1 = 1.0;
-			}
-			return std::make_tuple(theta1, omega);
-		}
-
-		//Function computes theta2 at 1 Gauss point in input direction
-		double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega ,double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir)
-		{
-			double theta2(0.0), pTemp(0.0);
-			//coefficients of t equation
-			double A1(0.0), A2(0.0), A3(0.0), A4(0.0), B1(0.0), B2(0.0), B3(0.0), B4(0.0), ACoef(0.0), BCoef(0.0), CCoef(0.0);
-			bool realRoot(true);
-			double root1(0.0), root2(0.0), rhouOrigin(0.0), rhovOrigin(0.0), rhoEOrigin(0.0), rhoMod(0.0),
-				aG(0.0), bG(0.0), aGL(0.0), bGL(0.0), min(0.0);
-			
-			aG = mathVar::GaussPts[na][nb][0];
-			bG = mathVar::GaussPts[na][nb][1];
-
-			aGL = mathVar::GaussLobattoPts[na][nb][0];
-			bGL = mathVar::GaussLobattoPts[na][nb][1];
-
-			switch (dir)
-			{
-			case 1:
-			{
-				rhoMod = math::limiter::calcRhoModified(element, aG, bGL, theta1);
-				rhouOrigin = math::pointValue(element, aG, bGL, 2, 2);
-				rhovOrigin = math::pointValue(element, aG, bGL, 3, 2);
-				rhoEOrigin = math::pointValue(element, aG, bGL, 4, 2);
-				break;
-			}
-			case 2:
-			{
-				rhoMod = math::limiter::calcRhoModified(element, aGL, bG, theta1);
-				rhouOrigin = math::pointValue(element, aGL, bG, 2, 2);
-				rhovOrigin = math::pointValue(element, aGL, bG, 3, 2);
-				rhoEOrigin = math::pointValue(element, aGL, bG, 4, 2);
-				break;
-			}
-			default:
-				break;
-			}
-
-			pTemp = math::CalcP(math::CalcTFromConsvVar(rhoMod, rhouOrigin, rhovOrigin, rhoEOrigin), rhoMod);
-			if (pTemp < omega)
-			{
-				if (limitVal::limitFlagLocal==false)
-				{
-					limitVal::limitFlagLocal = true;
-				}
-				
-				A1 = rhoMod - meanRho;
-				A2 = rhouOrigin - meanRhou;
-				A3 = rhovOrigin - meanRhov;
-				A4 = rhoEOrigin - meanRhoE;
-
-				ACoef = A4 * A1 - 0.5*(A2*A2 + A3 * A3);
-				BCoef = A4 * rhoMod + A1 * rhoEOrigin - A2 * rhouOrigin - A3 * rhovOrigin - omega * A1 / (material::gamma - 1);
-				CCoef = rhoEOrigin * rhoMod - 0.5*(pow(rhouOrigin, 2) + pow(rhovOrigin, 2)) - omega * rhoMod / (material::gamma - 1);
-
-				std::tie(realRoot, root1, root2) = math::solvQuadraticEq(ACoef, BCoef, CCoef);
-				if (realRoot)
-				{
-					if ((root1 > 0.0) & (root1 < 1.0))
-					{
-						theta2 = root1;
-					}
-					else if ((root2 > 0.0) & (root2 < 1.0))
-					{
-						theta2 = root2;
-					}
-					else
-					{
-						theta2 = 1.0;
-					}
-				}
-				else
-				{
-					theta2 = 1.0;
-				}
-			}
-			else
-			{
-				theta2 = 1.0;
-			}
-			
-			return theta2;
 		}
 	}
 

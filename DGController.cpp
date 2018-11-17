@@ -76,6 +76,10 @@ void Processing()
 			std::cout << "Warning!!! Bounding T\n" << std::endl;
 			limitVal::limitTOrNot = false;
 		}
+		if (systemVar::iterCount>=397)
+		{
+			DG2Matlab::exportData(systemVar::iterCount);
+		}
 	}
 }
 

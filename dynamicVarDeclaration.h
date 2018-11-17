@@ -12,36 +12,18 @@ namespace meshVar
 	extern std::vector<int>adressOfBCVals;
 }
 
-/*Conservative variables declaration
-extern double rho[elements2DArrSize][maxOrder],
-rhou[elements2DArrSize][maxOrder],
-rhov[elements2DArrSize][maxOrder],
-rhoE[elements2DArrSize][maxOrder];*/
+/*Conservative variables declaration*/
 extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE;
 extern std::vector<std::vector<double>> rhoN, rhouN, rhovN, rhoEN;
 
-/*Primary variables declaration
-extern double u[elements2DArrSize][maxOrder],
-v[elements2DArrSize][maxOrder],
-e[elements2DArrSize][maxOrder],
-p[elements2DArrSize][maxOrder],
-T[elements2DArrSize][maxOrder],
-mu[elements2DArrSize][maxOrder];*/
+/*Primary variables declaration*/
 extern std::vector<std::vector<double>>u, v, e, p, T, mu;
 
 /*Auxilary variables
-//X direction
-extern double rhoX[elements2DArrSize][maxOrder],
-rhouX[elements2DArrSize][maxOrder],
-rhovX[elements2DArrSize][maxOrder],
-rhoEX[elements2DArrSize][maxOrder];*/
+//X direction*/
 extern std::vector<std::vector<double>> rhoX, rhouX, rhovX, rhoEX;
 
-/*Y direction
-extern double rhoY[elements2DArrSize][maxOrder],
-rhouY[elements2DArrSize][maxOrder],
-rhovY[elements2DArrSize][maxOrder],
-rhoEY[elements2DArrSize][maxOrder];*/
+/*Y direction*/
 extern std::vector<std::vector<double>> rhoY, rhouY, rhovY, rhoEY;
 
 //time step

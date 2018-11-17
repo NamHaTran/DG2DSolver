@@ -89,5 +89,8 @@ namespace auxUlti
 
 	//Function returns location of input edge on BC values array
 	int getAdressOfBCEdgesOnBCValsArray(int edge);
+
+	//Function gets centroid coordinates of inputted cell
+	std::tuple<double, double> getCellCentroid(int element);
 }
 #endif // DGAUXULTILITIESLIB_H_INCLUDED

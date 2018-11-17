@@ -114,8 +114,17 @@ namespace process
 
 		namespace Pp
 		{
-			//Function computes coefficients theta1 theta2 for positivity preserving limiter
-			std::tuple<double, double> calcPpLimiterCoef(int element);
+			namespace triangleCell
+			{
+				//Function computes coefficients theta1 theta2 for positivity preserving limiter
+				std::tuple<double, double> calcPpLimiterCoef(int element);
+			}
+
+			namespace quadratureCell
+			{
+				//Function computes coefficients theta1 theta2 for positivity preserving limiter
+				std::tuple<double, double> calcPpLimiterCoef(int element);
+			}
 		}
 	}
 

@@ -12,6 +12,6 @@ namespace debugTool
 namespace DG2Matlab
 {
 	void createMatlabCode();
-	void exportData();
+	void exportData(int iter);
 }
 #endif // DGPOSTPROCESSLIB_H_INCLUDED

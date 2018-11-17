@@ -139,9 +139,10 @@ axis equal;
 		}
 	}
 
-	void exportData()
+	void exportData(int iter)
 	{
-		std::string fileName("rhoOrder.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\matlabFile");
+		std::string iter_str = std::to_string(iter);
+		std::string fileName("rho"+ iter_str +".txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\matlabFile");
 		std::string rhoLoc(Loc + "\\" + fileName);
 		std::ofstream rhoFlux(rhoLoc.c_str());
 		if (rhoFlux)
@@ -159,7 +160,7 @@ axis equal;
 		{
 			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rho.txt", rhoLoc));
 		}
-		fileName = "rhou.txt";
+		fileName = "rhou" + iter_str + ".txt";
 		std::string rhouLoc(Loc + "\\" + fileName);
 		std::ofstream rhouFlux(rhouLoc.c_str());
 		if (rhouFlux)
@@ -177,7 +178,7 @@ axis equal;
 		{
 			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhou.txt", rhoLoc));
 		}
-		fileName = "rhov.txt";
+		fileName = "rhov" + iter_str + ".txt";
 		std::string rhovLoc(Loc + "\\" + fileName);
 		std::ofstream rhovFlux(rhovLoc.c_str());
 		if (rhovFlux)
@@ -195,7 +196,7 @@ axis equal;
 		{
 			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhov.txt", rhoLoc));
 		}
-		fileName = "rhoE.txt";
+		fileName = "rhoE" + iter_str + ".txt";
 		std::string rhoELoc(Loc + "\\" + fileName);
 		std::ofstream rhoEFlux(rhoELoc.c_str());
 		if (rhoEFlux)
@@ -231,6 +232,38 @@ axis equal;
 		else
 		{
 			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("cellCentroid.txt", cellCentroidLoc));
+		}
+
+		fileName = "theta1" + iter_str + ".txt";
+		std::string theta1Loc(Loc + "\\" + fileName);
+		std::ofstream theta1Flux(theta1Loc.c_str());
+		if (theta1Flux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				theta1Flux << theta1Arr[i] << " ";
+				theta1Flux << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("cellCentroid.txt", theta1Loc));
+		}
+
+		fileName = "theta2" + iter_str + ".txt";
+		std::string theta2Loc(Loc + "\\" + fileName);
+		std::ofstream theta2Flux(theta2Loc.c_str());
+		if (theta2Flux)
+		{
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				theta2Flux << theta2Arr[i] << " ";
+				theta2Flux << "\n";
+			}
+		}
+		else
+		{
+			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("cellCentroid.txt", theta2Loc));
 		}
 	}
 }

@@ -1,17 +1,4 @@
-﻿  DGAuxUltilitiesLib.cpp
-  DGBCsLib.cpp
-  DGController.cpp
-  DGIOLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(47): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(163): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(461): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(564): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(715): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(799): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  DGMath.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(617): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  DGMessagesLib.cpp
-  DGPostProcessLib.cpp
-  DGProcLib.cpp
-  Generating Code...
+﻿  DGMath.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(624): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1303): warning C4553: '==': result of expression not used; did you intend '='?
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Debug\DG2DSolver.exe

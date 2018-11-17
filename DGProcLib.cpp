@@ -1027,7 +1027,7 @@ namespace process
 			{
 				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 				{
-					std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::calcPpLimiterCoef(nelem);
+					std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::triangleCell::calcPpLimiterCoef(nelem);
 				}
 				if (limitVal::numOfLimitCell>0)
 				{
@@ -1046,53 +1046,91 @@ namespace process
 
 		namespace Pp
 		{
-			//Function calculates coefficients of positivity preserving limiter
-			std::tuple<double, double> calcPpLimiterCoef(int element)
+			namespace triangleCell
 			{
-				double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
-				int elemType(auxUlti::checkType(element));
-
-				double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0);
-
-				/*Note: according to Kontzialis et al, positivity preserving limiter for quadrilateral element, which is presented on Zhang's paper,
-				shown a very good effect on results. Because of that, Zhang's limiter is used in this code for both triangular and quadrilateral elements*/
-
-				//Find theta1
-				minRho = math::limiter::calcMinRhoQuad(element);
-				meanRho = rho[element][0];
-
-				meanRhou = rhou[element][0];
-				meanRhov = rhov[element][0];
-				meanRhoE = rhoE[element][0];
-				double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
-				double meanP(math::CalcP(meanT, meanRho));
-				
-				//Compute theta1
-				std::tie(theta1, omega) = math::limiter::calcTheta1Coeff(meanRho, minRho, meanP);
-
-				//Find theta2
-				std::vector<double> vectort(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
-				int index(0);
-
-				for (int na = 0; na <= mathVar::nGauss; na++)
+				//Function calculates coefficients of positivity preserving limiter
+				std::tuple<double, double> calcPpLimiterCoef(int element)
 				{
-					for (int nb = 0; nb <= mathVar::nGauss; nb++)
+					double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
+					int elemType(auxUlti::checkType(element));
+
+					double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0);
+
+					//Find theta1
+					minRho = math::limiter::triangleCell::calcMinRho(element);
+					meanRho = rho[element][0];
+					meanRhou = rhou[element][0];
+					meanRhov = rhov[element][0];
+					meanRhoE = rhoE[element][0];
+					double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
+					double meanP(math::CalcP(meanT, meanRho));
+
+					//Compute theta1
+					std::tie(theta1, omega) = math::limiter::triangleCell::calcTheta1Coeff(meanRho, minRho, meanP);
+
+					//Find theta2
+					theta2 = math::limiter::triangleCell::calcTheta2Coeff(element, theta1, omega);
+
+					if (limitVal::limitFlagLocal == true)
 					{
-						vectort[index] = math::limiter::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 1);
-						index++;
-
-						vectort[index] = math::limiter::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 2);
-						index++;
+						limitVal::numOfLimitCell++;
 					}
+					//Reset limit flag
+					limitVal::limitFlagLocal = false;
+					return std::make_tuple(theta1, theta2);
 				}
-				if (limitVal::limitFlagLocal == true)
+			}
+
+			namespace quadratureCell
+			{
+				//Function calculates coefficients of positivity preserving limiter
+				std::tuple<double, double> calcPpLimiterCoef(int element)
 				{
-					limitVal::numOfLimitCell++;
+					double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
+					int elemType(auxUlti::checkType(element));
+
+					double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0);
+
+					/*Note: according to Kontzialis et al, positivity preserving limiter for quadrilateral element, which is presented on Zhang's paper,
+					shown a very good effect on results. Because of that, Zhang's limiter is used in this code for both triangular and quadrilateral elements*/
+
+					//Find theta1
+					minRho = math::limiter::quadratureCell::calcMinRhoQuad(element);
+					meanRho = rho[element][0];
+
+					meanRhou = rhou[element][0];
+					meanRhov = rhov[element][0];
+					meanRhoE = rhoE[element][0];
+					double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
+					double meanP(math::CalcP(meanT, meanRho));
+
+					//Compute theta1
+					std::tie(theta1, omega) = math::limiter::quadratureCell::calcTheta1Coeff(meanRho, minRho, meanP);
+
+					//Find theta2
+					std::vector<double> vectort(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
+					int index(0);
+
+					for (int na = 0; na <= mathVar::nGauss; na++)
+					{
+						for (int nb = 0; nb <= mathVar::nGauss; nb++)
+						{
+							vectort[index] = math::limiter::quadratureCell::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 1);
+							index++;
+
+							vectort[index] = math::limiter::quadratureCell::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 2);
+							index++;
+						}
+					}
+					if (limitVal::limitFlagLocal == true)
+					{
+						limitVal::numOfLimitCell++;
+					}
+					theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
+					//Reset limit flag
+					limitVal::limitFlagLocal = false;
+					return std::make_tuple(theta1, theta2);
 				}
-				theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
-				//Reset limit flag
-				limitVal::limitFlagLocal = false;
-				return std::make_tuple(theta1, theta2);
 			}
 		}
 
