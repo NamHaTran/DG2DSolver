@@ -947,45 +947,46 @@ namespace process
 
 		double localTimeStep(int element)
 		{
-			//Here, xC and yC are coordinates of center of standard elements
-			double deltaT(0.0), xC(-1.0 / 3.0), yC(1.0 / 3.0), size(0.0);
-			if (auxUlti::checkType(element) == 4)
-			{
-				xC = 0.0;
-				yC = 0.0;
-			}
+			std::vector<double> vectorDeltaT;
+			double deltaT(0.0), uVal(0.0), vVal(0.0), velocity(0.0), TVal(0.0), aSound(0.0), LocalMach(0.0), muVal(0.0),
+				aG(0.0), bG(0.0), rhoVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0), size(meshVar::cellSize[element]);
 
-			//std::tie(xC, yC, size) = auxUlti::getCellMetrics(element);
-			double uVal(math::pointValue(element, xC, yC, 2, 1)),
-				vVal(math::pointValue(element, xC, yC, 3, 1)), velocity(0.0),
-				TVal(math::pointValue(element, xC, yC, 6, 1)), aSound(0.0), LocalMach(0.0);
+			/*
 			if (TVal<=0 || TVal != TVal) //
 			{
 				std::cout << "Unphysical T is detected at element " << element + meshVar::nelem1D + 1 << std::endl;
 				//TVal = iniValues::TIni;
 				//system("pause");
-				double rhoVal(math::pointValue(element, xC, yC, 1, 2)),
-					rhouVal(math::pointValue(element, xC, yC, 2, 2)),
-					rhovVal(math::pointValue(element, xC, yC, 3, 2)),
-					rhoEVal(math::pointValue(element, xC, yC, 4, 2));
+				double rhoVal(math::pointValue(element, aC, bC, 1, 2)),
+					rhouVal(math::pointValue(element, aC, bC, 2, 2)),
+					rhovVal(math::pointValue(element, aC, bC, 3, 2)),
+					rhoEVal(math::pointValue(element, aC, bC, 4, 2));
 				//std::cout << "value rho, rhou, rhov, rhoe = " << rhoVal << ", " << rhouVal << ", " << rhovVal << ", " << rhoEVal << std::endl;
 			}
-
-			velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
-			aSound = math::CalcSpeedOfSound(TVal);
-			LocalMach = velocity / aSound;
-			size = meshVar::cellSize[element];
-			double muVal(math::CalcVisCoef(TVal));
-
-			if (systemVar::iterCount < -2000)
+			*/
+			for (int na = 0; na <= mathVar::nGauss; na++)
 			{
-				deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL / 10) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
-			}
-			else
-			{
-				deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
-			}
+				for (int nb = 0; nb <= mathVar::nGauss; nb++)
+				{
+					aG = mathVar::GaussPts[na][nb][0];
+					bG = mathVar::GaussPts[na][nb][1];
+					rhoVal = math::pointValue(element, aG, bG, 1, 2);
+					rhouVal = math::pointValue(element, aG, bG, 2, 2);
+					rhovVal = math::pointValue(element, aG, bG, 3, 2);
+					rhoEVal = math::pointValue(element, aG, bG, 4, 2);
 
+					uVal = rhouVal / rhoVal;
+					vVal = rhovVal / rhoVal;
+					velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+					TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+					aSound = math::CalcSpeedOfSound(TVal);
+					LocalMach = velocity / aSound;
+					muVal = math::CalcVisCoef(TVal);
+					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size)));
+				}
+			}
+			//deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
+			deltaT = *std::min_element(vectorDeltaT.begin(), vectorDeltaT.end());
 			return deltaT;
 		}
 
@@ -1027,11 +1028,11 @@ namespace process
 			{
 				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 				{
-					std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::triangleCell::calcPpLimiterCoef(nelem);
+					std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::calcPpLimiterCoef(nelem);
 				}
 				if (limitVal::numOfLimitCell>0)
 				{
-					std::cout << "Limiter is applied at " << limitVal::numOfLimitCell << std::endl;
+					std::cout << "Limiter is applied at " << limitVal::numOfLimitCell << " cell(s)/n" ;
 				}
 			}
 			else if (systemVar::limiter == 0)  //No limiter
@@ -1071,10 +1072,6 @@ namespace process
 					//Find theta2
 					theta2 = math::limiter::triangleCell::calcTheta2Coeff(element, theta1, omega);
 
-					if (limitVal::limitFlagLocal == true)
-					{
-						limitVal::numOfLimitCell++;
-					}
 					//Reset limit flag
 					limitVal::limitFlagLocal = false;
 					return std::make_tuple(theta1, theta2);
@@ -1089,7 +1086,7 @@ namespace process
 					double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
 					int elemType(auxUlti::checkType(element));
 
-					double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0);
+					double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0), aG(0.0), bG(0.0);
 
 					/*Note: according to Kontzialis et al, positivity preserving limiter for quadrilateral element, which is presented on Zhang's paper,
 					shown a very good effect on results. Because of that, Zhang's limiter is used in this code for both triangular and quadrilateral elements*/
@@ -1108,7 +1105,8 @@ namespace process
 					std::tie(theta1, omega) = math::limiter::quadratureCell::calcTheta1Coeff(meanRho, minRho, meanP);
 
 					//Find theta2
-					std::vector<double> vectort(2 * (mathVar::nGauss + 1) * (mathVar::nGauss + 1), 0.0);
+					std::vector<double> vectort;
+					/*
 					int index(0);
 
 					for (int na = 0; na <= mathVar::nGauss; na++)
@@ -1122,11 +1120,52 @@ namespace process
 							index++;
 						}
 					}
+					*/
+
+					//Compute t at all internal Gauss point
+					for (int na = 0; na <= mathVar::nGauss; na++)
+					{
+						for (int nb = 0; nb <= mathVar::nGauss; nb++)
+						{
+							aG = mathVar::GaussPts[na][nb][0];
+							bG = mathVar::GaussPts[na][nb][1];
+							vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
+						}
+					}
+					//Compute t at edge DA
+					aG = -1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						bG = mathVar::xGauss[nG];
+						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
+					}
+					//Compute t at edge BC
+					aG = 1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						bG = mathVar::xGauss[nG];
+						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
+					}
+					//Compute t at edge AB
+					bG = -1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						aG = mathVar::xGauss[nG];
+						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
+					}
+					//Compute t at edge CD
+					bG = 1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						aG = mathVar::xGauss[nG];
+						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
+					}
+
+					theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
 					if (limitVal::limitFlagLocal == true)
 					{
 						limitVal::numOfLimitCell++;
 					}
-					theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
 					//Reset limit flag
 					limitVal::limitFlagLocal = false;
 					return std::make_tuple(theta1, theta2);

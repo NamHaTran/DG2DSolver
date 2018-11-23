@@ -1,0 +1,2 @@
+log was created at time
+Cannot open file <D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\7\flatplate2.unv> located at D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\7

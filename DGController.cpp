@@ -53,6 +53,28 @@ void Processing()
 	//std::cout << meshVar::BoundaryType;
 	std::cout << " \n" << "Simulation is started\n";
 
+	//debugTool::checkElemSurPt();
+	//void checkPtsSurPt(int ipoin);
+	//debugTool::checkElemsSurElem(3435);
+	/*
+	debugTool::checkElemInfor(3435);
+	debugTool::checkElemInfor(5995);
+	debugTool::checkElemInfor(3369);
+	debugTool::checkElemInfor(557);
+	debugTool::checkElemInfor(795);
+	debugTool::checkElemInfor(3396);
+	debugTool::checkElemInfor(6028);
+
+	debugTool::checkElemInfor(284);
+	debugTool::checkElemInfor(2542);
+	debugTool::checkElemInfor(2444);
+	debugTool::checkElemInfor(297);
+	debugTool::checkElemInfor(2382);
+	debugTool::checkElemInfor(2518);
+	debugTool::checkElemInfor(2483);
+	*/
+	//void checkPointValue(int element);
+
 	while (process::checkRunningCond())
 	{
 		//APPLY LIMITER
@@ -76,10 +98,8 @@ void Processing()
 			std::cout << "Warning!!! Bounding T\n" << std::endl;
 			limitVal::limitTOrNot = false;
 		}
-		if (systemVar::iterCount>=397)
-		{
-			DG2Matlab::exportData(systemVar::iterCount);
-		}
+	
+		//DG2Matlab::exportData(systemVar::iterCount);
 	}
 }
 

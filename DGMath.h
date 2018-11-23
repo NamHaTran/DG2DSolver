@@ -290,9 +290,6 @@ namespace math
 			//Function calculates minimum value of rho of quad element
 			double calcMinRhoQuad(int element);
 
-			//Function calculates minimum value of rho of tri element
-			double calcMinRhoTri(int element);
-
 			//Function calculates minimum value of p of tri element
 			double calcMinPTri(int element);
 
@@ -306,7 +303,7 @@ namespace math
 			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
 
 			//Function computes theta2 at 1 Gauss point in input direction
-			double calcTheta2Coeff(int element, int na, int nb, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE, int dir);
+			double calcTheta2Coeff(int element, double aG, double bG, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE);
 		}
 
 		/*Function computes value of conservative variables at abitrary point with applying limiter

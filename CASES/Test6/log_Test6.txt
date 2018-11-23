@@ -1,2 +1,6 @@
 log was created at 20-10-2018_18-05-05
 Boundary condition <inOutFlow> of file U is not valid for type <wall>
+log was created at 18-11-2018_20-03-33
+Cannot open file <rho.txt> located at D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\Test6\matlabFile\rho397.txt
+log was created at 19-11-2018_07-33-05
+Cannot open file <rho.txt> located at D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\Test6\matlabFile\rho1.txt
