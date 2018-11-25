@@ -1,26 +1,12 @@
-﻿  CommandCheck.cpp
-  ConstDeclaration.cpp
-  DG2D.cpp
-  DGAuxUltilitiesLib.cpp
-  DGBCsLib.cpp
-  DGController.cpp
-  DGIOLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(47): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(163): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(461): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(564): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(715): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(799): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+﻿  DGController.cpp
   DGMath.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(625): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  DGMeshReaderLib.cpp
-  DGMessagesLib.cpp
   DGPostProcessLib.cpp
-  DGProcLib.cpp
-  dynamicVarDeclaration.cpp
-  VarDeclaration.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(269): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
   Generating code
-  All 962 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  145 of 967 functions (15.0%) were compiled, the rest were copied from previous compilation.
+    2 functions were new in current compilation
+    176 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Release\DG2DSolver.exe

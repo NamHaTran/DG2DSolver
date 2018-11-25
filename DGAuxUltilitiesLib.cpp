@@ -560,4 +560,80 @@ namespace auxUlti
 		double xC(meshVar::geoCenter[element][0]), yC(meshVar::geoCenter[element][1]);
 		return std::make_tuple(xC, yC);
 	}
+
+	namespace postProcess
+	{
+		std::vector<int> getElementsSurroundingPoint(int point)
+		{
+			std::vector<int>ElSurPt;
+			for (int iesup = meshVar::esup2[point] + 1; iesup <= meshVar::esup2[point + 1]; iesup++)
+			{
+				ElSurPt.push_back(meshVar::esup1[iesup]);
+			}
+			return ElSurPt;
+		}
+
+		std::tuple<double, double> findPointCoorInStandardSpace(int point, int element)
+		{
+			std::vector<int> iarray;
+			int index(0), size(0.0), elemType(auxUlti::checkType(element));
+			double a(0.0), b(0.0);
+			for (int ipoin = 0; ipoin < elemType; ipoin++)
+			{
+				iarray.push_back(meshVar::Elements2D[element][ipoin]);
+			}
+
+			for (int i = 0; i < size; i++)
+			{
+				if (point == iarray[i])
+				{
+					index = i;
+					break;
+				}
+				else
+				{
+					index = -1;
+				}
+			}
+
+			switch (index)
+			{
+			case 0:
+			{
+				a = -1;
+				b = -1;
+				break;
+			}
+			case 1:
+			{
+				a = 1;
+				b = -1;
+				break;
+			}
+			case 2:
+			{
+				if (elemType==3)
+				{
+					a = -1;
+					b = 1;
+				}
+				else
+				{
+					a = 1;
+					b = 1;
+				}
+				break;
+			}
+			case 3:
+			{
+				a = -1;
+				b = 1;
+				break;
+			}
+			default:
+				break;
+			}
+			return std::make_tuple(a, b);
+		}
+	}
 }

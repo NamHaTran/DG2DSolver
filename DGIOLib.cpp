@@ -904,7 +904,6 @@ namespace IO
 
 	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes)
 	{
-		systemVar::iterCount++;
 		if (systemVar::iterCount <= 5)
 		{
 			math::residualManipulation::calcNormResidual(rhoRes, rhouRes, rhovRes, rhoERes);
@@ -925,7 +924,6 @@ namespace IO
 			rhoERes /= systemVar::rhoEResNorm;
 		}
 
-		std::cout << "Iteration " << systemVar::iterCount << std::endl;
 		if (systemVar::ddtScheme == 1)
 		{
 			std::cout << "Time step: " << dt << std::endl;

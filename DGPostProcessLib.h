@@ -1,5 +1,6 @@
 #ifndef DGPOSTPROCESSLIB_H_INCLUDED
 #define DGPOSTPROCESSLIB_H_INCLUDED
+#include <vector>
 namespace debugTool
 {
 	void checkElemSurPt(int ipoin);
@@ -13,5 +14,16 @@ namespace DG2Matlab
 {
 	void createMatlabCode();
 	void exportData(int iter);
+}
+
+namespace DG2Tecplot
+{
+	std::vector<double> calcNodeValues(int valType);
+
+	std::vector<double> calcCellCenteredValues(int valType);
+
+	void exportNodeData(int iter);
+
+	void exportCellCenteredData(int iter);
 }
 #endif // DGPOSTPROCESSLIB_H_INCLUDED

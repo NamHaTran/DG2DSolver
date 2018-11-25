@@ -1772,9 +1772,32 @@ namespace math
 					out += Value[order] * mathVar::B[order] * theta2Arr[element];
 				}
 			}
-			
-				
 			out += Value[0];
+
+			//Modify output value
+			if (valType == 1 || valType == 4)
+			{
+				if (out < 0)
+				{
+					out = 0;
+					if (valType == 1)
+					{
+						for (int order = 1; order <= mathVar::orderElem; order++)
+						{
+							out += Value[order] * mathVar::B[order] * theta2Arr[element] * theta1Arr[element] * 0.9;
+						}
+					}
+					else
+					{
+						for (int order = 1; order <= mathVar::orderElem; order++)
+						{
+							out += Value[order] * mathVar::B[order] * theta2Arr[element] * 0.9;
+						}
+					}
+					out += Value[0];
+				}
+			}
+			
 			return out;
 		}
 	}

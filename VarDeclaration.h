@@ -41,7 +41,7 @@ namespace systemVar
 	//constant for limiter
 	extern double epsilon;
 
-	extern int iterCount;
+	extern int iterCount, savingCout;
 	extern std::vector<double> rhoResNormVector,
 		rhouResNormVector,
 		rhovResNormVector,

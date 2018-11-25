@@ -92,5 +92,15 @@ namespace auxUlti
 
 	//Function gets centroid coordinates of inputted cell
 	std::tuple<double, double> getCellCentroid(int element);
+
+	//Auxilary functions support for postProcessing
+	namespace postProcess
+	{
+		//Function gets vector of element which are surrounding inputted point
+		std::vector<int> getElementsSurroundingPoint(int point);
+
+		//Function finds index of inputted integer in inputted array
+		std::tuple<double, double> findPointCoorInStandardSpace(int point, int element);
+	}
 }
 #endif // DGAUXULTILITIESLIB_H_INCLUDED

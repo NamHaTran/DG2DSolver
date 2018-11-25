@@ -1032,7 +1032,7 @@ namespace process
 				}
 				if (limitVal::numOfLimitCell>0)
 				{
-					std::cout << "Limiter is applied at " << limitVal::numOfLimitCell << " cell(s)/n" ;
+					std::cout << "Limiter is applied at " << limitVal::numOfLimitCell << " cell(s)\n" ;
 				}
 			}
 			else if (systemVar::limiter == 0)  //No limiter

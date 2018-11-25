@@ -60,6 +60,19 @@ namespace preProcessKey
 		}
 		return trigger;
 	}
+
+	namespace debug
+	{
+		bool checkElement(std::string cmd)
+		{
+			bool trigger(false);
+			if ((cmd.compare("checkElementInfor") == 0) || (cmd.compare("checkelementinfor") == 0))
+			{
+				trigger = true;
+			}
+			return trigger;
+		}
+	}
 }
 
 namespace processKey

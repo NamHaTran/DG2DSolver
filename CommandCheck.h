@@ -21,6 +21,11 @@ namespace preProcessKey
 
 	/*Function return true if reSubmit is available*/
 	bool reSubmit(std::string cmd);
+
+	namespace debug
+	{
+		bool checkElement(std::string cmd);
+	}
 }
 
 namespace processKey

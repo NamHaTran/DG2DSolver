@@ -22,6 +22,9 @@ namespace MshReader
 	/*Calculate normal vector of each face (edge)*/
 	void GetNormalVector();
 
+	/*Function supports for EdgesInfor(), it returns index of checking number in input iarray*/
+	int findIndex(int number, int iarray[], int size);
+
 	/*Child functions*/
 
 	int CheckConnection(int point, int helpArray[], int length);

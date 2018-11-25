@@ -20,7 +20,7 @@ namespace systemVar
 	int limiter(1);
 	double epsilon(1e-13);
 
-	int iterCount(0);
+	int iterCount(0), savingCout(0.0);
 	std::vector<double> rhoResNormVector(5, 0.0),
 		rhouResNormVector(5, 0.0),
 		rhovResNormVector(5, 0.0),

@@ -19,7 +19,7 @@ void Executer(std::string cmd)
 	}
 	else if (processKey::checkDGRun(cmd))
 	{
-		PreProcessing();
+		//PreProcessing();
 		Processing();
 	}
 	else if (postProcessKey::checkExit(cmd))
@@ -37,6 +37,15 @@ void Executer(std::string cmd)
 	else if (preProcessKey::reSubmit(cmd))
 	{
 		IO::getCase();
+		PreProcessing();
+	}
+	else if (preProcessKey::debug::checkElement(cmd))
+	{
+		int input(-1);
+		std::cout << "Input element ID (ID supplied by SALOME): ";
+		std::cin >> input;
+		std::cout << " \n";
+		debugTool::checkElemInfor(input);
 	}
 	else
 	{
@@ -48,35 +57,14 @@ void Processing()
 {
 	/*SET INITIAL VALUES*/
 	process::setIniValues();
-	//auxUlti::ConserToPri();
 
-	//std::cout << meshVar::BoundaryType;
 	std::cout << " \n" << "Simulation is started\n";
-
-	//debugTool::checkElemSurPt();
-	//void checkPtsSurPt(int ipoin);
-	//debugTool::checkElemsSurElem(3435);
-	/*
-	debugTool::checkElemInfor(3435);
-	debugTool::checkElemInfor(5995);
-	debugTool::checkElemInfor(3369);
-	debugTool::checkElemInfor(557);
-	debugTool::checkElemInfor(795);
-	debugTool::checkElemInfor(3396);
-	debugTool::checkElemInfor(6028);
-
-	debugTool::checkElemInfor(284);
-	debugTool::checkElemInfor(2542);
-	debugTool::checkElemInfor(2444);
-	debugTool::checkElemInfor(297);
-	debugTool::checkElemInfor(2382);
-	debugTool::checkElemInfor(2518);
-	debugTool::checkElemInfor(2483);
-	*/
-	//void checkPointValue(int element);
 
 	while (process::checkRunningCond())
 	{
+		systemVar::iterCount++;
+		std::cout << "Iteration " << systemVar::iterCount << std::endl;
+
 		//APPLY LIMITER
 		limitVal::numOfLimitCell = 0;
 		process::limiter::limiter();
@@ -92,14 +80,14 @@ void Processing()
 
 		//UPDATE VARIABLES
 		process::NSFEq::updateVariables();
-
-		if (limitVal::limitTOrNot)
-		{
-			std::cout << "Warning!!! Bounding T\n" << std::endl;
-			limitVal::limitTOrNot = false;
-		}
 	
-		//DG2Matlab::exportData(systemVar::iterCount);
+		systemVar::savingCout++;
+		if (systemVar::savingCout == systemVar::wrtI) //
+		{
+			std::cout << "Saving case...\n" << std::endl;
+			DG2Tecplot::exportCellCenteredData(systemVar::iterCount);
+			systemVar::savingCout = 0;
+		}
 	}
 }
 
@@ -138,5 +126,5 @@ void PreProcessing()
 
 void PostProcessing()
 {
-
+	
 }
