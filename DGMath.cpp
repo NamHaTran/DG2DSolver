@@ -664,7 +664,6 @@ namespace math
 		std::vector<double> Value(mathVar::orderElem + 1, 0.0);
 
 		Value = auxUlti::getElementAuxValuesOfOrder(element, valType, dir);
-		double muVal(math::pointValue(element, a, b, 7, 1));
 
 		math::basisFc(a, b);
 		for (int order = 0; order <= mathVar::orderElem; order++)
@@ -899,14 +898,14 @@ namespace math
 				exitDG(str);
 			}
 			
-			if (fabs(aCoor*Ay + Cy) == 0)
+			if (fabs(aCoor*Ay + Cy) <= 1e-15)
 			{
 				//std::cout << "aCoor: " << aCoor << " criteria: " << fabs((aCoor*By + Dy) - (aCoor*Ay + Cy)) << std::endl;
 				//bCoor = 2;
 				AA = -Ay * Bx + Ax * By;
 				BB = -Ay * Dx + By * Cx - Cy * Bx + Ax * Dy;
 				CC = Dy * Cx - Cy * Dx;
-				if (fabs(AA) < 1e-16 && fabs(BB) < 1e-16 && fabs(CC) < 1e-16)
+				if (fabs(AA) < 1e-15 && fabs(BB) < 1e-15 && fabs(CC) < 1e-15)
 				{
 					aCoor = -1;
 					bCoor = 1;

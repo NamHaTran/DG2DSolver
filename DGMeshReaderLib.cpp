@@ -3,6 +3,7 @@
 #include "ConstDeclaration.h"
 #include "VarDeclaration.h"
 #include "dynamicVarDeclaration.h"
+#include "DGAuxUltilitiesLib.h"
 #include <fstream>
 #include <iostream>
 #include <math.h>
@@ -29,7 +30,10 @@ namespace MshReader
 
 		/*Calculate normal vector of each face (edge)*/
 		GetNormalVector();
-		
+
+		/*Get points at boundary (for postProcessing)*/
+		getBoundaryPoints();
+
 		/*Save mesh data*/
 		IO::SaveMeshInfor();
 	}
@@ -655,5 +659,31 @@ namespace MshReader
 		normX = deltaY / vectorLength;
 		normY = -deltaX / vectorLength;
 		return std::make_tuple(normX, normY);
+	}
+
+	//Note: run this function AFTER mesh processing is DONE
+	void getBoundaryPoints()
+	{
+		std::vector<int> helpArr(meshVar::npoin, 0);
+		int edgeId(-1), pt1(-1), pt2(-1);
+		for (int i = 0; i < meshVar::numBCEdges; i++)
+		{
+			edgeId = meshVar::adressOfBCVals[i];
+			pt1 = meshVar::inpoed[0][edgeId];
+			pt2 = meshVar::inpoed[1][edgeId];
+			if (helpArr[pt1] == 0)
+			{
+				SurfaceBCFields::BCPoints.push_back(pt1);
+				helpArr[pt1] = 1;
+			}
+
+			if (helpArr[pt2] == 0)
+			{
+				SurfaceBCFields::BCPoints.push_back(pt2);
+				helpArr[pt2] = 1;
+			}
+		}
+
+		auxUlti::clear1DIntVector(helpArr);
 	}
 }

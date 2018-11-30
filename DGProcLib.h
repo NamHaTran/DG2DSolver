@@ -33,6 +33,10 @@ namespace process
 
 	namespace auxEq
 	{
+		void calcValuesAtInterface();
+
+		std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int valType);
+
 		/*Function solves auxilary equation at all elements for auxilary variables*/
 		void solveAuxEquation();
 
@@ -59,6 +63,10 @@ namespace process
 
 	namespace NSFEq
 	{
+		void calcValuesAtInterface();
+
+		std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int mod, int direction, int valType);
+
 		/*Function solves NSEF equation at all elements for conservative variables*/
 		void solveNSFEquation();
 
@@ -152,6 +160,8 @@ namespace process
 
 	/*Function return false if running contion is wrong*/
 	bool checkRunningCond();
+
+	std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int valType);
 }
 
 #endif // DGPROCLIB_H_INCLUDED

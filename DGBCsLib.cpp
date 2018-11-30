@@ -456,19 +456,20 @@ namespace NSFEqBCs
 							UMinus[1] = UPlus[1];
 							UMinus[2] = UPlus[2];
 							UMinus[3] = bcValues::pBC[edgeGrp - 1] / (material::gamma - 1) + 0.5*UPlus[0] * (pow(uPlus, 2) + pow(vPlus, 2));
-							break;
 						}
+						break;
 						case false:
 						{
 							UMinus[0] = UPlus[0];
 							UMinus[1] = UPlus[1];
 							UMinus[2] = UPlus[2];
 							UMinus[3] = UPlus[3];
-							break;
-						}
+						
 						}
 						break;
+						}
 					}
+					break;
 					case 2: //PNR
 					{
 						double TInternal(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3]));
@@ -482,19 +483,19 @@ namespace NSFEqBCs
 							UMinus[1] = UPlus[1];
 							UMinus[2] = UPlus[2];
 							UMinus[3] = (2 * bcValues::pBC[edgeGrp - 1] - pInternal) / (material::gamma - 1) + 0.5*UPlus[0] * (pow(uPlus, 2) + pow(vPlus, 2));
-							break;
 						}
+						break;
 						case false:
 						{
 							UMinus[0] = UPlus[0];
 							UMinus[1] = UPlus[1];
 							UMinus[2] = UPlus[2];
 							UMinus[3] = UPlus[3];
-							break;
-						}
 						}
 						break;
+						}
 					}
+					break;
 					default:
 						break;
 					}
@@ -507,7 +508,6 @@ namespace NSFEqBCs
 
 		std::vector <std::vector<double>> Symmetry(int element, int edge, int edgeGrp, int nG)
 		{
-			//test thu zerogradient
 			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
 			std::vector<double>
 				UPlus(4, 0.0),
@@ -525,25 +525,25 @@ namespace NSFEqBCs
 			for (int i = 0; i < 4; i++)
 			{
 				UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
-				UMinus[i] = UPlus[i];
+				//UMinus[i] = UPlus[i];
 				dUXPlus[i] = math::pointAuxValue(element, a, b, i + 1, 1);
 				dUYPlus[i] = math::pointAuxValue(element, a, b, i + 1, 2);
 				dUXMinus[i] = dUXPlus[i];
-				//dUYMinus[i] = -dUYPlus[i];
-				dUYMinus[i] = dUYPlus[i];
+				dUYMinus[i] = -dUYPlus[i];
+				//dUYMinus[i] = dUYPlus[i];
 			}
 			/*
 			double uP(UPlus[1] / UPlus[0]), vP(UPlus[2] / UPlus[0]), tx(-ny), ty(nx), uPn(0.0), uPt(0.0);
 			uPn = uP * (-nx) + vP * (-ny);
 			uPt = uP * tx + vP * ty;
-
+			*/
 			UMinus[0] = math::pointValue(element, a, b, 1, 2);
 			UMinus[1] = UPlus[1] * (ny*ny - nx * nx) + UPlus[2] * (-2 * nx*ny);
 			UMinus[2] = UPlus[1] * (-2 * nx*ny) + UPlus[2] * (nx*nx - ny * ny);
 			//UMinus[1] = UMinus[0] * (uPn*nx + uPt * tx);
 			//UMinus[2] = UMinus[0] * (uPn*ny + uPt * ty);
 			UMinus[3] = math::pointValue(element, a, b, 4, 2);
-			*/
+			
 			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
 			return Fluxes;
 		}
@@ -827,9 +827,11 @@ namespace auxilaryBCs
 			Fluxes[i][1] = math::numericalFluxes::auxFlux(gaussVector[i][1], gaussVector[i][0], ny);
 		}
 		*/
+
 		std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
 		std::vector<double>
 			UPlus(4, 0.0),
+			UMinus(4, 0.0),
 			norm(2, 0.0);
 		double a(0.0), b(0.0);
 		std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, element, nG);
@@ -840,12 +842,16 @@ namespace auxilaryBCs
 		{
 			UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
 		}
-
 		double muP(math::CalcVisCoef(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3])));
+		UMinus[0] = math::pointValue(element, a, b, 1, 2);
+		UMinus[1] = UPlus[1] * (ny*ny - nx * nx) + UPlus[2] * (-2 * nx*ny);
+		UMinus[2] = UPlus[1] * (-2 * nx*ny) + UPlus[2] * (nx*nx - ny * ny);
+		UMinus[3] = math::pointValue(element, a, b, 4, 2);
+
 		for (int i = 0; i < 4; i++)
 		{
-			Fluxes[i][0] = UPlus[i]*nx*muP; //at symmetry plane, muPlus = muMinus
-			Fluxes[i][1] = UPlus[i]*ny*muP;
+			Fluxes[i][0] = math::numericalFluxes::auxFlux(UMinus[i] * muP, UPlus[i] * muP, nx);
+			Fluxes[i][1] = math::numericalFluxes::auxFlux(UMinus[i] * muP, UPlus[i] * muP, ny);
 		}
 		return Fluxes;
 	}

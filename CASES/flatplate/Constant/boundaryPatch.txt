@@ -17,29 +17,22 @@ inlet
 	Method				weakPrescribed
 }
  
-front
+symmetry
 {
 	Group				2
 	Type				symmetry
 }
  
-flat_plate
+flatplate
 {
 	Group				3
 	Type				wall
 	Method				weakPrescribed
 }
  
-outlet_back
-{
-	Group				4
-	Type				patch
-	Method				weakRiemann
-}
- 
 outlet
 {
-	Group				5
+	Group				4
 	Type				patch
 	Method				weakRiemann
 }

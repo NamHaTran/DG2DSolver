@@ -1,4 +1,4 @@
-+------------------------------ CFD LOVES C++ ---------------------------+
+ +------------------------------ CFD LOVES C++ ---------------------------+
 |--------------------DISCONTINUOS GALERKIN METHOD SOLVER-----------------|
 |                                  Author                                |
 |   Nam Ha Tran.                                                         |
@@ -12,8 +12,8 @@
 Material Properties
 {
 	gammaRatio					1.4
-	gasConstant					287
-	PrandtlNumber				0.72
-	SutherlandAs				1.46e-6
-	SutherlandTs				110.4
+	gasConstant					296.8
+	PrandtlNumber				0.71
+	SutherlandAs				1.41e-6
+	SutherlandTs				111
 }

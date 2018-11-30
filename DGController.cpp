@@ -19,7 +19,7 @@ void Executer(std::string cmd)
 	}
 	else if (processKey::checkDGRun(cmd))
 	{
-		//PreProcessing();
+		PreProcessing();
 		Processing();
 	}
 	else if (postProcessKey::checkExit(cmd))
@@ -37,7 +37,7 @@ void Executer(std::string cmd)
 	else if (preProcessKey::reSubmit(cmd))
 	{
 		IO::getCase();
-		PreProcessing();
+		//PreProcessing();
 	}
 	else if (preProcessKey::debug::checkElement(cmd))
 	{
@@ -59,7 +59,7 @@ void Processing()
 	process::setIniValues();
 
 	std::cout << " \n" << "Simulation is started\n";
-
+	int loadConstCount(0);
 	while (process::checkRunningCond())
 	{
 		systemVar::iterCount++;
@@ -73,9 +73,11 @@ void Processing()
 		process::Euler::calcGlobalTimeStep();
 
 		//SOLVE AUXILARY EQUATION
+		process::auxEq::calcValuesAtInterface();
 		process::auxEq::solveAuxEquation();
 
 		//SOLVE NSF EQUATION
+		process::NSFEq::calcValuesAtInterface();
 		process::NSFEq::solveNSFEquation();
 
 		//UPDATE VARIABLES
@@ -85,8 +87,15 @@ void Processing()
 		if (systemVar::savingCout == systemVar::wrtI) //
 		{
 			std::cout << "Saving case...\n" << std::endl;
-			DG2Tecplot::exportCellCenteredData(systemVar::iterCount);
+			DG2Tecplot::exportNodeData(systemVar::iterCount);
 			systemVar::savingCout = 0;
+		}
+
+		loadConstCount++;
+		if (loadConstCount == 10) //
+		{
+			IO::loadConstants();
+			loadConstCount = 0;
 		}
 	}
 }

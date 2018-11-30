@@ -9,37 +9,31 @@
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
 Temperature conditions (K)
-initialValue				293
+initialValue				83.4
 inlet
 {
 	Group				1
 	Type				inOutFlow
-	value				293
+	value				83.4
 }
  
-front
+symmetry
 {
 	Group				2
 	Type				symmetry
 }
  
-flat_plate
+flatplate
 {
 	Group				3
-	Type				WallAdiabatic
-}
- 
-outlet_back
-{
-	Group				4
-	Type				inOutFlow
-	value				293
+	Type				WallIsothermal
+	value				200
 }
  
 outlet
 {
-	Group				5
+	Group				4
 	Type				inOutFlow
-	value				293
+	value				83.4
 }
  

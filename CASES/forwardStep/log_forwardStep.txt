@@ -1,0 +1,2 @@
+log was created at 28-11-2018_19-51-32
+Boundary condition <inOutFlow> of file U is not valid for type <wall>

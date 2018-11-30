@@ -97,6 +97,7 @@ namespace auxUlti
 		return std::make_tuple(x, y);
 	}
 	
+	/*
 	void ConserToPri()
 	{
 		for (int ielem = 0; ielem < meshVar::nelem2D; ielem++)
@@ -112,7 +113,7 @@ namespace auxUlti
 			}
 		}
 	}
-	
+	*/
 	std::string workingdir()
 	{
 		char buf[256];
@@ -517,13 +518,24 @@ namespace auxUlti
 		auxUlti::resize2DArray(rhouN, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhovN, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhoEN, meshVar::nelem2D, mathVar::orderElem + 1);
-
+		/*
 		auxUlti::resize2DArray(u, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(v, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(e, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(p, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(T, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(mu, meshVar::nelem2D, mathVar::orderElem + 1);
+		*/
+
+		auxUlti::resize2DArray(aux_interface_rho, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(aux_interface_rhou, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(aux_interface_rhov, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(aux_interface_rhoE, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+
+		auxUlti::resize2DArray(interface_rho, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(interface_rhou, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(interface_rhov, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(interface_rhoE, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
 
 		auxUlti::resize2DArray(rhoX, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhouX, meshVar::nelem2D, mathVar::orderElem + 1);
@@ -535,8 +547,30 @@ namespace auxUlti
 		auxUlti::resize2DArray(rhovY, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhoEY, meshVar::nelem2D, mathVar::orderElem + 1);
 
+		auxUlti::resize2DArray(invis_interface_rhoX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(invis_interface_rhouX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(invis_interface_rhovX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(invis_interface_rhoEX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+
+		auxUlti::resize2DArray(invis_interface_rhoY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(invis_interface_rhouY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(invis_interface_rhovY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(invis_interface_rhoEY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+
+		auxUlti::resize2DArray(Vis_interface_rhoX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(Vis_interface_rhouX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(Vis_interface_rhovX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(Vis_interface_rhoEX, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+
+		auxUlti::resize2DArray(Vis_interface_rhoY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(Vis_interface_rhouY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(Vis_interface_rhovY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+		auxUlti::resize2DArray(Vis_interface_rhoEY, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
+
 		theta1Arr.resize(meshVar::nelem2D);
 		theta2Arr.resize(meshVar::nelem2D);
+
+		LxFConst.resize(meshVar::inpoedCount);
 
 		//meshVar::adressOfBCVals.resize(meshVar::numBCEdges);
 	}
@@ -561,6 +595,15 @@ namespace auxUlti
 		return std::make_tuple(xC, yC);
 	}
 
+	void clear1DIntVector(std::vector<int>&vector)
+	{
+		int vectorLenth(vector.size());
+		/*Use erase function to clear vector*/
+		vector.erase(vector.begin(), vector.begin() + vectorLenth);
+		/*Shrink to fit*/
+		vector.shrink_to_fit();
+	}
+
 	namespace postProcess
 	{
 		std::vector<int> getElementsSurroundingPoint(int point)
@@ -576,14 +619,14 @@ namespace auxUlti
 		std::tuple<double, double> findPointCoorInStandardSpace(int point, int element)
 		{
 			std::vector<int> iarray;
-			int index(0), size(0.0), elemType(auxUlti::checkType(element));
+			int index(0), elemType(auxUlti::checkType(element));
 			double a(0.0), b(0.0);
 			for (int ipoin = 0; ipoin < elemType; ipoin++)
 			{
 				iarray.push_back(meshVar::Elements2D[element][ipoin]);
 			}
 
-			for (int i = 0; i < size; i++)
+			for (int i = 0; i < elemType; i++)
 			{
 				if (point == iarray[i])
 				{
@@ -600,34 +643,34 @@ namespace auxUlti
 			{
 			case 0:
 			{
-				a = -1;
-				b = -1;
+				a = -1.0;
+				b = -1.0;
 				break;
 			}
 			case 1:
 			{
-				a = 1;
-				b = -1;
+				a = 1.0;
+				b = -1.0;
 				break;
 			}
 			case 2:
 			{
 				if (elemType==3)
 				{
-					a = -1;
-					b = 1;
+					a = -1.0;
+					b = 1.0;
 				}
 				else
 				{
-					a = 1;
-					b = 1;
+					a = 1.0;
+					b = 1.0;
 				}
 				break;
 			}
 			case 3:
 			{
-				a = -1;
-				b = 1;
+				a = -1.0;
+				b = 1.0;
 				break;
 			}
 			default:

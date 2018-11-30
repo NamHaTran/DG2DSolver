@@ -9,37 +9,30 @@
 +------------------------------------------------------------------------+
 	Program ran at (d-m-y_h-m-s) time
 Pressure conditions (Pa)
-initialValue				101325
+initialValue				2.97
 inlet
 {
 	Group 1
 	Type				inOutFlow
-	value 				101325
+	value 				2.97
 }
  
-front
+symmetry
 {
 	Group 2
 	Type				symmetry
 }
  
-flat_plate
+flatplate
 {
 	Group 3
 	Type				zeroGradient
 }
  
-outlet_back
+outlet
 {
 	Group 4
 	Type				inOutFlow
-	value 				101325
-}
- 
-outlet
-{
-	Group 5
-	Type				inOutFlow
-	value 				101325
+	value 				2.97
 }
  

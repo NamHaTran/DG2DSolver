@@ -14,7 +14,7 @@ namespace auxUlti
 	std::tuple<double, double> getElemCornerCoord(int elem, int index);
 
 	/*Function calculates primary variables from conservative variables*/
-	void ConserToPri();
+	//void ConserToPri();
 
 	/*Function gets working directory*/
 	std::string workingdir();
@@ -92,6 +92,9 @@ namespace auxUlti
 
 	//Function gets centroid coordinates of inputted cell
 	std::tuple<double, double> getCellCentroid(int element);
+
+	//Function deletes 1D vector and frees its memory
+	void clear1DIntVector(std::vector<int>&vector);
 
 	//Auxilary functions support for postProcessing
 	namespace postProcess

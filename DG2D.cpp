@@ -10,7 +10,7 @@ int main()
 	IO::dispLogo();
 	std::cout << "                     Welcome to DG2D solver console!!\n";
 	IO::getCase();
-	PreProcessing();
+	//PreProcessing();
 	while (systemVar::endKey==false)
 	{
 		std::cout << ">> ";

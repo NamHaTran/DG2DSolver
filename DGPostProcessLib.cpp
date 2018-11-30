@@ -322,57 +322,113 @@ DATAPACKING=BLOCK)";
 		{
 			fileFlux << code << std::endl << "NODES=" << std::to_string(meshVar::npoin) << ", " << "ELEMENTS=" << std::to_string(meshVar::nelem2D) << std::endl;
 			//X
+			int counter(0);
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << meshVar::Points[i][0] << " ";
 			}
 			fileFlux << std::endl;
 
 			//Y
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << meshVar::Points[i][1] << " ";
 			}
 			fileFlux << std::endl;
 
 			//RHO
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << nodeRho[i] << " ";
 			}
 			fileFlux << std::endl;
 
 			//U
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << node_u[i] << " ";
 			}
 			fileFlux << std::endl;
 
 			//U
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << node_v[i] << " ";
 			}
 			fileFlux << std::endl;
 
 			//VELOCITY_MAG
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << node_uMag[i] << " ";
 			}
 			fileFlux << std::endl;
 
 			//P
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << node_p[i] << " ";
 			}
 			fileFlux << std::endl;
 
 			//T
+			counter = 0;
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
 				fileFlux << node_T[i] << " ";
 			}
 			fileFlux << std::endl;

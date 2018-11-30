@@ -25,6 +25,9 @@ namespace MshReader
 	/*Function supports for EdgesInfor(), it returns index of checking number in input iarray*/
 	int findIndex(int number, int iarray[], int size);
 
+	//Note: run this function AFTER mesh processing is DONE
+	void getBoundaryPoints();
+
 	/*Child functions*/
 
 	int CheckConnection(int point, int helpArray[], int length);

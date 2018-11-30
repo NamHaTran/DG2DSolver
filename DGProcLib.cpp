@@ -167,8 +167,8 @@ namespace process
 		}
 
 		//Calculate limit of rhoE
-		limitVal::rhoEUp = material::Cv*limitVal::TUp*limitVal::rhoUp;
-		limitVal::rhoEDwn = material::Cv*limitVal::TDwn*limitVal::rhoDwn;
+		//limitVal::rhoEUp = material::Cv*limitVal::TUp*limitVal::rhoUp;
+		//limitVal::rhoEDwn = material::Cv*limitVal::TDwn*limitVal::rhoDwn;
 	}
 
 	std::vector<double> calcIniValues(double iniVal, int element)
@@ -206,6 +206,102 @@ namespace process
 
 	namespace auxEq
 	{
+		void calcValuesAtInterface()
+		{
+			//mu included
+			int masterCell(-1), slaveCell(-1), bcGrp(0);
+			double muMaster(0.0), muSlave(0.0), tempMaster(0.0), tempSlave(0.0);
+			for (int iedge = 0; iedge < meshVar::inpoedCount; iedge++)
+			{
+				bcGrp = auxUlti::getBCType(iedge);
+				if (bcGrp == 0)
+				{
+					std::tie(masterCell, slaveCell) = auxUlti::getMasterServantOfEdge(iedge);
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						std::tie(muMaster, muSlave) = math::internalSurfaceValue(iedge, masterCell, nG, 7, 1);
+
+						//rho*mu
+						std::tie(tempMaster, tempSlave) = math::internalSurfaceValue(iedge, masterCell, nG, 1, 2);
+						aux_interface_rho[iedge][nG] = tempMaster * muMaster;
+						aux_interface_rho[iedge][nG + mathVar::nGauss + 1] = tempSlave * muSlave;
+						interface_rho[iedge][nG] = tempMaster;
+						interface_rho[iedge][nG + mathVar::nGauss + 1] = tempSlave;
+
+						//rhou*mu
+						std::tie(tempMaster, tempSlave) = math::internalSurfaceValue(iedge, masterCell, nG, 2, 2);
+						aux_interface_rhou[iedge][nG] = tempMaster * muMaster;
+						aux_interface_rhou[iedge][nG + mathVar::nGauss + 1] = tempSlave * muSlave;
+						interface_rhou[iedge][nG] = tempMaster;
+						interface_rhou[iedge][nG + mathVar::nGauss + 1] = tempSlave;
+
+						//rhov*mu
+						std::tie(tempMaster, tempSlave) = math::internalSurfaceValue(iedge, masterCell, nG, 3, 2);
+						aux_interface_rhov[iedge][nG] = tempMaster * muMaster;
+						aux_interface_rhov[iedge][nG + mathVar::nGauss + 1] = tempSlave * muSlave;
+						interface_rhov[iedge][nG] = tempMaster;
+						interface_rhov[iedge][nG + mathVar::nGauss + 1] = tempSlave;
+
+						//rhoE*mu
+						std::tie(tempMaster, tempSlave) = math::internalSurfaceValue(iedge, masterCell, nG, 4, 2);
+						aux_interface_rhoE[iedge][nG] = tempMaster * muMaster;
+						aux_interface_rhoE[iedge][nG + mathVar::nGauss + 1] = tempSlave * muSlave;
+						interface_rhoE[iedge][nG] = tempMaster;
+						interface_rhoE[iedge][nG + mathVar::nGauss + 1] = tempSlave;
+					}
+				}
+			}
+		}
+
+		std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int valType)
+		{
+			//valType = 1(rho*mu), 2(rhou*mu), 3(rhov*mu), 4(rhoE*mu)
+			bool isMaster(auxUlti::checkMaster(element, edge));
+			int locationPlus(-1), locationMinus(-1);
+			double valPlus(0.0), valMinus(0.0);
+			if (isMaster)
+			{
+				locationPlus = nG;
+				locationMinus = nG + mathVar::nGauss + 1;
+			}
+			else
+			{
+				locationPlus = nG + mathVar::nGauss + 1;
+				locationMinus = nG;
+			}
+
+			switch (valType)
+			{
+			case 1:
+			{
+				valPlus = aux_interface_rho[edge][locationPlus];
+				valMinus = aux_interface_rho[edge][locationMinus];
+			}
+			break;
+			case 2:
+			{
+				valPlus = aux_interface_rhou[edge][locationPlus];
+				valMinus = aux_interface_rhou[edge][locationMinus];
+			}
+			break;
+			case 3:
+			{
+				valPlus = aux_interface_rhov[edge][locationPlus];
+				valMinus = aux_interface_rhov[edge][locationMinus];
+			}
+			break;
+			case 4:
+			{
+				valPlus = aux_interface_rhoE[edge][locationPlus];
+				valMinus = aux_interface_rhoE[edge][locationMinus];
+			}
+			break;
+			default:
+				break;
+			}
+			return std::make_tuple(valPlus, valMinus);
+		}
+
 		void solveAuxEquation()
 		{
 			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
@@ -419,14 +515,13 @@ namespace process
 
 		std::vector<std::vector<double>> getVectorOfConserVarFluxesAtInternal(int edge, int element, int nG, double nx, double ny)
 		{
-			std::vector<std::vector<double>> gaussVector(4, std::vector<double>(2, 0.0)); //columns 0, 1 are plus, minus values
-			double muP(0.0), muM(0.0), tempP(0.0), tempM(0.0);
-			std::tie(muP,muM) = math::internalSurfaceValue(edge, element, nG, 7, 1);
+			std::vector<std::vector<double>> gaussVector(4, std::vector<double>(2, 0.0)); //columns 0, 1 are Ox, Oy values
+			double tempP(0.0), tempM(0.0);
 			for (int i = 0; i < 4; i++)
 			{
-				std::tie(tempP, tempM) = math::internalSurfaceValue(edge, element, nG, i + 1, 2);
-				gaussVector[i][0] = math::numericalFluxes::auxFlux(tempM*muM, tempP*muP, nx);
-				gaussVector[i][1] = math::numericalFluxes::auxFlux(tempM*muM, tempP*muP, ny);
+				std::tie(tempP, tempM) = process::auxEq::getInternalValuesFromCalculatedArrays(edge, element, nG, i+1);
+				gaussVector[i][0] = math::numericalFluxes::auxFlux(tempM, tempP, nx);
+				gaussVector[i][1] = math::numericalFluxes::auxFlux(tempM, tempP, ny);
 			}
 
 			return gaussVector;
@@ -486,6 +581,268 @@ namespace process
 
 	namespace NSFEq
 	{
+		void calcValuesAtInterface()
+		{
+			//mu included
+			int masterCell(-1), slaveCell(-1), bcGrp(0);
+			double uMaster(0.0), vMaster(0.0), totalEMaster(0.0), TMaster(0.0), pMaster(0.0),
+				uSlave(0.0), vSlave(0.0), totalESlave(0.0), TSlave(0.0), pSlave(0.0),
+				uMagM(0.0), uMagP(0.0), aM(0.0), aP(0.0),
+				dRhoXMaster(0.0), dRhouXMaster(0.0), dRhovXMaster(0.0), dRhoEXMaster(0.0),
+				dRhoYMaster(0.0), dRhouYMaster(0.0), dRhovYMaster(0.0), dRhoEYMaster(0.0),
+				dRhoXSlave(0.0), dRhouXSlave(0.0), dRhovXSlave(0.0), dRhoEXSlave(0.0),
+				dRhoYSlave(0.0), dRhouYSlave(0.0), dRhovYSlave(0.0), dRhoEYSlave(0.0);
+			std::vector<double> UMaster(4, 0.0), dUXMaster(4, 0.0), dUYMaster(4, 0.0),
+				USlave(4, 0.0), dUXSlave(4, 0.0), dUYSlave(4, 0.0);
+			/*StressHeat matrix has form:
+			[tauXx		tauXy		Qx]
+			[tauYx		tauYy		Qy]
+			*/
+			std::vector<std::vector<double>> StressHeatP(2, std::vector<double>(3, 0.0));
+			std::vector<std::vector<double>> StressHeatM(2, std::vector<double>(3, 0.0));
+			for (int iedge = 0; iedge < meshVar::inpoedCount; iedge++)
+			{
+				bcGrp = auxUlti::getBCType(iedge);
+				if (bcGrp == 0)
+				{
+					std::tie(masterCell, slaveCell) = auxUlti::getMasterServantOfEdge(iedge);
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							/*INVISCID TERMS*/
+							std::tie(UMaster[i], USlave[i]) = math::internalSurfaceValue(iedge, masterCell, nG, i + 1, 2);
+							/*VISCOUS TERMS*/
+							std::tie(dUXMaster[i], dUXSlave[i]) = math::internalSurfaceDerivativeValue(iedge, masterCell, nG, i + 1, 1);  //dUx
+							std::tie(dUYMaster[i], dUYSlave[i]) = math::internalSurfaceDerivativeValue(iedge, masterCell, nG, i + 1, 2);  //dUy
+						}
+
+						uMaster = (UMaster[1] / UMaster[0]);
+						uSlave = (USlave[1] / USlave[0]);
+
+						vMaster = (UMaster[2] / UMaster[0]);
+						vSlave = (USlave[2] / USlave[0]);
+
+						totalEMaster = (UMaster[3] / UMaster[0]);
+						totalESlave = (USlave[3] / USlave[0]);
+
+						/*calculate T and P*/
+						TMaster = math::CalcTFromConsvVar(UMaster[0], UMaster[1], UMaster[2], UMaster[3]);
+						TSlave = math::CalcTFromConsvVar(USlave[0], USlave[1], USlave[2], USlave[3]);
+						pMaster = math::CalcP(TMaster, UMaster[0]);
+						pSlave = math::CalcP(TSlave, USlave[0]);
+
+						/*INVISCID TERMS*/
+						/*calculate velocity magnitude*/
+						uMagP = sqrt(pow(uMaster, 2) + pow(vMaster, 2));
+						uMagM = sqrt(pow(uSlave, 2) + pow(vSlave, 2));
+
+						/*calculate speed of sound*/
+						aP = math::CalcSpeedOfSound(TMaster);
+						aM = math::CalcSpeedOfSound(TSlave);
+
+						/*calculate constant for Lax-Friederich flux*/
+						LxFConst[iedge] = math::numericalFluxes::constantC(uMagP, uMagM, aP, aM);
+
+						/*calculate inviscid terms*/
+						
+						std::tie(invis_interface_rhoX[iedge][nG], invis_interface_rhouX[iedge][nG], invis_interface_rhovX[iedge][nG], invis_interface_rhoEX[iedge][nG]) = math::inviscidTerms::calcInvisTermsFromPriVars(UMaster[0], uMaster, vMaster, totalEMaster, pMaster, 1);
+						std::tie(invis_interface_rhoY[iedge][nG], invis_interface_rhouY[iedge][nG], invis_interface_rhovY[iedge][nG], invis_interface_rhoEY[iedge][nG]) = math::inviscidTerms::calcInvisTermsFromPriVars(UMaster[0], uMaster, vMaster, totalEMaster, pMaster, 2);
+
+						std::tie(invis_interface_rhoX[iedge][nG + mathVar::nGauss + 1], invis_interface_rhouX[iedge][nG + mathVar::nGauss + 1], invis_interface_rhovX[iedge][nG + mathVar::nGauss + 1], invis_interface_rhoEX[iedge][nG + mathVar::nGauss + 1]) = math::inviscidTerms::calcInvisTermsFromPriVars(USlave[0], uSlave, vSlave, totalESlave, pSlave, 1);
+						std::tie(invis_interface_rhoY[iedge][nG + mathVar::nGauss + 1], invis_interface_rhouY[iedge][nG + mathVar::nGauss + 1], invis_interface_rhovY[iedge][nG + mathVar::nGauss + 1], invis_interface_rhoEY[iedge][nG + mathVar::nGauss + 1]) = math::inviscidTerms::calcInvisTermsFromPriVars(USlave[0], uSlave, vSlave, totalESlave, pSlave, 2);
+
+						/*calculate viscous terms*/
+						StressHeatP = math::viscousTerms::calcStressTensorAndHeatFlux(UMaster, dUXMaster, dUYMaster);
+						std::tie(Vis_interface_rhoX[iedge][nG], Vis_interface_rhouX[iedge][nG], Vis_interface_rhovX[iedge][nG], Vis_interface_rhoEX[iedge][nG]) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uMaster, vMaster, 1);
+						std::tie(Vis_interface_rhoY[iedge][nG], Vis_interface_rhouY[iedge][nG], Vis_interface_rhovY[iedge][nG], Vis_interface_rhoEY[iedge][nG]) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uMaster, vMaster, 2);
+
+						StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(USlave, dUXSlave, dUYSlave);
+						std::tie(Vis_interface_rhoX[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhouX[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhovX[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhoEX[iedge][nG + mathVar::nGauss + 1]) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uSlave, vSlave, 1);
+						std::tie(Vis_interface_rhoY[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhouY[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhovY[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhoEY[iedge][nG + mathVar::nGauss + 1]) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uSlave, vSlave, 2);
+					}
+				}
+			}
+		}
+
+		std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int mod, int direction, int valType)
+		{
+			/*
+			-mod: 1 for inviscid, 2 for viscous
+			-direction: 1 for Ox, 2 for Oy
+			*/
+			bool isMaster(auxUlti::checkMaster(element, edge));
+			int locationPlus(-1), locationMinus(-1);
+			double valPlus(0.0), valMinus(0.0);
+			if (isMaster)
+			{
+				locationPlus = nG;
+				locationMinus = nG + mathVar::nGauss + 1;
+			}
+			else
+			{
+				locationPlus = nG + mathVar::nGauss + 1;
+				locationMinus = nG;
+			}
+
+			switch (mod)
+			{
+			case 1: //inviscid
+			{
+				switch (direction)
+				{
+				case 1:
+				{
+					switch (valType)
+					{
+					case 1:
+					{
+						valPlus = invis_interface_rhoX[edge][locationPlus];
+						valMinus = invis_interface_rhoX[edge][locationMinus];
+					}
+					break;
+					case 2:
+					{
+						valPlus = invis_interface_rhouX[edge][locationPlus];
+						valMinus = invis_interface_rhouX[edge][locationMinus];
+					}
+					break;
+					case 3:
+					{
+						valPlus = invis_interface_rhovX[edge][locationPlus];
+						valMinus = invis_interface_rhovX[edge][locationMinus];
+					}
+					break;
+					case 4:
+					{
+						valPlus = invis_interface_rhoEX[edge][locationPlus];
+						valMinus = invis_interface_rhoEX[edge][locationMinus];
+					}
+					break;
+					default:
+						break;
+					}
+				}
+				break;
+				case 2:
+				{
+					switch (valType)
+					{
+					case 1:
+					{
+						valPlus = invis_interface_rhoY[edge][locationPlus];
+						valMinus = invis_interface_rhoY[edge][locationMinus];
+					}
+					break;
+					case 2:
+					{
+						valPlus = invis_interface_rhouY[edge][locationPlus];
+						valMinus = invis_interface_rhouY[edge][locationMinus];
+					}
+					break;
+					case 3:
+					{
+						valPlus = invis_interface_rhovY[edge][locationPlus];
+						valMinus = invis_interface_rhovY[edge][locationMinus];
+					}
+					break;
+					case 4:
+					{
+						valPlus = invis_interface_rhoEY[edge][locationPlus];
+						valMinus = invis_interface_rhoEY[edge][locationMinus];
+					}
+					break;
+					default:
+						break;
+					}
+				}
+				break;
+				default:
+					break;
+				}
+			}
+				break;
+			case 2: //viscous
+			{
+				switch (direction)
+				{
+				case 1:
+				{
+					switch (valType)
+					{
+					case 1:
+					{
+						valPlus = Vis_interface_rhoX[edge][locationPlus];
+						valMinus = Vis_interface_rhoX[edge][locationMinus];
+					}
+					break;
+					case 2:
+					{
+						valPlus = Vis_interface_rhouX[edge][locationPlus];
+						valMinus = Vis_interface_rhouX[edge][locationMinus];
+					}
+					break;
+					case 3:
+					{
+						valPlus = Vis_interface_rhovX[edge][locationPlus];
+						valMinus = Vis_interface_rhovX[edge][locationMinus];
+					}
+					break;
+					case 4:
+					{
+						valPlus = Vis_interface_rhoEX[edge][locationPlus];
+						valMinus = Vis_interface_rhoEX[edge][locationMinus];
+					}
+					break;
+					default:
+						break;
+					}
+				}
+				break;
+				case 2:
+				{
+					switch (valType)
+					{
+					case 1:
+					{
+						valPlus = Vis_interface_rhoY[edge][locationPlus];
+						valMinus = Vis_interface_rhoY[edge][locationMinus];
+					}
+					break;
+					case 2:
+					{
+						valPlus = Vis_interface_rhouY[edge][locationPlus];
+						valMinus = Vis_interface_rhouY[edge][locationMinus];
+					}
+					break;
+					case 3:
+					{
+						valPlus = Vis_interface_rhovY[edge][locationPlus];
+						valMinus = Vis_interface_rhovY[edge][locationMinus];
+					}
+					break;
+					case 4:
+					{
+						valPlus = Vis_interface_rhoEY[edge][locationPlus];
+						valMinus = Vis_interface_rhoEY[edge][locationMinus];
+					}
+					break;
+					default:
+						break;
+					}
+				}
+				break;
+				default:
+					break;
+				}
+			}
+				break;
+			default:
+				break;
+			}
+			return std::make_tuple(valPlus, valMinus);
+		}
+
 		void solveNSFEquation()
 		{
 			std::vector<double> rhoError(meshVar::nelem2D, 1.0),
@@ -889,30 +1246,60 @@ namespace process
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss)
 		{
 			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
-			std::vector<double> UMinus(4, 0.0),
-				UPlus(4, 0.0),
-				dUXMinus(4, 0.0),
-				dUXPlus(4, 0.0),
-				dUYMinus(4, 0.0),
-				dUYPlus(4, 0.0),
-				normalVector(2, 0.0);
+			double nx(auxUlti::getNormVectorComp(element, edgeName, 1)), ny(auxUlti::getNormVectorComp(element, edgeName, 2));
+			double
+				termX1P(0.0), termX1M(0.0),  //(rho*u)					or 0
+				termX2P(0.0), termX2M(0.0),  //(rho*u^2 + p)			or tauxx
+				termX3P(0.0), termX3M(0.0),  //(rho*u*v)				or tauxy
+				termX4P(0.0), termX4M(0.0),  //(rho*totalE + p)*u		or tauxx*u + tauxy*v + Qx
 
-			/*Normal vector*/
-			normalVector[0] = auxUlti::getNormVectorComp(element, edgeName, 1);
-			normalVector[1] = auxUlti::getNormVectorComp(element, edgeName, 2);
+				termY1P(0.0), termY1M(0.0),  //(rho*v)					or 0
+				termY2P(0.0), termY2M(0.0),  //(rho*u*v)				or tauxy
+				termY3P(0.0), termY3M(0.0),  //(rho*v^2 + p)			or tauyy
+				termY4P(0.0), termY4M(0.0);  //(rho*totalE + p)*v		or tauxy*u + tauyy*v + Qy
+			double rhoPlus(0.0), rhouPlus(0.0), rhovPlus(0.0), rhoEPlus(0.0), rhoMinus(0.0), rhouMinus(0.0), rhovMinus(0.0), rhoEMinus(0.0);
 
-			for (int i = 0; i < 4; i++)
-			{
-				/*INVISCID TERMS*/
-				std::tie(UPlus[i], UMinus[i]) = math::internalSurfaceValue(edgeName, element, nGauss, i + 1, 2);
+			/*INVISCID TERM*/
+			//Get value
+			std::tie(termX1P, termX1M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 1, 1);
+			std::tie(termX2P, termX2M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 1, 2);
+			std::tie(termX3P, termX3M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 1, 3);
+			std::tie(termX4P, termX4M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 1, 4);
 
-				/*VISCOUS TERMS*/
-				std::tie(dUXPlus[i], dUXMinus[i]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, i + 1, 1);  //dUx
-				std::tie(dUYPlus[i], dUYMinus[i]) = math::internalSurfaceDerivativeValue(edgeName, element, nGauss, i + 1, 2);  //dUy
-			}
-			
+			std::tie(termY1P, termY1M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 2, 1);
+			std::tie(termY2P, termY2M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 2, 2);
+			std::tie(termY3P, termY3M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 2, 3);
+			std::tie(termY4P, termY4M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1, 2, 4);
+
+			std::tie(rhoPlus, rhoMinus) = process::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 1);
+			std::tie(rhouPlus, rhouMinus) = process::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2);
+			std::tie(rhovPlus, rhovMinus) = process::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 3);
+			std::tie(rhoEPlus, rhoEMinus) = process::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 4);
+
 			/*Calculate fluxes*/
-			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, normalVector);
+			Fluxes[0][0] = math::numericalFluxes::advectiveFlux(termX1P, termX1M, rhoPlus, rhoMinus, LxFConst[edgeName], nx) + math::numericalFluxes::advectiveFlux(termY1P, termY1M, rhoPlus, rhoMinus, LxFConst[edgeName], ny);
+			Fluxes[1][0] = math::numericalFluxes::advectiveFlux(termX2P, termX2M, rhouPlus, rhouMinus, LxFConst[edgeName], nx) + math::numericalFluxes::advectiveFlux(termY2P, termY2M, rhouPlus, rhouMinus, LxFConst[edgeName], ny);
+			Fluxes[2][0] = math::numericalFluxes::advectiveFlux(termX3P, termX3M, rhovPlus, rhovMinus, LxFConst[edgeName], nx) + math::numericalFluxes::advectiveFlux(termY3P, termY3M, rhovPlus, rhovMinus, LxFConst[edgeName], ny);
+			Fluxes[3][0] = math::numericalFluxes::advectiveFlux(termX4P, termX4M, rhoEPlus, rhoEMinus, LxFConst[edgeName], nx) + math::numericalFluxes::advectiveFlux(termY4P, termY4M, rhoEPlus, rhoEMinus, LxFConst[edgeName], ny);
+			
+			/*VISCOUS TERM*/
+			//Get value
+			std::tie(termX1P, termX1M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 1, 1);
+			std::tie(termX2P, termX2M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 1, 2);
+			std::tie(termX3P, termX3M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 1, 3);
+			std::tie(termX4P, termX4M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 1, 4);
+
+			std::tie(termY1P, termY1M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 2, 1);
+			std::tie(termY2P, termY2M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 2, 2);
+			std::tie(termY3P, termY3M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 2, 3);
+			std::tie(termY4P, termY4M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 2, 4);
+
+			/*Calculate fluxes*/
+			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, ny);
+			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, ny);
+			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, ny);
+			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, ny);
+
 			return Fluxes;
 		}
 
@@ -1018,6 +1405,55 @@ namespace process
 				rhoERes(*std::max_element(RhoEError.begin(), RhoEError.end()));
 			return std::make_tuple(rhoRes, rhouRes, rhovRes, rhoERes);
 		}
+	}
+
+	std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int valType)
+	{
+		//valType = 1(rho*mu), 2(rhou*mu), 3(rhov*mu), 4(rhoE*mu)
+		bool isMaster(auxUlti::checkMaster(element, edge));
+		int locationPlus(-1), locationMinus(-1);
+		double valPlus(0.0), valMinus(0.0);
+		if (isMaster)
+		{
+			locationPlus = nG;
+			locationMinus = nG + mathVar::nGauss + 1;
+		}
+		else
+		{
+			locationPlus = nG + mathVar::nGauss + 1;
+			locationMinus = nG;
+		}
+
+		switch (valType)
+		{
+		case 1:
+		{
+			valPlus = interface_rho[edge][locationPlus];
+			valMinus = interface_rho[edge][locationMinus];
+		}
+		break;
+		case 2:
+		{
+			valPlus = interface_rhou[edge][locationPlus];
+			valMinus = interface_rhou[edge][locationMinus];
+		}
+		break;
+		case 3:
+		{
+			valPlus = interface_rhov[edge][locationPlus];
+			valMinus = interface_rhov[edge][locationMinus];
+		}
+		break;
+		case 4:
+		{
+			valPlus = interface_rhoE[edge][locationPlus];
+			valMinus = interface_rhoE[edge][locationMinus];
+		}
+		break;
+		default:
+			break;
+		}
+		return std::make_tuple(valPlus, valMinus);
 	}
 
 	namespace limiter
