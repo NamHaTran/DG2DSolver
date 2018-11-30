@@ -1,3 +1,26 @@
-﻿  DGMath.cpp
+﻿  CommandCheck.cpp
+  ConstDeclaration.cpp
+  DG2D.cpp
+  DGAuxUltilitiesLib.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(620): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  DGBCsLib.cpp
+  DGController.cpp
+  DGIOLib.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(47): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(163): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(461): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(564): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(715): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(799): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  DGMath.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(625): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  DGMeshReaderLib.cpp
+  DGMessagesLib.cpp
+  DGPostProcessLib.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(269): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  DGProcLib.cpp
+  dynamicVarDeclaration.cpp
+  VarDeclaration.cpp
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\vardeclaration.cpp(23): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  Generating Code...
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Debug\DG2DSolver.exe

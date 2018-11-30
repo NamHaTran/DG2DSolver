@@ -134,6 +134,17 @@ namespace meshParam
 			}
 		}
 	}
+
+	void calcStiffMatrixCoeffs()
+	{
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				stiffMatrixCoeffs[nelem][iorder] = process::calculateStiffMatrixElement(nelem, iorder, iorder);
+			}
+		}
+	}
 }
 
 namespace process
@@ -202,6 +213,25 @@ namespace process
 			Out[order] = math::volumeInte(matrix, element)*iniVal;
 		}
 		return Out;
+	}
+
+	void calcVolumeGaussValues()
+	{
+		double a(0.0), b(0.0);
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			for (int na = 0; na <= mathVar::nGauss; na++)
+			{
+				for (int nb = 0; nb <= mathVar::nGauss; nb++)
+				{
+					std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
+					rhoVolGauss[nelem][na][nb] = math::pointValue(nelem, a, b, 1, 2);
+					rhouVolGauss[nelem][na][nb] = math::pointValue(nelem, a, b, 2, 2);
+					rhovVolGauss[nelem][na][nb] = math::pointValue(nelem, a, b, 3, 2);
+					rhoEVolGauss[nelem][na][nb] = math::pointValue(nelem, a, b, 4, 2);
+				}
+			}
+		}
 	}
 
 	namespace auxEq
@@ -304,7 +334,7 @@ namespace process
 
 		void solveAuxEquation()
 		{
-			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
+			//std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
 			std::vector<double> rhoRHSTermOxDir(mathVar::orderElem + 1, 0.0),
 				rhoRHSTermOyDir(mathVar::orderElem + 1, 0.0),
 				rhouRHSTermOxDir(mathVar::orderElem + 1, 0.0),
@@ -326,36 +356,25 @@ namespace process
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
 				//1) Calculate Stiff matrix
-				StiffMatrix = process::calculateStiffMatrix(nelement);
+				//StiffMatrix = process::calculateStiffMatrix(nelement);
 				
 				//2) Calculate Right hand side terms
 				process::auxEq::CalcRHSTerm(nelement, rhoRHSTermOxDir, rhoRHSTermOyDir, rhouRHSTermOxDir, rhouRHSTermOyDir, rhovRHSTermOxDir, rhovRHSTermOyDir, rhoERHSTermOxDir, rhoERHSTermOyDir);
 
 				//3) Solve for auxilary variables
-				//Ox direction
-				rhoxVector = math::SolveSysEqs(StiffMatrix, rhoRHSTermOxDir);
-				rhouxVector = math::SolveSysEqs(StiffMatrix, rhouRHSTermOxDir);
-				rhovxVector = math::SolveSysEqs(StiffMatrix, rhovRHSTermOxDir);
-				rhoExVector = math::SolveSysEqs(StiffMatrix, rhoERHSTermOxDir);
-
-				//Oy direction
-				rhoyVector = math::SolveSysEqs(StiffMatrix, rhoRHSTermOyDir);
-				rhouyVector = math::SolveSysEqs(StiffMatrix, rhouRHSTermOyDir);
-				rhovyVector = math::SolveSysEqs(StiffMatrix, rhovRHSTermOyDir);
-				rhoEyVector = math::SolveSysEqs(StiffMatrix, rhoERHSTermOyDir);
-
-				//4) Save results to auxilary variables array
-
-				for (int order = 0; order <= mathVar::orderElem; order++)
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 				{
-					rhoX[nelement][order] = rhoxVector[order];
-					rhoY[nelement][order] = rhoyVector[order];
-					rhouX[nelement][order] = rhouxVector[order];
-					rhouY[nelement][order] = rhouyVector[order];
-					rhovX[nelement][order] = rhovxVector[order];
-					rhovY[nelement][order] = rhovyVector[order];
-					rhoEX[nelement][order] = rhoExVector[order];
-					rhoEY[nelement][order] = rhoEyVector[order];
+					//Ox direction
+					rhoX[nelement][iorder] = rhoRHSTermOxDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					rhouX[nelement][iorder] = rhouRHSTermOxDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					rhovX[nelement][iorder] = rhovRHSTermOxDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					rhoEX[nelement][iorder] = rhoERHSTermOxDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+
+					//Oy direction
+					rhoY[nelement][iorder] = rhoRHSTermOyDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					rhouY[nelement][iorder] = rhouRHSTermOyDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					rhovY[nelement][iorder] = rhovRHSTermOyDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					rhoEY[nelement][iorder] = rhoERHSTermOyDir[iorder] / stiffMatrixCoeffs[nelement][iorder];
 				}
 			}
 		}
@@ -500,14 +519,39 @@ namespace process
 		std::vector<std::vector<double>> getGaussMatrixOfConserVar(int element, int valType)
 		{
 			std::vector<std::vector<double>> GaussMatrix(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
-			double muGs(0.0), a(0.0), b(0.0);
+			double muGs(0.0), a(0.0), b(0.0), val(0.0);
 			for (int na = 0; na <= mathVar::nGauss; na++)
 			{
 				for (int nb = 0; nb <= mathVar::nGauss; nb++)
 				{
 					std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
 					muGs = math::pointValue(element, a, b, 7, 1);
-					GaussMatrix[na][nb] = math::pointValue(element, a, b, valType, 2)*muGs;
+					switch (valType)
+					{
+					case 1:
+					{
+						val = rhoVolGauss[element][na][nb];
+					}
+					break;
+					case 2:
+					{
+						val = rhouVolGauss[element][na][nb];
+					}
+					break;
+					case 3:
+					{
+						val = rhovVolGauss[element][na][nb];
+					}
+					break;
+					case 4:
+					{
+						val = rhoEVolGauss[element][na][nb];
+					}
+					break;
+					default:
+						break;
+					}
+					GaussMatrix[na][nb] = val*muGs;
 				}
 			}
 			return GaussMatrix;
@@ -876,16 +920,19 @@ namespace process
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
 				//1) Calculate Stiff matrix
-				StiffMatrix = process::calculateStiffMatrix(nelement);
+				//StiffMatrix = process::calculateStiffMatrix(nelement);
 
 				//2) Calculate Right hand side terms
 				process::NSFEq::CalcRHSTerm(nelement, RHSTerm1, RHSTerm2, RHSTerm3, RHSTerm4);
 
 				//3) Solve for derivartives of conservative variables
-				ddtRhoVector = math::SolveSysEqs(StiffMatrix, RHSTerm1);
-				ddtRhouVector = math::SolveSysEqs(StiffMatrix, RHSTerm2);
-				ddtRhovVector = math::SolveSysEqs(StiffMatrix, RHSTerm3);
-				ddtRhoEVector = math::SolveSysEqs(StiffMatrix, RHSTerm4);
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+				{
+					ddtRhoVector[iorder] = RHSTerm1[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					ddtRhouVector[iorder] = RHSTerm2[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					ddtRhovVector[iorder] = RHSTerm3[iorder] / stiffMatrixCoeffs[nelement][iorder];
+					ddtRhoEVector[iorder] = RHSTerm4[iorder] / stiffMatrixCoeffs[nelement][iorder];
+				}
 
 				//4) Solve time marching
 				//rho
@@ -976,20 +1023,26 @@ namespace process
 		}
 
 		/*Function calculates Inviscid terms at Gauss point (a, b)*/
-		std::vector<std::vector<double>> calcGaussInviscidTerm(int element, double a, double b)
+		std::vector<std::vector<double>> calcGaussInviscidTerm(int element, int na, int nb)
 		{
 			/*InviscidTerm 2D array has 4 row 2 column:
 			- column 1: Ox direction
 			- column 2: Oy direction*/
 			std::vector<std::vector<double>> InviscidTerm(4, std::vector<double>(2, 0.0));
 			double
-				rhoVal(math::pointValue(element, a, b, 1, 1)),
-				uVal(math::pointValue(element, a, b, 2, 1)),
-				vVal(math::pointValue(element, a, b, 3, 1)),
-				eVal(math::pointValue(element, a, b, 4, 1)),
-				pVal(math::pointValue(element, a, b, 5, 1));
+				rhoVal(rhoVolGauss[element][na][nb]),
+				rhouVal(rhouVolGauss[element][na][nb]),
+				rhovVal(rhovVolGauss[element][na][nb]),
+				rhoEVal(rhoEVolGauss[element][na][nb]),
+				uVal(0.0),
+				vVal(0.0),
+				pVal(0.0),
+				totalE(0.0);
 
-			double totalE(eVal + 0.5*(uVal*uVal + vVal * vVal));
+			uVal = rhouVal / rhoVal;
+			vVal = rhovVal / rhoVal;
+			totalE = rhoEVal / rhoVal;
+			pVal = math::CalcP(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal), rhoVal);
 
 			/*1. Ox direction*/
 			std::tie(InviscidTerm[0][0], InviscidTerm[1][0], InviscidTerm[2][0], InviscidTerm[3][0]) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoVal, uVal, vVal, totalE, pVal, 1);
@@ -1001,9 +1054,9 @@ namespace process
 		}
 
 		/*Function calculates Viscous terms at Gauss point (a, b)*/
-		std::vector<std::vector<double>> calcGaussViscousTerm(int element, double a, double b)
+		std::vector<std::vector<double>> calcGaussViscousTerm(int element, int na, int nb)
 		{
-			double uVal(math::pointValue(element, a, b, 2, 1)), vVal(math::pointValue(element, a, b, 3, 1));//, muVal(math::pointValue(element, a, b, 7, 1));
+			double uVal(rhouVolGauss[element][na][nb] / rhoVolGauss[element][na][nb]), vVal(rhovVolGauss[element][na][nb] / rhoVolGauss[element][na][nb]), a(0.0), b(0.0);
 			/*ViscousTerm 2D array has 4 row 2 column:
 			- column 1: Ox direction
 			- column 2: Oy direction*/
@@ -1012,11 +1065,15 @@ namespace process
 			std::vector<double> vectorU(4, 0.0);
 			std::vector<double> vectordUx(4, 0.0);
 			std::vector<double> vectordUy(4, 0.0);
+			std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
 
 			/*calculate conservative and derivative variables*/
+			vectorU[0] = rhoVolGauss[element][na][nb];
+			vectorU[1] = rhouVolGauss[element][na][nb];
+			vectorU[2] = rhovVolGauss[element][na][nb];
+			vectorU[3] = rhoEVolGauss[element][na][nb];
 			for (int i = 0; i < 4; i++)
 			{
-				vectorU[i] = math::pointValue(element, a, b, i + 1, 2);
 				vectordUx[i] = math::pointAuxValue(element, a, b, i + 1, 1);
 				vectordUy[i] = math::pointAuxValue(element, a, b, i + 1, 2);
 			}
@@ -1067,9 +1124,9 @@ namespace process
 			{
 				for (int nb = 0; nb <= mathVar::nGauss; nb++)
 				{
-					std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
+					//std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
 					/*A INVISCID TERMS*/
-					InviscidTerms = NSFEq::calcGaussInviscidTerm(element, a, b);
+					InviscidTerms = NSFEq::calcGaussInviscidTerm(element, na, nb);
 					/*A1. Inviscid term on Ox direction*/
 					InvisGsVolX1[na][nb] = InviscidTerms[0][0];
 					InvisGsVolX2[na][nb] = InviscidTerms[1][0];
@@ -1082,7 +1139,7 @@ namespace process
 					InvisGsVolY4[na][nb] = InviscidTerms[3][1];
 
 					/*B VISCOUS TERMS*/
-					ViscousTerms = NSFEq::calcGaussViscousTerm(element, a, b);
+					ViscousTerms = NSFEq::calcGaussViscousTerm(element, na, nb);
 					/*B1. Viscous term on Ox direction*/
 					//ViscGsVolX1[na][nb] = ViscousTerms[0][0];
 					ViscGsVolX2[na][nb] = ViscousTerms[1][0];
@@ -1369,7 +1426,7 @@ namespace process
 					aSound = math::CalcSpeedOfSound(TVal);
 					LocalMach = velocity / aSound;
 					muVal = math::CalcVisCoef(TVal);
-					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size)));
+					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size)));
 				}
 			}
 			//deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));

@@ -96,10 +96,21 @@ Vis_interface_rhoEY(1, std::vector<double>(1, 0.0));
 //Lax-Friedrich constant
 std::vector<double> LxFConst(1, 0.0);
 
+//StiffMatrixCoefficients
+std::vector<std::vector<double>>
+stiffMatrixCoeffs(1, std::vector<double>(1, 0.0));
+
 //Limiting coefficients
 std::vector<double>
 theta1Arr(1, 1.0),
 theta2Arr(1, 1.0);
+
+//Volume values
+std::vector<std::vector<std::vector<double>>>
+rhoVolGauss(1, std::vector<std::vector<double>>(1, std::vector<double>(1, 0.0))),
+rhouVolGauss(1, std::vector<std::vector<double>>(1, std::vector<double>(1, 0.0))),
+rhovVolGauss(1, std::vector<std::vector<double>>(1, std::vector<double>(1, 0.0))),
+rhoEVolGauss(1, std::vector<std::vector<double>>(1, std::vector<double>(1, 0.0)));
 
 namespace SurfaceBCFields
 {

@@ -78,6 +78,9 @@ namespace auxUlti
 	/*Function resize 2D array*/
 	void resize2DArray(std::vector<std::vector<double>> &Array, int row, int column);
 
+	/*Function resize 3D array*/
+	void resize3DArray(std::vector<std::vector<std::vector<double>>> &Array, int direct1, int direct2, int direct3);
+
 	/*Function resizes all dynamic arrays, it helps to reduce amount of consumed RAM*/
 	void resizeDGArrays();
 

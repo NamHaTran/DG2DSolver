@@ -56,6 +56,8 @@ void Executer(std::string cmd)
 void Processing()
 {
 	/*SET INITIAL VALUES*/
+	meshParam::calcStiffMatrixCoeffs();
+
 	process::setIniValues();
 
 	std::cout << " \n" << "Simulation is started\n";
@@ -64,6 +66,9 @@ void Processing()
 	{
 		systemVar::iterCount++;
 		std::cout << "Iteration " << systemVar::iterCount << std::endl;
+
+		//COMPUTE GAUSS VALUES
+		process::calcVolumeGaussValues();
 
 		//APPLY LIMITER
 		limitVal::numOfLimitCell = 0;

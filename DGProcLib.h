@@ -18,6 +18,8 @@ namespace meshParam
 
 	/*Function calculates centroid and cell size of elements*/
 	void calcCellMetrics();
+
+	void calcStiffMatrixCoeffs();
 }
 
 namespace process
@@ -30,6 +32,8 @@ namespace process
 
 	/*Function computes RHS of initial condition equation*/
 	std::vector<double> calcIniValuesRHS(int element, double iniVal);
+
+	void calcVolumeGaussValues();
 
 	namespace auxEq
 	{
@@ -77,13 +81,13 @@ namespace process
 		InviscidTerm 2D array has 4 row 2 column:
 		- column 1: Ox direction
 		- column 2: Oy direction*/
-		std::vector<std::vector<double>> calcGaussInviscidTerm(int element, double a, double b);
+		std::vector<std::vector<double>> calcGaussInviscidTerm(int element, int na, int nb);
 
 		/*Function calculates Viscous terms at Gauss point (a, b) and returns 2D matrix
 		ViscousTerm 2D array has 4 row 2 column:
 		- column 1: Ox direction
 		- column 2: Oy direction*/
-		std::vector<std::vector<double>> calcGaussViscousTerm(int element, double a, double b);
+		std::vector<std::vector<double>> calcGaussViscousTerm(int element, int na, int nb);
 
 		/*Function calculates volume integral terms in NSF equation at ONLY ONE ORDER*/
 		void calcVolumeIntegralTerms(int element, std::vector<double> &VolIntTerm1, std::vector<double> &VolIntTerm2, std::vector<double> &VolIntTerm3, std::vector<double> &VolIntTerm4);

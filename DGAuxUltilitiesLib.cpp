@@ -442,6 +442,19 @@ namespace auxUlti
 		}
 	}
 
+	void resize3DArray(std::vector<std::vector<std::vector<double>>> &Array, int direct1, int direct2, int direct3)
+	{
+		Array.resize(direct1);
+		for (int i = 0; i < direct1; ++i)
+		{
+			Array[i].resize(direct2);
+			for (int j = 0; j < direct2; j++)
+			{
+				Array[i][j].resize(direct3);
+			}
+		}
+	}
+
 	//Function returns cell centroid coordinates and size (cell area)
 	std::tuple<double, double, double> getCellMetrics(int element)
 	{
@@ -571,6 +584,13 @@ namespace auxUlti
 		theta2Arr.resize(meshVar::nelem2D);
 
 		LxFConst.resize(meshVar::inpoedCount);
+
+		auxUlti::resize2DArray(stiffMatrixCoeffs, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize3DArray(rhoVolGauss, meshVar::nelem2D, mathVar::nGauss + 1, mathVar::nGauss + 1);
+		auxUlti::resize3DArray(rhouVolGauss, meshVar::nelem2D, mathVar::nGauss + 1, mathVar::nGauss + 1);
+		auxUlti::resize3DArray(rhovVolGauss, meshVar::nelem2D, mathVar::nGauss + 1, mathVar::nGauss + 1);
+		auxUlti::resize3DArray(rhoEVolGauss, meshVar::nelem2D, mathVar::nGauss + 1, mathVar::nGauss + 1);
 
 		//meshVar::adressOfBCVals.resize(meshVar::numBCEdges);
 	}

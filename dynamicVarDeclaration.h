@@ -52,6 +52,12 @@ extern std::vector<double>
 theta1Arr,
 theta2Arr;
 
+//StiffMatrixCoefficients
+extern std::vector<std::vector<double>> stiffMatrixCoeffs;
+
+//Volume values
+extern std::vector<std::vector<std::vector<double>>> rhoVolGauss, rhouVolGauss, rhovVolGauss, rhoEVolGauss;
+
 namespace SurfaceBCFields
 {
 	extern std::vector<std::vector<double>> rhoBc, rhouBc, rhovBc, rhoEBc;
