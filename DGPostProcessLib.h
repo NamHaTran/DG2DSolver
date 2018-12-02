@@ -10,12 +10,6 @@ namespace debugTool
 	void checkPointValue(int element);
 }
 
-namespace DG2Matlab
-{
-	void createMatlabCode();
-	void exportData(int iter);
-}
-
 namespace DG2Tecplot
 {
 	std::vector<double> calcNodeValues(int valType);

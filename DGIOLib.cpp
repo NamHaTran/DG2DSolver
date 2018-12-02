@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <direct.h>
 
 namespace IO
 {
@@ -352,13 +353,13 @@ namespace IO
 		/*Read DGOptions*/
 		std::string DGOptfileName("DGOptions.txt");
 		std::string DGOptLoc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System");
-		std::string DGOptkeyWordsDouble[3] = { "CourantNumber", "totalTime(s)", "refMach" }, DGOptkeyWordsInt[2] = {"orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[1] = { "writeLog" }, DGOptkeyWordsStr[2] = {"ddtScheme", "limiter"};
+		std::string DGOptkeyWordsDouble[3] = { "CourantNumber", "totalTime(s)", "refMach" }, DGOptkeyWordsInt[2] = {"orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[2] = { "writeLog", "loadSavedCase"}, DGOptkeyWordsStr[2] = {"ddtScheme", "limiter"};
 		double DGOptoutDB[3] = {};
 		int DGOptoutInt[3] = {};
-		bool DGOptoutBool[1] = {};
+		bool DGOptoutBool[2] = {};
 		std::string DGOptoutStr[2] = {};
 
-		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 3, 2, 1, 2);
+		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 3, 2, 2, 2);
 		
 		systemVar::CFL = DGOptoutDB[0];
 		systemVar::Ttime = DGOptoutDB[1];
@@ -366,6 +367,7 @@ namespace IO
 		mathVar::orderElem = DGOptoutInt[0];
 		systemVar::wrtI = DGOptoutInt[1]; 
 		systemVar::wrtLog = DGOptoutBool[0];
+		systemVar::loadSavedCase = DGOptoutBool[1];
 
 		if (DGOptoutStr[0].compare("Euler") == 0)
 		{
@@ -409,6 +411,9 @@ namespace IO
 		material::Pr = MatoutDB[2];
 		material::As = MatoutDB[3];
 		material::Ts = MatoutDB[4];
+
+		material::Cp = material::R*material::gamma / (material::gamma - 1);
+		material::Cv = material::Cp - material::R;
 	}
 
 	void loadpTU()
@@ -929,5 +934,203 @@ namespace IO
 			std::cout << "Time step: " << dt << std::endl;
 		}
 		std::cout << "Residuals: ddt(rho)=" << rhoRes << ", ddt(rhou)=" << rhouRes << ", ddt(rhov)=" << rhovRes << ", ddt(rhoE)=" << rhoERes << std::endl << std::endl;
+	}
+
+	void saveCase()
+	{
+		std::string iter_str = std::to_string(systemVar::iterCount);
+		std::string fileName("rho.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\" + iter_str);
+		_mkdir(Loc.c_str());
+
+		/*Conservative variables*/
+		std::string fileLoc(Loc + "\\" + fileName);
+		std::ofstream fileFluxRho(fileLoc.c_str());
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				fileFluxRho << rho[nelem][iorder] << " ";
+			}
+			fileFluxRho << std::endl;
+		}
+
+		fileName = "rhou.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ofstream fileFluxRhou(fileLoc.c_str());
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				fileFluxRhou << rhou[nelem][iorder] << " ";
+			}
+			fileFluxRhou << std::endl;
+		}
+
+		fileName = "rhov.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ofstream fileFluxRhov(fileLoc.c_str());
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				fileFluxRhov << rhov[nelem][iorder] << " ";
+			}
+			fileFluxRhov << std::endl;
+		}
+
+		fileName = "rhoE.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ofstream fileFluxRhoE(fileLoc.c_str());
+		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				fileFluxRhoE << rhoE[nelem][iorder] << " ";
+			}
+			fileFluxRhoE << std::endl;
+		}
+		/*end of saving conservative variables*/
+
+		/*Residual normalized coeffs*/
+		fileName = "ResidualNormCoeffs.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ofstream fileFluxResNorm(fileLoc.c_str());
+		fileFluxResNorm << systemVar::rhoResNorm << " " << systemVar::rhouResNorm << " " << systemVar::rhovResNorm << " " << systemVar::rhoEResNorm << std::endl;
+
+		/*Time informations*/
+		Loc = systemVar::wD + "\\CASES\\" + systemVar::caseName;
+		fileName = "time.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ofstream fileFluxTime(fileLoc.c_str());
+		fileFluxTime << systemVar::iterCount << std::endl;
+	}
+
+	void loadCase()
+	{
+		std::string fileName("time.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName);
+		std::string fileLoc(Loc + "\\" + fileName);
+		std::ifstream FileFluxTime(fileLoc.c_str());
+		if (FileFluxTime)
+		{
+			std::string line;
+			std::getline(FileFluxTime, line);
+			std::istringstream lineflux(line);
+			lineflux >> systemVar::iterCount;
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
+
+		std::string iter_str = std::to_string(systemVar::iterCount);
+		Loc = systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\" + iter_str;
+
+		//Read rho
+		fileName = "rho.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ifstream FileFluxRho(fileLoc.c_str());
+		if (FileFluxRho)
+		{
+			int nelement(0);
+			std::string line;
+			while (std::getline(FileFluxRho, line))
+			{
+				std::istringstream lineflux(line);
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+				{
+					lineflux >> rho[nelement][iorder];
+				}
+				nelement++;
+			}
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
+
+		//Read rhou
+		fileName = "rhou.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ifstream FileFluxRhou(fileLoc.c_str());
+		if (FileFluxRhou)
+		{
+			int nelement(0);
+			std::string line;
+			while (std::getline(FileFluxRhou, line))
+			{
+				std::istringstream lineflux(line);
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+				{
+					lineflux >> rhou[nelement][iorder];
+				}
+				nelement++;
+			}
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
+
+		//Read rhov
+		fileName = "rhov.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ifstream FileFluxRhov(fileLoc.c_str());
+		if (FileFluxRhov)
+		{
+			int nelement(0);
+			std::string line;
+			while (std::getline(FileFluxRhov, line))
+			{
+				std::istringstream lineflux(line);
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+				{
+					lineflux >> rhov[nelement][iorder];
+				}
+				nelement++;
+			}
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
+
+		//Read rhoE
+		fileName = "rhoE.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ifstream FileFluxRhoE(fileLoc.c_str());
+		if (FileFluxRhoE)
+		{
+			int nelement(0);
+			std::string line;
+			while (std::getline(FileFluxRhoE, line))
+			{
+				std::istringstream lineflux(line);
+				for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+				{
+					lineflux >> rhoE[nelement][iorder];
+				}
+				nelement++;
+			}
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
+
+		//Read residual norm coeffs
+		fileName = "ResidualNormCoeffs.txt";
+		fileLoc = (Loc + "\\" + fileName);
+		std::ifstream FileFluxResNorm(fileLoc.c_str());
+		if (FileFluxResNorm)
+		{
+			std::string line;
+			std::getline(FileFluxResNorm, line);
+			std::istringstream lineflux(line);
+			lineflux >> systemVar::rhoResNorm >> systemVar::rhouResNorm >> systemVar::rhovResNorm >> systemVar::rhoEResNorm;
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
 	}
 }

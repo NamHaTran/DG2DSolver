@@ -112,147 +112,6 @@ namespace debugTool
 	}
 }
 
-namespace DG2Matlab
-{
-	void createMatlabCode()
-	{
-		std::string fileName("MeshPlot.m"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\matlabFile");
-		std::string meshPlotLoc(Loc + "\\" + fileName);
-		std::ofstream meshPlotFlux(meshPlotLoc.c_str());
-		std::string code(" ");
-		code = R"(
-clear;
-clc;
-inpoed=dlmread('inpoed.txt',' ',13,1);
-points=dlmread('Points.txt');
-nedge=size(inpoed,2);
-figure;
-hold on;
-for iedge=1:nedge
-    point1=inpoed(1,iedge);
-    point2=inpoed(2,iedge);
-    XCoor=[points(point1+1,2) points(point2+1,2)];
-    YCoor=[points(point1+1,3) points(point2+1,3)];
-    plot(XCoor,YCoor,'-b');
-end
-axis equal;
-)";
-		if (meshPlotFlux)
-		{
-			meshPlotFlux << code;
-		}
-		else
-		{
-			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("MeshPlot.m", meshPlotLoc));
-		}
-	}
-
-	void exportData(int iter)
-	{
-		double xC(0.0), yC(0.0), aC(0.0), bC(0.0);
-		std::string iter_str = std::to_string(iter);
-		std::string fileName("rho"+ iter_str +".txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\matlabFile");
-		std::string rhoLoc(Loc + "\\" + fileName);
-		std::ofstream rhoFlux(rhoLoc.c_str());
-		if (rhoFlux)
-		{
-			for (int i = 0; i < meshVar::nelem2D; i++)
-			{
-				for (int j = 0; j <= mathVar::orderElem; j++)
-				{
-					rhoFlux << rho[i][j] << " ";
-				}
-				std::tie(xC, yC) = auxUlti::getCellCentroid(i);
-				std::tie(aC, bC) = math::inverseMapping(i, xC, yC);
-				rhoFlux << math::pointValue(i, aC, bC, 1, 2) << "\n";
-			}
-		}
-		else
-		{
-			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rho.txt", rhoLoc));
-		}
-		fileName = "rhou" + iter_str + ".txt";
-		std::string rhouLoc(Loc + "\\" + fileName);
-		std::ofstream rhouFlux(rhouLoc.c_str());
-		if (rhouFlux)
-		{
-			for (int i = 0; i < meshVar::nelem2D; i++)
-			{
-				for (int j = 0; j <= mathVar::orderElem; j++)
-				{
-					rhouFlux << rhou[i][j] << " ";
-				}
-				std::tie(xC, yC) = auxUlti::getCellCentroid(i);
-				std::tie(aC, bC) = math::inverseMapping(i, xC, yC);
-				rhouFlux << math::pointValue(i, aC, bC, 2, 2) << "\n";
-			}
-		}
-		else
-		{
-			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhou.txt", rhoLoc));
-		}
-		fileName = "rhov" + iter_str + ".txt";
-		std::string rhovLoc(Loc + "\\" + fileName);
-		std::ofstream rhovFlux(rhovLoc.c_str());
-		if (rhovFlux)
-		{
-			for (int i = 0; i < meshVar::nelem2D; i++)
-			{
-				for (int j = 0; j <= mathVar::orderElem; j++)
-				{
-					rhovFlux << rhov[i][j] << " ";
-				}
-				std::tie(xC, yC) = auxUlti::getCellCentroid(i);
-				std::tie(aC, bC) = math::inverseMapping(i, xC, yC);
-				rhovFlux << math::pointValue(i, aC, bC, 3, 2) << "\n";
-			}
-		}
-		else
-		{
-			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhov.txt", rhoLoc));
-		}
-		fileName = "rhoE" + iter_str + ".txt";
-		std::string rhoELoc(Loc + "\\" + fileName);
-		std::ofstream rhoEFlux(rhoELoc.c_str());
-		if (rhoEFlux)
-		{
-			for (int i = 0; i < meshVar::nelem2D; i++)
-			{
-				for (int j = 0; j <= mathVar::orderElem; j++)
-				{
-					rhoEFlux << rhoE[i][j] << " ";
-				}
-				std::tie(xC, yC) = auxUlti::getCellCentroid(i);
-				std::tie(aC, bC) = math::inverseMapping(i, xC, yC);
-				rhoEFlux << math::pointValue(i, aC, bC, 4, 2) << "\n";
-			}
-		}
-		else
-		{
-			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("rhoE.txt", rhoLoc));
-		}
-
-		fileName = "cellCentroid.txt"; 
-		std::string cellCentroidLoc(Loc + "\\" + fileName);
-		std::ofstream cellCentroidFlux(cellCentroidLoc.c_str());
-		if (cellCentroidFlux)
-		{
-			for (int i = 0; i < meshVar::nelem2D; i++)
-			{
-				for (int j = 0; j < 2; j++)
-				{
-					cellCentroidFlux << meshVar::geoCenter[i][j] << " ";
-				}
-				cellCentroidFlux << "\n";
-			}
-		}
-		else
-		{
-			message::writeLog(systemVar::pwd, systemVar::caseName, message::opFError("cellCentroid.txt", cellCentroidLoc));
-		}
-	}
-}
-
 namespace DG2Tecplot
 {
 	std::vector<double> calcNodeValues(int valType)
@@ -293,7 +152,7 @@ namespace DG2Tecplot
 
 	void exportNodeData(int iter)
 	{
-		std::vector<double>nodeRho, node_u, node_v, node_p, node_T, node_uMag(meshVar::npoin, 0.0);
+		std::vector<double>nodeRho(meshVar::npoin, 0.0), node_u(meshVar::npoin, 0.0), node_v(meshVar::npoin, 0.0), node_p(meshVar::npoin, 0.0), node_T(meshVar::npoin, 0.0), node_uMag(meshVar::npoin, 0.0);
 		nodeRho = DG2Tecplot::calcNodeValues(1);
 		node_u = DG2Tecplot::calcNodeValues(2);
 		node_v = DG2Tecplot::calcNodeValues(3);
@@ -305,7 +164,7 @@ namespace DG2Tecplot
 		}
 
 		std::string iter_str = std::to_string(iter);
-		std::string fileName(systemVar::caseName + ".dat"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\TecplotFile\\" + iter_str), code;
+		std::string fileName(systemVar::caseName + "_node.dat"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\TecplotFile\\" + iter_str), code;
 		_mkdir(Loc.c_str());
 		
 		std::string fileLoc(Loc + "\\" + fileName);
@@ -466,20 +325,20 @@ DATAPACKING=BLOCK)";
 
 	void exportCellCenteredData(int iter)
 	{
-		std::vector<double>nodeRho, node_u, node_v, node_p, node_T, node_uMag(meshVar::npoin, 0.0);
+		std::vector<double>nodeRho(meshVar::nelem2D, 0.0), node_u(meshVar::nelem2D, 0.0), node_v(meshVar::nelem2D, 0.0), node_p(meshVar::nelem2D, 0.0), node_T(meshVar::nelem2D, 0.0), node_uMag(meshVar::nelem2D, 0.0);
 		nodeRho = DG2Tecplot::calcCellCenteredValues(1);
 		node_u = DG2Tecplot::calcCellCenteredValues(2);
 		node_v = DG2Tecplot::calcCellCenteredValues(3);
 		node_p = DG2Tecplot::calcCellCenteredValues(5);
 		node_T = DG2Tecplot::calcCellCenteredValues(6);
 		double xC(0.0), yC(0.0);
-		for (int i = 0; i < meshVar::npoin; i++)
+		for (int i = 0; i < meshVar::nelem2D; i++)
 		{
 			node_uMag[i] = sqrt(pow(node_u[i], 2) + pow(node_v[i], 2));
 		}
 
 		std::string iter_str = std::to_string(iter);
-		std::string fileName(systemVar::caseName + ".dat"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\TecplotFile\\" + iter_str), code;
+		std::string fileName(systemVar::caseName + "cellCentered.dat"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\TecplotFile\\" + iter_str), code;
 		_mkdir(Loc.c_str());
 
 		std::string fileLoc(Loc + "\\" + fileName);
@@ -487,33 +346,18 @@ DATAPACKING=BLOCK)";
 
 		code = R"(
 TITLE     = "DG2D to Tecplot"
-VARIABLES = "X", "Y", "RHO", "U" ,"V", "VELOCITY_MAG", "P", "T"
+VARIABLES = "X", "Y", "RHO", "U" ,"V", "VELOCITY_MAG", "P", "T", "THETA1", "THETA2"
 ZONE T="ZONE 1"
 ZONETYPE=FEQUADRILATERAL
 DATAPACKING=BLOCK
-VARLOCATION=CELLCENTERED)";
+VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 
 		if (fileFlux)
 		{
 			fileFlux << code << std::endl << "NODES=" << std::to_string(meshVar::npoin) << ", " << "ELEMENTS=" << std::to_string(meshVar::nelem2D) << std::endl;
 			//X
 			int counter(0);
-			for (int i = 0; i < meshVar::nelem2D; i++)
-			{
-				counter++;
-				std::tie(xC, yC) = auxUlti::getCellCentroid(i);
-				if (counter==1000)
-				{
-					fileFlux << std::endl;
-					counter = 0;
-				}
-				fileFlux << xC << " ";
-			}
-			fileFlux << std::endl;
-
-			//Y
-			counter = 0;
-			for (int i = 0; i < meshVar::nelem2D; i++)
+			for (int i = 0; i < meshVar::npoin; i++)
 			{
 				counter++;
 				if (counter == 1000)
@@ -521,8 +365,21 @@ VARLOCATION=CELLCENTERED)";
 					fileFlux << std::endl;
 					counter = 0;
 				}
-				std::tie(xC, yC) = auxUlti::getCellCentroid(i);
-				fileFlux << yC << " ";
+				fileFlux << meshVar::Points[i][0] << " ";
+			}
+			fileFlux << std::endl;
+
+			//Y
+			counter = 0;
+			for (int i = 0; i < meshVar::npoin; i++)
+			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
+				fileFlux << meshVar::Points[i][1] << " ";
 			}
 			fileFlux << std::endl;
 
@@ -554,7 +411,7 @@ VARLOCATION=CELLCENTERED)";
 			}
 			fileFlux << std::endl;
 
-			//U
+			//V
 			counter = 0;
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
@@ -607,6 +464,34 @@ VARLOCATION=CELLCENTERED)";
 					counter = 0;
 				}
 				fileFlux << node_T[i] << " ";
+			}
+			fileFlux << std::endl;
+
+			//Theta1
+			counter = 0;
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
+				fileFlux << theta1Arr[i] << " ";
+			}
+			fileFlux << std::endl;
+
+			//Theta2
+			counter = 0;
+			for (int i = 0; i < meshVar::nelem2D; i++)
+			{
+				counter++;
+				if (counter == 1000)
+				{
+					fileFlux << std::endl;
+					counter = 0;
+				}
+				fileFlux << theta2Arr[i] << " ";
 			}
 			fileFlux << std::endl;
 

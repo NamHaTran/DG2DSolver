@@ -55,27 +55,35 @@ void Executer(std::string cmd)
 
 void Processing()
 {
-	/*SET INITIAL VALUES*/
 	meshParam::calcStiffMatrixCoeffs();
-
-	process::setIniValues();
+	if (systemVar::loadSavedCase)
+	{
+		std::cout << "Loading case...\n" << std::endl;
+		IO::loadCase();
+	}
+	else
+	{
+		/*SET INITIAL VALUES*/
+		process::setIniValues();
+	}
 
 	std::cout << " \n" << "Simulation is started\n";
+
+	//APPLY LIMITER
+	limitVal::numOfLimitCell = 0;
+	process::limiter::limiter();
+
 	int loadConstCount(0);
 	while (process::checkRunningCond())
 	{
 		systemVar::iterCount++;
 		std::cout << "Iteration " << systemVar::iterCount << std::endl;
 
-		//COMPUTE GAUSS VALUES
-		process::calcVolumeGaussValues();
-
-		//APPLY LIMITER
-		limitVal::numOfLimitCell = 0;
-		process::limiter::limiter();
-
 		//CALCULATE TIME STEP
 		process::Euler::calcGlobalTimeStep();
+
+		//COMPUTE GAUSS VALUES
+		process::calcVolumeGaussValues();
 
 		//SOLVE AUXILARY EQUATION
 		process::auxEq::calcValuesAtInterface();
@@ -87,12 +95,18 @@ void Processing()
 
 		//UPDATE VARIABLES
 		process::NSFEq::updateVariables();
+
+		//APPLY LIMITER
+		limitVal::numOfLimitCell = 0;
+		process::limiter::limiter();
 	
 		systemVar::savingCout++;
 		if (systemVar::savingCout == systemVar::wrtI) //
 		{
 			std::cout << "Saving case...\n" << std::endl;
-			DG2Tecplot::exportNodeData(systemVar::iterCount);
+			IO::saveCase();
+			std::cout << "Exporting data to Tecplot...\n" << std::endl;
+			DG2Tecplot::exportCellCenteredData(systemVar::iterCount);
 			systemVar::savingCout = 0;
 		}
 

@@ -364,7 +364,7 @@ namespace NSFEqBCs
 				UMinus[0] = UPlus[0];
 				UMinus[1] = -UPlus[1];
 				UMinus[2] = -UPlus[2];
-				UMinus[3] = UPlus[0] * (material::Cv*bcValues::TBC[edgeGrp - 1]);
+				UMinus[3] = UPlus[0] * (material::Cv*bcValues::TBC[edgeGrp - 1]) + 0.5*(pow(UMinus[1], 2) + pow(UMinus[2], 2)) / UMinus[0];
 				//with isothermal BC, dUXMinus = dUXPlus, dUYMinus = dUYPlus
 				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
 				return Fluxes;

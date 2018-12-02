@@ -152,8 +152,6 @@ namespace process
 	void setIniValues()
 	{
 		iniValues::rhoIni = iniValues::pIni / (material::R*iniValues::TIni);
-		material::Cp = material::R*material::gamma / (material::gamma - 1);
-		material::Cv = material::Cp - material::R;
 		iniValues::eIni = material::Cv*iniValues::TIni; //+0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2) + pow(iniValues::wIni, 2));
 		iniValues::muIni = math::CalcVisCoef(iniValues::TIni);
 		std::vector<double> iniRho(mathVar::orderElem + 1),

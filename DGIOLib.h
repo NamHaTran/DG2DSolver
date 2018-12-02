@@ -40,5 +40,9 @@ namespace IO
 
 	/*Function writes residuals on console*/
 	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes);
+
+	void saveCase();
+
+	void loadCase();
 }
 #endif // DGIOLIB_H_INCLUDED

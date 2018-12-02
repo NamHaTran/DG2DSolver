@@ -15,7 +15,7 @@ namespace systemVar
 	extern double CFL; //Courant number
 	extern double Ttime; //Total time
 	extern int wrtI; //write interval
-	extern bool wrtLog; //write log file
+	extern bool wrtLog, loadSavedCase;
 
 	/*
 	time discretization scheme	|keyWord	|index		|

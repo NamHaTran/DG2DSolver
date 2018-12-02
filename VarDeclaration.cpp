@@ -14,13 +14,13 @@ namespace systemVar
 	double CFL(0.5); //Courant number
 	double Ttime(0.0); //Total time
 	int wrtI(0); //write interval
-	bool wrtLog("true");
+	bool wrtLog("true"), loadSavedCase("false");
 
 	int ddtScheme(1);
 	int limiter(1);
 	double epsilon(1e-13);
 
-	int iterCount(0), savingCout(0.0);
+	int iterCount(0), savingCout(0);
 	std::vector<double> rhoResNormVector(5, 0.0),
 		rhouResNormVector(5, 0.0),
 		rhovResNormVector(5, 0.0),

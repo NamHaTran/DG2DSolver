@@ -866,7 +866,7 @@ namespace math
 		AA = -Ax * By + Ay * Bx;
 		BB = -Ax * Dy + Bx * Cy - Cx * By + Ay * Dx;
 		CC = Dx * Cy - Cx * Dy;
-		if (fabs(AA) < 1e-16 && fabs(BB) < 1e-16 && fabs(CC) < 1e-16)
+		if (fabs(AA) < 1e-12 && fabs(BB) < 1e-12 && fabs(CC) < 1e-12)
 		{
 			aCoor = -1;
 			bCoor = 1;
@@ -898,14 +898,14 @@ namespace math
 				exitDG(str);
 			}
 			
-			if (fabs(aCoor*Ay + Cy) <= 1e-15)
+			if (fabs(aCoor*Ay + Cy) <= 1e-12)
 			{
 				//std::cout << "aCoor: " << aCoor << " criteria: " << fabs((aCoor*By + Dy) - (aCoor*Ay + Cy)) << std::endl;
 				//bCoor = 2;
 				AA = -Ay * Bx + Ax * By;
 				BB = -Ay * Dx + By * Cx - Cy * Bx + Ax * Dy;
 				CC = Dy * Cx - Cy * Dx;
-				if (fabs(AA) < 1e-15 && fabs(BB) < 1e-15 && fabs(CC) < 1e-15)
+				if (fabs(AA) < 1e-12 && fabs(BB) < 1e-12 && fabs(CC) < 1e-12)
 				{
 					aCoor = -1;
 					bCoor = 1;
