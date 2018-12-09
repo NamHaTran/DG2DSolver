@@ -9,6 +9,7 @@
 #include "DGAuxUltilitiesLib.h"
 #include <iostream>
 #include <windows.h>
+#include "dynamicVarDeclaration.h"
 
 void Executer(std::string cmd)
 {
@@ -80,25 +81,13 @@ void Processing()
 		std::cout << "Iteration " << systemVar::iterCount << std::endl;
 
 		//CALCULATE TIME STEP
-		process::Euler::calcGlobalTimeStep();
+		process::timeDiscretization::calcGlobalTimeStep();
 
-		//COMPUTE GAUSS VALUES
-		process::calcVolumeGaussValues();
+		//SOLVE TIME MARCHING BY USING TVDRK3
+		process::timeDiscretization::TVDRK3();
 
-		//SOLVE AUXILARY EQUATION
-		process::auxEq::calcValuesAtInterface();
-		process::auxEq::solveAuxEquation();
-
-		//SOLVE NSF EQUATION
-		process::NSFEq::calcValuesAtInterface();
-		process::NSFEq::solveNSFEquation();
-
-		//UPDATE VARIABLES
-		process::NSFEq::updateVariables();
-
-		//APPLY LIMITER
-		limitVal::numOfLimitCell = 0;
-		process::limiter::limiter();
+		//COMPUTE RESIDUALS
+		process::timeDiscretization::globalErrorEstimate();
 	
 		systemVar::savingCout++;
 		if (systemVar::savingCout == systemVar::wrtI) //

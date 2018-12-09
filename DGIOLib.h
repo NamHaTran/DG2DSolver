@@ -1,6 +1,7 @@
 #ifndef DGIOLIB_H_INCLUDED
 #define DGIOLIB_H_INCLUDED
 #include <string>
+#include <vector>
 namespace IO
 {
 	/*Function displays program's logo*/
@@ -39,7 +40,7 @@ namespace IO
 	void readDataFile(std::string fileName, std::string direction, std::string keyWordsDbl[], std::string keyWordsInt[], std::string keyWordsBool[], std::string keyWordsStr[], double *outDbl, int *outInt, bool *outBool, std::string *Str, int numParamDbl, int numParamInt, int numParamBool, int numParamStr);
 
 	/*Function writes residuals on console*/
-	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes);
+	void residualOutput(std::vector<double> &rhoRes, std::vector<double> &rhouRes, std::vector<double> &rhovRes, std::vector<double> &rhoERes);
 
 	void saveCase();
 

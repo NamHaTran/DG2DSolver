@@ -32,7 +32,7 @@ namespace MshReader
 		GetNormalVector();
 
 		/*Get points at boundary (for postProcessing)*/
-		getBoundaryPoints();
+		//getBoundaryPoints();
 
 		/*Save mesh data*/
 		IO::SaveMeshInfor();

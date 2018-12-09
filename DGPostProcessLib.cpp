@@ -346,11 +346,22 @@ DATAPACKING=BLOCK)";
 
 		code = R"(
 TITLE     = "DG2D to Tecplot"
-VARIABLES = "X", "Y", "RHO", "U" ,"V", "VELOCITY_MAG", "P", "T", "THETA1", "THETA2"
+VARIABLES = "X"
+"Y"
+"RHO"
+"U"
+"V"
+"VELOCITY_MAG"
+"P"
+"T"
+"THETA1"
+"THETA2"
 ZONE T="ZONE 1"
-ZONETYPE=FEQUADRILATERAL
-DATAPACKING=BLOCK
-VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
+ STRANDID=0, SOLUTIONTIME=0
+ Nodes=5151, Elements=10000, ZONETYPE=FEQuadrilateral
+ DATAPACKING=BLOCK
+ VARLOCATION=([3-10]=CELLCENTERED)
+ DT=(SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE)";
 
 		if (fileFlux)
 		{
@@ -360,7 +371,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -374,7 +385,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::npoin; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -388,7 +399,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -402,7 +413,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -416,7 +427,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -430,7 +441,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -444,7 +455,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -458,7 +469,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -472,7 +483,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;
@@ -486,7 +497,7 @@ VARLOCATION=([1,2]=nodal,[3,4,5,6,7,8,9,10]=cellcentered))";
 			for (int i = 0; i < meshVar::nelem2D; i++)
 			{
 				counter++;
-				if (counter == 1000)
+				if (counter == 5)
 				{
 					fileFlux << std::endl;
 					counter = 0;

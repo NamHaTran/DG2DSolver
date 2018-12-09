@@ -1470,7 +1470,7 @@ namespace math
 						index++;
 					}
 				}
-				*/
+				
 				//Compute rho at all internal Gauss point
 				for (int na = 0; na <= mathVar::nGauss; na++)
 				{
@@ -1481,6 +1481,7 @@ namespace math
 						vectorRho.push_back(math::pointValue(element, aG, bG, 1, 2));
 					}
 				}
+				*/
 				//Compute rho at edge DA
 				aG = -1;
 				for (int nG = 0; nG <= mathVar::nGauss; nG++)
@@ -1757,6 +1758,7 @@ namespace math
 
 			//Compute value at point (a, b) without limiter
 			math::basisFc(a, b);
+			/*
 			if (valType == 1)
 			{
 				for (int order = 1; order <= mathVar::orderElem; order++)
@@ -1766,36 +1768,14 @@ namespace math
 			}
 			else
 			{
-				for (int order = 1; order <= mathVar::orderElem; order++)
-				{
-					out += Value[order] * mathVar::B[order] * theta2Arr[element];
-				}
-			}
-			out += Value[0];
-
-			//Modify output value
-			if (valType == 1 || valType == 4)
+				
+			}*/
+			for (int order = 1; order <= mathVar::orderElem; order++)
 			{
-				if (out < 0)
-				{
-					out = 0;
-					if (valType == 1)
-					{
-						for (int order = 1; order <= mathVar::orderElem; order++)
-						{
-							out += Value[order] * mathVar::B[order] * theta2Arr[element] * theta1Arr[element] * 0.9;
-						}
-					}
-					else
-					{
-						for (int order = 1; order <= mathVar::orderElem; order++)
-						{
-							out += Value[order] * mathVar::B[order] * theta2Arr[element] * 0.9;
-						}
-					}
-					out += Value[0];
-				}
+				out += Value[order] * mathVar::B[order] * theta2Arr[element];
 			}
+
+			out += Value[0];
 			
 			return out;
 		}

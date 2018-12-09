@@ -528,8 +528,8 @@ namespace NSFEqBCs
 				//UMinus[i] = UPlus[i];
 				dUXPlus[i] = math::pointAuxValue(element, a, b, i + 1, 1);
 				dUYPlus[i] = math::pointAuxValue(element, a, b, i + 1, 2);
-				dUXMinus[i] = dUXPlus[i];
-				dUYMinus[i] = -dUYPlus[i];
+				dUXMinus[i] = dUXPlus[i] - 2 * (dUXPlus[i] * nx + dUYPlus[i] * ny)*nx;
+				dUYMinus[i] = dUYPlus[i] - 2 * (dUXPlus[i] * nx + dUYPlus[i] * ny)*ny;
 				//dUYMinus[i] = dUYPlus[i];
 			}
 			/*
@@ -538,8 +538,8 @@ namespace NSFEqBCs
 			uPt = uP * tx + vP * ty;
 			*/
 			UMinus[0] = math::pointValue(element, a, b, 1, 2);
-			UMinus[1] = UPlus[1] * (ny*ny - nx * nx) + UPlus[2] * (-2 * nx*ny);
-			UMinus[2] = UPlus[1] * (-2 * nx*ny) + UPlus[2] * (nx*nx - ny * ny);
+			UMinus[1] = UPlus[1] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*nx;
+			UMinus[2] = UPlus[2] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*ny;
 			//UMinus[1] = UMinus[0] * (uPn*nx + uPt * tx);
 			//UMinus[2] = UMinus[0] * (uPn*ny + uPt * ty);
 			UMinus[3] = math::pointValue(element, a, b, 4, 2);
@@ -787,7 +787,7 @@ namespace auxilaryBCs
 		}
 		*/
 		//General formulae: hS_BC = UBc*n
-		std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
+ 		std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
 		std::vector<double> UBc(4, 0.0);
 		double TBc(0.0), muBc(0.0);
 		UBc = BCSupportFncs::weakPrescribedFluxes::distributeBCValsToArray(nG, edge);
@@ -844,8 +844,8 @@ namespace auxilaryBCs
 		}
 		double muP(math::CalcVisCoef(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3])));
 		UMinus[0] = math::pointValue(element, a, b, 1, 2);
-		UMinus[1] = UPlus[1] * (ny*ny - nx * nx) + UPlus[2] * (-2 * nx*ny);
-		UMinus[2] = UPlus[1] * (-2 * nx*ny) + UPlus[2] * (nx*nx - ny * ny);
+		UMinus[1] = UPlus[1] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*nx;
+		UMinus[2] = UPlus[2] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*ny;
 		UMinus[3] = math::pointValue(element, a, b, 4, 2);
 
 		for (int i = 0; i < 4; i++)

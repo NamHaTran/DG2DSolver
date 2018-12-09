@@ -1,10 +1,2 @@
-﻿  DGIOLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(48): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(164): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(466): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(569): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(720): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(804): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  DGProcLib.cpp
-  Generating Code...
+﻿  DGProcLib.cpp
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Debug\DG2DSolver.exe

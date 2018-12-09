@@ -153,8 +153,6 @@ namespace auxUlti
 	std::tuple<double, double> getGaussSurfCoor(int edge, int elem, int nG)
 	{
 		double a(0.0), b(0.0);
-		int edgeOrder(auxUlti::findEdgeOrder(elem, edge));
-		int elemType(auxUlti::checkType(elem));
 		bool isMaster(auxUlti::checkMaster(elem, edge));
 
 		if (isMaster)
@@ -467,7 +465,6 @@ namespace auxUlti
 		int masterElem(0), servantElem(0), bcType(0), errorLoc(0);
 		double aMaster(0.0), bMaster(0.0), aServant(0.0), bServant(0.0),
 			xMaster(0.0), yMaster(0.0);
-		bool mappingError(false);
 
 		for (int iedge = 0; iedge < meshVar::inpoedCount; iedge++)
 		{
@@ -488,27 +485,9 @@ namespace auxUlti
 				{
 					std::tie(aServant, bServant) = math::inverseMapping(servantElem, xMaster, yMaster);
 				}
-				if (bServant==2)
-				{
-					mappingError = true;
-					errorLoc = nG + mathVar::nGauss + 1;
-				}
 				meshVar::edgeGaussPoints_a[iedge][nG + mathVar::nGauss + 1] = aServant;
 				meshVar::edgeGaussPoints_b[iedge][nG + mathVar::nGauss + 1] = bServant;
 			}
-			//modify b coordinate if mappingError is true
-			if (mappingError)
-			{
-				for (int nG2 = 0; nG2 <= mathVar::nGauss; nG2++)
-				{
-					if (meshVar::edgeGaussPoints_b[iedge][nG2 + mathVar::nGauss + 1] != 2)
-					{
-						meshVar::edgeGaussPoints_b[iedge][errorLoc] = meshVar::edgeGaussPoints_b[iedge][nG2 + mathVar::nGauss + 1];
-						break;
-					}
-				}
-			}
-			mappingError = false;
 		}
 	}
 
@@ -521,6 +500,16 @@ namespace auxUlti
 		auxUlti::resize2DArray(rhou, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhov, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhoE, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize2DArray(rho0, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhou0, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhov0, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhoE0, meshVar::nelem2D, mathVar::orderElem + 1);
+
+		auxUlti::resize2DArray(rhoResArr, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhouResArr, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhovResArr, meshVar::nelem2D, mathVar::orderElem + 1);
+		auxUlti::resize2DArray(rhoEResArr, meshVar::nelem2D, mathVar::orderElem + 1);
 		
 		auxUlti::resize2DArray(SurfaceBCFields::rhoBc, mathVar::nGauss + 1, meshVar::numBCEdges);
 		auxUlti::resize2DArray(SurfaceBCFields::rhouBc, mathVar::nGauss + 1, meshVar::numBCEdges);
@@ -531,14 +520,6 @@ namespace auxUlti
 		auxUlti::resize2DArray(rhouN, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhovN, meshVar::nelem2D, mathVar::orderElem + 1);
 		auxUlti::resize2DArray(rhoEN, meshVar::nelem2D, mathVar::orderElem + 1);
-		/*
-		auxUlti::resize2DArray(u, meshVar::nelem2D, mathVar::orderElem + 1);
-		auxUlti::resize2DArray(v, meshVar::nelem2D, mathVar::orderElem + 1);
-		auxUlti::resize2DArray(e, meshVar::nelem2D, mathVar::orderElem + 1);
-		auxUlti::resize2DArray(p, meshVar::nelem2D, mathVar::orderElem + 1);
-		auxUlti::resize2DArray(T, meshVar::nelem2D, mathVar::orderElem + 1);
-		auxUlti::resize2DArray(mu, meshVar::nelem2D, mathVar::orderElem + 1);
-		*/
 
 		auxUlti::resize2DArray(aux_interface_rho, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));
 		auxUlti::resize2DArray(aux_interface_rhou, meshVar::inpoedCount, 2 * (mathVar::nGauss + 1));

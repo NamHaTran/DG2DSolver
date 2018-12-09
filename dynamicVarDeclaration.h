@@ -13,8 +13,7 @@ namespace meshVar
 }
 
 /*Conservative variables declaration*/
-extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE;
-extern std::vector<std::vector<double>> rhoN, rhouN, rhovN, rhoEN;
+extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE, rhoN, rhouN, rhovN, rhoEN, rho0, rhou0, rhov0, rhoE0, rhoResArr, rhouResArr, rhovResArr, rhoEResArr;
 
 /*Primary variables declaration
 extern std::vector<std::vector<double>>u, v, e, p, T, mu;*/

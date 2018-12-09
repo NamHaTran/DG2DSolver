@@ -885,7 +885,7 @@ namespace process
 			return std::make_tuple(valPlus, valMinus);
 		}
 
-		void solveNSFEquation()
+		void solveNSFEquation(int RKOrder)
 		{
 			std::vector<double> rhoError(meshVar::nelem2D, 1.0),
 				rhouError(meshVar::nelem2D, 1.0),
@@ -908,18 +908,11 @@ namespace process
 				rhouVectorN(mathVar::orderElem + 1, 0.0),
 				rhovVectorN(mathVar::orderElem + 1, 0.0),
 				rhoEVectorN(mathVar::orderElem + 1, 0.0),
-				
-				UnVector(mathVar::orderElem + 1, 0.0),
-				
-				timeStepArr(meshVar::nelem2D,1.0);
 
-			double rhoRes(1.0), rhouRes(1.0), rhovRes(1.0), rhoERes(1.0);
+				UnVector(mathVar::orderElem + 1, 0.0);
 
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
-				//1) Calculate Stiff matrix
-				//StiffMatrix = process::calculateStiffMatrix(nelement);
-
 				//2) Calculate Right hand side terms
 				process::NSFEq::CalcRHSTerm(nelement, RHSTerm1, RHSTerm2, RHSTerm3, RHSTerm4);
 
@@ -930,6 +923,36 @@ namespace process
 					ddtRhouVector[iorder] = RHSTerm2[iorder] / stiffMatrixCoeffs[nelement][iorder];
 					ddtRhovVector[iorder] = RHSTerm3[iorder] / stiffMatrixCoeffs[nelement][iorder];
 					ddtRhoEVector[iorder] = RHSTerm4[iorder] / stiffMatrixCoeffs[nelement][iorder];
+
+					switch (RKOrder)
+					{
+					case 1:
+					{
+						rhoResArr[nelement][iorder] = (1.0 / 6.0)*ddtRhoVector[iorder];
+						rhouResArr[nelement][iorder] = (1.0 / 6.0)*ddtRhouVector[iorder];
+						rhovResArr[nelement][iorder] = (1.0 / 6.0)*ddtRhovVector[iorder];
+						rhoEResArr[nelement][iorder] = (1.0 / 6.0)*ddtRhoEVector[iorder];
+					}
+					break;
+					case 2:
+					{
+						rhoResArr[nelement][iorder] += (1.0 / 6.0)*ddtRhoVector[iorder];
+						rhouResArr[nelement][iorder] += (1.0 / 6.0)*ddtRhouVector[iorder];
+						rhovResArr[nelement][iorder] += (1.0 / 6.0)*ddtRhovVector[iorder];
+						rhoEResArr[nelement][iorder] += (1.0 / 6.0)*ddtRhoEVector[iorder];
+					}
+					break;
+					case 3:
+					{
+						rhoResArr[nelement][iorder] += (2.0 / 3.0)*ddtRhoVector[iorder];
+						rhouResArr[nelement][iorder] += (2.0 / 3.0)*ddtRhouVector[iorder];
+						rhovResArr[nelement][iorder] += (2.0 / 3.0)*ddtRhovVector[iorder];
+						rhoEResArr[nelement][iorder] += (2.0 / 3.0)*ddtRhoEVector[iorder];
+					}
+					break;
+					default:
+						break;
+					}
 				}
 
 				//4) Solve time marching
@@ -938,25 +961,25 @@ namespace process
 				{
 					UnVector[order] = rho[nelement][order];
 				}
-				rhoVectorN = process::NSFEq::solveTimeMarching(ddtRhoVector, UnVector);
+				rhoVectorN = process::NSFEq::solveTimeMarching(nelement, ddtRhoVector, UnVector, RKOrder, 1);
 				//rhou
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					UnVector[order] = rhou[nelement][order];
 				}
-				rhouVectorN = process::NSFEq::solveTimeMarching(ddtRhouVector, UnVector);
+				rhouVectorN = process::NSFEq::solveTimeMarching(nelement, ddtRhouVector, UnVector, RKOrder, 2);
 				//rhov
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					UnVector[order] = rhov[nelement][order];
 				}
-				rhovVectorN = process::NSFEq::solveTimeMarching(ddtRhovVector, UnVector);
+				rhovVectorN = process::NSFEq::solveTimeMarching(nelement, ddtRhovVector, UnVector, RKOrder, 3);
 				//rhoE
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					UnVector[order] = rhoE[nelement][order];
 				}
-				rhoEVectorN = process::NSFEq::solveTimeMarching(ddtRhoEVector, UnVector);
+				rhoEVectorN = process::NSFEq::solveTimeMarching(nelement, ddtRhoEVector, UnVector, RKOrder, 4);
 
 				//5) Save results to conservative variables array
 				for (int order = 0; order <= mathVar::orderElem; order++)
@@ -966,15 +989,7 @@ namespace process
 					rhovN[nelement][order] = rhovVectorN[order];
 					rhoEN[nelement][order] = rhoEVectorN[order];
 				}
-
-				//6) Estimate Residuals
-				rhoError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhoVector));
-				rhouError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhouVector));
-				rhovError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhovVector));
-				rhoEError[nelement] = (process::Euler::localErrorEstimate(nelement, ddtRhoEVector));
 			}
-			std::tie(rhoRes, rhouRes, rhovRes, rhoERes) = process::Euler::globalErrorEstimate(rhoError, rhouError, rhovError, rhoEError);
-			IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
 		}
 
 		void updateVariables()
@@ -1358,29 +1373,118 @@ namespace process
 			return Fluxes;
 		}
 
-		std::vector<double> solveTimeMarching(std::vector<double> &ddtArr, std::vector<double> &UnArr)
+		std::vector<double> solveTimeMarching(int element, std::vector<double> &ddtArr, std::vector<double> &UnArr, int RKOrder, int varType)
 		{
 			std::vector<double> OutArr(mathVar::orderElem + 1, 0.0);
-
-			if (systemVar::ddtScheme==1) //Euler scheme
+			
+			switch (RKOrder)
+			{
+			case 1:
 			{
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
 					OutArr[order] = dt * ddtArr[order] + UnArr[order];
 				}
 			}
+			break;
+			case 2:
+			{
+				switch (varType)
+				{
+				case 1://rho
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = 0.25*(dt * ddtArr[order] + UnArr[order]) + (3.0 / 4.0)*rho0[element][order];
+					}
+				}
+				break;
+				case 2://rhou
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = 0.25*(dt * ddtArr[order] + UnArr[order]) + (3.0 / 4.0)*rhou0[element][order];
+					}
+				}
+				break;
+				case 3://rhov
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = 0.25*(dt * ddtArr[order] + UnArr[order]) + (3.0 / 4.0)*rhov0[element][order];
+					}
+				}
+				break;
+				case 4://rhoE
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = 0.25*(dt * ddtArr[order] + UnArr[order]) + (3.0 / 4.0)*rhoE0[element][order];
+					}
+				}
+				break;
+				default:
+					break;
+				}
+			}
+			break;
+			case 3:
+			{
+				switch (varType)
+				{
+				case 1://rho
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = (2.0 / 3.0)*(dt * ddtArr[order] + UnArr[order]) + (1.0 / 3.0)*rho0[element][order];
+					}
+				}
+				break;
+				case 2://rhou
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = (2.0 / 3.0)*(dt * ddtArr[order] + UnArr[order]) + (1.0 / 3.0)*rhou0[element][order];
+					}
+				}
+				break;
+				case 3://rhov
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = (2.0 / 3.0)*(dt * ddtArr[order] + UnArr[order]) + (1.0 / 3.0)*rhov0[element][order];
+					}
+				}
+				break;
+				case 4://rhoE
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						OutArr[order] = (2.0 / 3.0)*(dt * ddtArr[order] + UnArr[order]) + (1.0 / 3.0)*rhoE0[element][order];
+					}
+				}
+				break;
+				default:
+					break;
+				}
+			}
+			break;
+			default:
+				break;
+			}
+			
 			return OutArr;
 		}
 	}
 
-	namespace Euler
+	namespace timeDiscretization
 	{
 		void calcGlobalTimeStep()
 		{
 			std::vector<double>timeStepArr(meshVar::nelem2D, 1.0);
 			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 			{
-				timeStepArr[nelement] = process::Euler::localTimeStep(nelement);
+				timeStepArr[nelement] = process::timeDiscretization::localTimeStep(nelement);
 				
 			}
 			runTime += dt;
@@ -1417,14 +1521,14 @@ namespace process
 					rhovVal = math::pointValue(element, aG, bG, 3, 2);
 					rhoEVal = math::pointValue(element, aG, bG, 4, 2);
 
-					uVal = rhouVal / rhoVal;
-					vVal = rhovVal / rhoVal;
-					velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+					//uVal = rhouVal / rhoVal;
+					//vVal = rhovVal / rhoVal;
+					//velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
 					TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 					aSound = math::CalcSpeedOfSound(TVal);
-					LocalMach = velocity / aSound;
+					//LocalMach = velocity / aSound;
 					muVal = math::CalcVisCoef(TVal);
-					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size)));
+					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
 				}
 			}
 			//deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
@@ -1449,16 +1553,84 @@ namespace process
 				errorVal += ddtArr[order] * mathVar::B[order];
 			}
 
-			return errorVal;
+			return abs(errorVal);
 		}
 
-		std::tuple <double, double, double, double> globalErrorEstimate(std::vector<double> &RhoError, std::vector<double> &RhouError, std::vector<double> &RhovError, std::vector<double> &RhoEError)
+		void globalErrorEstimate()
 		{
-			double rhoRes(*std::max_element(RhoError.begin(), RhoError.end())),
-				rhouRes(*std::max_element(RhouError.begin(), RhouError.end())),
-				rhovRes(*std::max_element(RhovError.begin(), RhovError.end())),
-				rhoERes(*std::max_element(RhoEError.begin(), RhoEError.end()));
-			return std::make_tuple(rhoRes, rhouRes, rhovRes, rhoERes);
+			std::vector<double> rhoRes(mathVar::orderElem + 1, 0.0),
+				rhouRes(mathVar::orderElem + 1, 0.0),
+				rhovRes(mathVar::orderElem + 1, 0.0),
+				rhoERes(mathVar::orderElem + 1, 0.0),
+
+				rhoResOrder(meshVar::nelem2D, 0.0),
+				rhouResOrder(meshVar::nelem2D, 0.0),
+				rhovResOrder(meshVar::nelem2D, 0.0),
+				rhoEResOrder(meshVar::nelem2D, 0.0);
+
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
+				{
+					rhoResOrder[nelement] = fabs(rhoResArr[nelement][iorder]);
+					rhouResOrder[nelement] = fabs(rhouResArr[nelement][iorder]);
+					rhovResOrder[nelement] = fabs(rhovResArr[nelement][iorder]);
+					rhoEResOrder[nelement] = fabs(rhoEResArr[nelement][iorder]);
+				}
+				rhoRes[iorder]= *std::max_element(rhoResOrder.begin(), rhoResOrder.end());
+				rhouRes[iorder] = *std::max_element(rhouResOrder.begin(), rhouResOrder.end());
+				rhovRes[iorder] = *std::max_element(rhovResOrder.begin(), rhovResOrder.end());
+				rhoERes[iorder] = *std::max_element(rhoEResOrder.begin(), rhoEResOrder.end());
+			}
+			
+			IO::residualOutput(rhoRes, rhouRes, rhovRes, rhoERes);
+		}
+
+		void TVDRK_1step(int RKOrder)
+		{
+			//COMPUTE GAUSS VALUES
+			process::calcVolumeGaussValues();
+
+			//SOLVE AUXILARY EQUATION
+			process::auxEq::calcValuesAtInterface();
+			process::auxEq::solveAuxEquation();
+
+			//SOLVE NSF EQUATION
+			process::NSFEq::calcValuesAtInterface();
+			process::NSFEq::solveNSFEquation(RKOrder);
+		}
+
+		void TVDRK3()
+		{
+			for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
+			{
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					rho0[nelement][order] = rho[nelement][order];
+					rhou0[nelement][order] = rhou[nelement][order];
+					rhov0[nelement][order] = rhov[nelement][order];
+					rhoE0[nelement][order] = rhoE[nelement][order];
+				}
+			}
+
+			for (int iRKOrder = 1; iRKOrder <= 3; iRKOrder++)
+			{
+				process::timeDiscretization::TVDRK_1step(iRKOrder);
+
+				for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
+				{
+					for (int order = 0; order <= mathVar::orderElem; order++)
+					{
+						rho[nelement][order] = rhoN[nelement][order];
+						rhou[nelement][order] = rhouN[nelement][order];
+						rhov[nelement][order] = rhovN[nelement][order];
+						rhoE[nelement][order] = rhoEN[nelement][order];
+					}
+				}
+
+				limitVal::numOfLimitCell = 0;
+				process::limiter::limiter();
+			}
 		}
 	}
 
@@ -1611,7 +1783,7 @@ namespace process
 							index++;
 						}
 					}
-					*/
+					
 
 					//Compute t at all internal Gauss point
 					for (int na = 0; na <= mathVar::nGauss; na++)
@@ -1622,7 +1794,7 @@ namespace process
 							bG = mathVar::GaussPts[na][nb][1];
 							vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
 						}
-					}
+					}*/
 					//Compute t at edge DA
 					aG = -1;
 					for (int nG = 0; nG <= mathVar::nGauss; nG++)

@@ -72,7 +72,7 @@ namespace process
 		std::tuple<double, double> getInternalValuesFromCalculatedArrays(int edge, int element, int nG, int mod, int direction, int valType);
 
 		/*Function solves NSEF equation at all elements for conservative variables*/
-		void solveNSFEquation();
+		void solveNSFEquation(int RKOrder);
 
 		/*Function calculates right hand side terms of all conservative variables at ONLY one order*/
 		void CalcRHSTerm(int element, std::vector<double> &term1RHS, std::vector<double> &term2RHS, std::vector<double> &term3RHS, std::vector<double> &term4RHS);
@@ -99,13 +99,10 @@ namespace process
 		std::vector<std::vector<double>> getGaussVectorOfConserVarFluxesAtInternal(int edgeName, int element, int nGauss);
 
 		/*Function applies input ddtSchemme to solve time marching*/
-		std::vector<double> solveTimeMarching(std::vector<double> &ddtArr, std::vector<double> &UnArr);
-		
-		/*Function updates values in conservative variable array*/
-		void updateVariables();
+		std::vector<double> solveTimeMarching(int element, std::vector<double> &ddtArr, std::vector<double> &UnArr, int RKOrder, int varType);
 	}
 
-	namespace Euler
+	namespace timeDiscretization
 	{
 		void calcGlobalTimeStep();
 
@@ -116,7 +113,11 @@ namespace process
 		double localErrorEstimate(int element, std::vector<double> &ddtArr);
 
 		/*Function computes global errors*/
-		std::tuple <double, double, double, double> globalErrorEstimate(std::vector<double> &RhoError, std::vector<double> &RhouError, std::vector<double> &RhovError, std::vector<double> &RhoEError);
+		void globalErrorEstimate();
+
+		void TVDRK_1step(int RKOrder);
+
+		void TVDRK3();
 	}
 
 	namespace limiter

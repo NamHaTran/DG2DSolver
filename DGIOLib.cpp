@@ -907,33 +907,15 @@ namespace IO
 		}
 	}
 
-	void residualOutput(double rhoRes, double rhouRes, double rhovRes, double rhoERes)
+	void residualOutput(std::vector<double> &rhoRes, std::vector<double> &rhouRes, std::vector<double> &rhovRes, std::vector<double> &rhoERes)
 	{
-		if (systemVar::iterCount <= 5)
+		std::cout << "Time step: " << dt << std::endl;
+		for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
 		{
-			math::residualManipulation::calcNormResidual(rhoRes, rhouRes, rhovRes, rhoERes);
+			std::cout << "Order " << iorder << std::endl;
+			std::cout << "Residuals: ddt(rho)=" << rhoRes[iorder] << ", ddt(rhou)=" << rhouRes[iorder] << ", ddt(rhov)=" << rhovRes[iorder] << ", ddt(rhoE)=" << rhoERes[iorder] << std::endl;
 		}
-
-		if (systemVar::iterCount == 1)
-		{
-			rhoRes = 1.0;
-			rhouRes = 1.0;
-			rhovRes = 1.0;
-			rhoERes = 1.0;
-		}
-		else
-		{
-			rhoRes /= systemVar::rhoResNorm;
-			rhouRes /= systemVar::rhouResNorm;
-			rhovRes /= systemVar::rhovResNorm;
-			rhoERes /= systemVar::rhoEResNorm;
-		}
-
-		if (systemVar::ddtScheme == 1)
-		{
-			std::cout << "Time step: " << dt << std::endl;
-		}
-		std::cout << "Residuals: ddt(rho)=" << rhoRes << ", ddt(rhou)=" << rhouRes << ", ddt(rhov)=" << rhovRes << ", ddt(rhoE)=" << rhoERes << std::endl << std::endl;
+		std::cout << std::endl;
 	}
 
 	void saveCase()

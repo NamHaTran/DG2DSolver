@@ -18,12 +18,22 @@ std::vector<std::vector<double>>
 rho(1, std::vector<double>(1, 0.0)),
 rhou(1, std::vector<double>(1, 0.0)),
 rhov(1, std::vector<double>(1, 0.0)),
-rhoE(1, std::vector<double>(1, 0.0));
-std::vector<std::vector<double>>
+rhoE(1, std::vector<double>(1, 0.0)),
+
 rhoN(1, std::vector<double>(1, 0.0)),
 rhouN(1, std::vector<double>(1, 0.0)),
 rhovN(1, std::vector<double>(1, 0.0)),
-rhoEN(1, std::vector<double>(1, 0.0));
+rhoEN(1, std::vector<double>(1, 0.0)),
+
+rho0(1, std::vector<double>(1, 0.0)),
+rhou0(1, std::vector<double>(1, 0.0)),
+rhov0(1, std::vector<double>(1, 0.0)),
+rhoE0(1, std::vector<double>(1, 0.0)),
+
+rhoResArr(1, std::vector<double>(1, 0.0)),
+rhouResArr(1, std::vector<double>(1, 0.0)),
+rhovResArr(1, std::vector<double>(1, 0.0)),
+rhoEResArr(1, std::vector<double>(1, 0.0));
 
 /*Primary variables declaration*/
 /*
