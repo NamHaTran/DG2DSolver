@@ -242,9 +242,10 @@ namespace auxUlti
 		{
 			n = meshVar::normalVector[1][edge];
 		}
+
 		if (master == false)
 		{
-			n = -n;
+			n = -1.0 * n;
 		}
 		return n;
 	}
@@ -440,6 +441,15 @@ namespace auxUlti
 		}
 	}
 
+	void resize2DIntArray(std::vector<std::vector<int>> &Array, int row, int column)
+	{
+		Array.resize(row);
+		for (int i = 0; i < row; ++i)
+		{
+			Array[i].resize(column);
+		}
+	}
+
 	void resize3DArray(std::vector<std::vector<std::vector<double>>> &Array, int direct1, int direct2, int direct3)
 	{
 		Array.resize(direct1);
@@ -574,6 +584,7 @@ namespace auxUlti
 		auxUlti::resize3DArray(rhoEVolGauss, meshVar::nelem2D, mathVar::nGauss + 1, mathVar::nGauss + 1);
 
 		//meshVar::adressOfBCVals.resize(meshVar::numBCEdges);
+		auxUlti::resize2DIntArray(meshVar::neighboringElements, meshVar::nelem2D, 4);
 	}
 
 	int getAdressOfBCEdgesOnBCValsArray(int edge)
@@ -679,5 +690,42 @@ namespace auxUlti
 			}
 			return std::make_tuple(a, b);
 		}
+	}
+
+	int getNeighborElement(int element, int edge)
+	{
+		int neighbor(0);
+		if (auxUlti::getBCType(edge) == 0)
+		{
+			if (meshVar::ineled[0][edge] == element)
+			{
+				neighbor = meshVar::ineled[1][edge];
+			}
+			else
+			{
+				neighbor = meshVar::ineled[0][edge];
+			}
+		}
+		else
+		{
+			neighbor = -1;
+		}
+		return neighbor;
+	}
+
+	int getEdgeHasInputOrderOfElement(int element, int inputEdgeOrder)
+	{
+		int elemType(auxUlti::checkType(element)), edgeId(0), edgeOrder(0), outputEdgeId(0);
+		for (int i = 0; i < elemType; i++)
+		{
+			edgeId = meshVar::inedel[i][element];
+			edgeOrder = auxUlti::findEdgeOrder(element, edgeId);
+			if (edgeOrder == inputEdgeOrder)
+			{
+				outputEdgeId = edgeId;
+				break;
+			}
+		}
+		return outputEdgeId;
 	}
 }

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <windows.h>
 #include "dynamicVarDeclaration.h"
+#include "DGLimiterLib.h"
 
 void Executer(std::string cmd)
 {
@@ -71,8 +72,9 @@ void Processing()
 	std::cout << " \n" << "Simulation is started\n";
 
 	//APPLY LIMITER
+	limiter::mathForLimiter::getNeighborElements();
 	limitVal::numOfLimitCell = 0;
-	process::limiter::limiter();
+	limiter::limiter();
 
 	int loadConstCount(0);
 	while (process::checkRunningCond())

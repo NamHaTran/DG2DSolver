@@ -75,7 +75,7 @@ namespace auxUlti
 	//Function returns cell centroid coordinates and size (cell area)
 	std::tuple<double, double, double> getCellMetrics(int element);
 
-	/*Function resize 2D array*/
+	/*Function resize 2D array type double*/
 	void resize2DArray(std::vector<std::vector<double>> &Array, int row, int column);
 
 	/*Function resize 3D array*/
@@ -83,6 +83,9 @@ namespace auxUlti
 
 	/*Function resizes all dynamic arrays, it helps to reduce amount of consumed RAM*/
 	void resizeDGArrays();
+
+	/*Function resize 2D array type int*/
+	void resize2DIntArray(std::vector<std::vector<int>> &Array, int row, int column);
 
 	/*Function computes coordinates of Gauss point on all edges*/
 	void mappingEdges();
@@ -98,6 +101,12 @@ namespace auxUlti
 
 	//Function deletes 1D vector and frees its memory
 	void clear1DIntVector(std::vector<int>&vector);
+
+	//Function returns neighbor element of input element which shares input edge with
+	int getNeighborElement(int element, int edge);
+
+	//Function gets edge of input element which has input order
+	int getEdgeHasInputOrderOfElement(int element, int inputEdgeOrder);
 
 	//Auxilary functions support for postProcessing
 	namespace postProcess

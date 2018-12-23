@@ -357,15 +357,16 @@ VARIABLES = "X"
 "THETA1"
 "THETA2"
 ZONE T="ZONE 1"
- STRANDID=0, SOLUTIONTIME=0
- Nodes=5151, Elements=10000, ZONETYPE=FEQuadrilateral
- DATAPACKING=BLOCK
- VARLOCATION=([3-10]=CELLCENTERED)
- DT=(SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE)";
+STRANDID=0
+ZONETYPE=FEQuadrilateral
+DATAPACKING=BLOCK
+VARLOCATION=([3-10]=CELLCENTERED)
+DT=(SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE SINGLE)
+)";
 
 		if (fileFlux)
 		{
-			fileFlux << code << std::endl << "NODES=" << std::to_string(meshVar::npoin) << ", " << "ELEMENTS=" << std::to_string(meshVar::nelem2D) << std::endl;
+			fileFlux << code << std::endl << "Nodes=" << std::to_string(meshVar::npoin) << ", " << "Elements=" << std::to_string(meshVar::nelem2D) << std::endl;
 			//X
 			int counter(0);
 			for (int i = 0; i < meshVar::npoin; i++)

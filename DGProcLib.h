@@ -120,27 +120,6 @@ namespace process
 		void TVDRK3();
 	}
 
-	namespace limiter
-	{
-		//Function applies limiter to input element
-		void limiter();
-
-		namespace Pp
-		{
-			namespace triangleCell
-			{
-				//Function computes coefficients theta1 theta2 for positivity preserving limiter
-				std::tuple<double, double> calcPpLimiterCoef(int element);
-			}
-
-			namespace quadratureCell
-			{
-				//Function computes coefficients theta1 theta2 for positivity preserving limiter
-				std::tuple<double, double> calcPpLimiterCoef(int element);
-			}
-		}
-	}
-
 	/*Function calculates volume integral terms of auxilary equations of ONLY one order
 	User's guide:
 	elem: element index

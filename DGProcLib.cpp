@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "DGIOLib.h"
 #include <iostream>
+#include "DGLimiterLib.h"
 
 namespace meshParam
 {
@@ -63,16 +64,28 @@ namespace meshParam
 		{
 			for (int nb = 0; nb <= mathVar::nGauss; nb++)
 			{
+				//Triangle
 				a = mathVar::GaussPts[na][nb][0];
 				b = mathVar::GaussPts[na][nb][1];
-				math::basisFc(a, b);
-				math::dBasisFc(a, b);
+				math::basisFc(a, b, 3);
+				math::dBasisFc(a, b, 3);
 				for (int order = 0; order <= mathVar::orderElem; order++)
 				{
-					mathVar::BPts[order][na][nb] = mathVar::B[order];
+					mathVar::BPts_Tri[order][na][nb] = mathVar::B[order];
 
-					mathVar::dBaPts[order][na][nb] = mathVar::dBa[order];
-					mathVar::dBbPts[order][na][nb] = mathVar::dBb[order];
+					mathVar::dBaPts_Tri[order][na][nb] = mathVar::dBa[order];
+					mathVar::dBbPts_Tri[order][na][nb] = mathVar::dBb[order];
+				}
+
+				//Quadrilateral
+				math::basisFc(a, b, 4);
+				math::dBasisFc(a, b, 4);
+				for (int order = 0; order <= mathVar::orderElem; order++)
+				{
+					mathVar::BPts_Quad[order][na][nb] = mathVar::B[order];
+
+					mathVar::dBaPts_Quad[order][na][nb] = mathVar::dBa[order];
+					mathVar::dBbPts_Quad[order][na][nb] = mathVar::dBb[order];
 				}
 			}
 		}
@@ -132,6 +145,9 @@ namespace meshParam
 				//3. Compute geometric center of sub-triangles which creates polygon
 				std::tie(meshVar::geoCenter[nelem][0], meshVar::geoCenter[nelem][1]) = math::geometricOp::calcQuadCentroid(nelem, xCG, yCG, meshVar::cellSize[nelem]);
 			}
+
+			//4. Calculate local cell size
+			meshVar::localCellSize[nelem] = math::geometricOp::calLocalCellSize(nelem);
 		}
 	}
 
@@ -182,13 +198,14 @@ namespace process
 
 	std::vector<double> calcIniValues(double iniVal, int element)
 	{
-		std::vector<std::vector<double>> matrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
 		std::vector<double> RHS(mathVar::orderElem + 1, 0.0);
 		std::vector<double> iniVector(mathVar::orderElem + 1, 0.0);
 
-		matrix = process::calculateStiffMatrix(element);
 		RHS = process::calcIniValuesRHS(element, iniVal);
-		iniVector = math::SolveSysEqs(matrix, RHS);
+		for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+		{
+			iniVector[iorder] = RHS[iorder] / stiffMatrixCoeffs[element][iorder];
+		}
 		return iniVector;
 	}
 
@@ -204,7 +221,7 @@ namespace process
 				for (int nb = 0; nb <= mathVar::nGauss; nb++)
 				{
 					std::tie(a, b) = auxUlti::getGaussCoor(na, nb);
-					math::basisFc(a, b);
+					math::basisFc(a, b, auxUlti::checkType(element));
 					matrix[na][nb] = mathVar::B[order];
 				}
 			}
@@ -605,7 +622,7 @@ namespace process
 				{
 					for (int nGauss = 0; nGauss <= mathVar::nGauss; nGauss++)
 					{
-						gaussVector = auxEqBCsImplement(element, edgeName, nGauss, nx, ny);
+						gaussVector = auxEqBCsImplement(element, edgeName, nGauss);
 						rhoFluxX[nGauss][nface] = gaussVector[0][0];
 						rhouFluxX[nGauss][nface] = gaussVector[1][0];
 						rhovFluxX[nGauss][nface] = gaussVector[2][0];
@@ -892,7 +909,7 @@ namespace process
 				rhovError(meshVar::nelem2D, 1.0),
 				rhoEError(meshVar::nelem2D, 1.0);
 
-			std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
+			//std::vector<std::vector<double>> StiffMatrix(mathVar::orderElem + 1, std::vector<double>(mathVar::orderElem + 1, 0.0));
 			std::vector<double>
 				RHSTerm1(mathVar::orderElem + 1, 0.0),
 				RHSTerm2(mathVar::orderElem + 1, 0.0),
@@ -1130,8 +1147,6 @@ namespace process
 
 				ViscGsVolX4(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0)),
 				ViscGsVolY4(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
-
-			double a(0.0), b(0.0);
 
 			for (int na = 0; na <= mathVar::nGauss; na++)
 			{
@@ -1531,6 +1546,86 @@ namespace process
 					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
 				}
 			}
+
+			int na = 1;
+			for (int nb = 0; nb <= mathVar::nGauss; nb++)
+			{
+				aG = mathVar::GaussPts[na][nb][0];
+				bG = mathVar::GaussPts[na][nb][1];
+				rhoVal = math::pointValue(element, aG, bG, 1, 2);
+				rhouVal = math::pointValue(element, aG, bG, 2, 2);
+				rhovVal = math::pointValue(element, aG, bG, 3, 2);
+				rhoEVal = math::pointValue(element, aG, bG, 4, 2);
+
+				//uVal = rhouVal / rhoVal;
+				//vVal = rhovVal / rhoVal;
+				//velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				aSound = math::CalcSpeedOfSound(TVal);
+				//LocalMach = velocity / aSound;
+				muVal = math::CalcVisCoef(TVal);
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+			}
+
+			na = -1;
+			for (int nb = 0; nb <= mathVar::nGauss; nb++)
+			{
+				aG = mathVar::GaussPts[na][nb][0];
+				bG = mathVar::GaussPts[na][nb][1];
+				rhoVal = math::pointValue(element, aG, bG, 1, 2);
+				rhouVal = math::pointValue(element, aG, bG, 2, 2);
+				rhovVal = math::pointValue(element, aG, bG, 3, 2);
+				rhoEVal = math::pointValue(element, aG, bG, 4, 2);
+
+				//uVal = rhouVal / rhoVal;
+				//vVal = rhovVal / rhoVal;
+				//velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				aSound = math::CalcSpeedOfSound(TVal);
+				//LocalMach = velocity / aSound;
+				muVal = math::CalcVisCoef(TVal);
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+			}
+
+			int nb = 1;
+			for (int na = 0; na <= mathVar::nGauss; na++)
+			{
+				aG = mathVar::GaussPts[na][nb][0];
+				bG = mathVar::GaussPts[na][nb][1];
+				rhoVal = math::pointValue(element, aG, bG, 1, 2);
+				rhouVal = math::pointValue(element, aG, bG, 2, 2);
+				rhovVal = math::pointValue(element, aG, bG, 3, 2);
+				rhoEVal = math::pointValue(element, aG, bG, 4, 2);
+
+				//uVal = rhouVal / rhoVal;
+				//vVal = rhovVal / rhoVal;
+				//velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				aSound = math::CalcSpeedOfSound(TVal);
+				//LocalMach = velocity / aSound;
+				muVal = math::CalcVisCoef(TVal);
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+			}
+
+			nb = -1;
+			for (int na = 0; na <= mathVar::nGauss; na++)
+			{
+				aG = mathVar::GaussPts[na][nb][0];
+				bG = mathVar::GaussPts[na][nb][1];
+				rhoVal = math::pointValue(element, aG, bG, 1, 2);
+				rhouVal = math::pointValue(element, aG, bG, 2, 2);
+				rhovVal = math::pointValue(element, aG, bG, 3, 2);
+				rhoEVal = math::pointValue(element, aG, bG, 4, 2);
+
+				//uVal = rhouVal / rhoVal;
+				//vVal = rhovVal / rhoVal;
+				//velocity = sqrt(pow(uVal, 2) + pow(vVal, 2));
+				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+				aSound = math::CalcSpeedOfSound(TVal);
+				//LocalMach = velocity / aSound;
+				muVal = math::CalcVisCoef(TVal);
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+			}
 			//deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
 			deltaT = *std::min_element(vectorDeltaT.begin(), vectorDeltaT.end());
 			return deltaT;
@@ -1547,7 +1642,7 @@ namespace process
 			}
 
 			//Compute basis function
-			math::basisFc(xC, yC);
+			math::basisFc(xC, yC, auxUlti::checkType(element));
 			for (int order = 0; order <= mathVar::orderElem; order++)
 			{
 				errorVal += ddtArr[order] * mathVar::B[order];
@@ -1628,8 +1723,9 @@ namespace process
 					}
 				}
 
+				limitVal::pAdaptive::numOfLimitCell = 0;
 				limitVal::numOfLimitCell = 0;
-				process::limiter::limiter();
+				limiter::limiter();
 			}
 		}
 	}
@@ -1683,161 +1779,6 @@ namespace process
 		return std::make_tuple(valPlus, valMinus);
 	}
 
-	namespace limiter
-	{
-		void limiter()
-		{
-			if (systemVar::limiter==1)  //positivity preserving
-			{
-				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
-				{
-					std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::calcPpLimiterCoef(nelem);
-				}
-				if (limitVal::numOfLimitCell>0)
-				{
-					std::cout << "Limiter is applied at " << limitVal::numOfLimitCell << " cell(s)\n" ;
-				}
-			}
-			else if (systemVar::limiter == 0)  //No limiter
-			{
-				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
-				{
-					theta1Arr[nelem] = 1.0;
-					theta2Arr[nelem] = 1.0;
-				}
-			}
-		}
-
-		namespace Pp
-		{
-			namespace triangleCell
-			{
-				//Function calculates coefficients of positivity preserving limiter
-				std::tuple<double, double> calcPpLimiterCoef(int element)
-				{
-					double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
-					int elemType(auxUlti::checkType(element));
-
-					double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0);
-
-					//Find theta1
-					minRho = math::limiter::triangleCell::calcMinRho(element);
-					meanRho = rho[element][0];
-					meanRhou = rhou[element][0];
-					meanRhov = rhov[element][0];
-					meanRhoE = rhoE[element][0];
-					double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
-					double meanP(math::CalcP(meanT, meanRho));
-
-					//Compute theta1
-					std::tie(theta1, omega) = math::limiter::triangleCell::calcTheta1Coeff(meanRho, minRho, meanP);
-
-					//Find theta2
-					theta2 = math::limiter::triangleCell::calcTheta2Coeff(element, theta1, omega);
-
-					//Reset limit flag
-					limitVal::limitFlagLocal = false;
-					return std::make_tuple(theta1, theta2);
-				}
-			}
-
-			namespace quadratureCell
-			{
-				//Function calculates coefficients of positivity preserving limiter
-				std::tuple<double, double> calcPpLimiterCoef(int element)
-				{
-					double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), omega(0.0);
-					int elemType(auxUlti::checkType(element));
-
-					double meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0), aG(0.0), bG(0.0);
-
-					/*Note: according to Kontzialis et al, positivity preserving limiter for quadrilateral element, which is presented on Zhang's paper,
-					shown a very good effect on results. Because of that, Zhang's limiter is used in this code for both triangular and quadrilateral elements*/
-
-					//Find theta1
-					minRho = math::limiter::quadratureCell::calcMinRhoQuad(element);
-					meanRho = rho[element][0];
-
-					meanRhou = rhou[element][0];
-					meanRhov = rhov[element][0];
-					meanRhoE = rhoE[element][0];
-					double meanT(math::CalcTFromConsvVar(meanRho, meanRhou, meanRhov, meanRhoE));
-					double meanP(math::CalcP(meanT, meanRho));
-
-					//Compute theta1
-					std::tie(theta1, omega) = math::limiter::quadratureCell::calcTheta1Coeff(meanRho, minRho, meanP);
-
-					//Find theta2
-					std::vector<double> vectort;
-					/*
-					int index(0);
-
-					for (int na = 0; na <= mathVar::nGauss; na++)
-					{
-						for (int nb = 0; nb <= mathVar::nGauss; nb++)
-						{
-							vectort[index] = math::limiter::quadratureCell::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 1);
-							index++;
-
-							vectort[index] = math::limiter::quadratureCell::calcTheta2Coeff(element, na, nb, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE, 2);
-							index++;
-						}
-					}
-					
-
-					//Compute t at all internal Gauss point
-					for (int na = 0; na <= mathVar::nGauss; na++)
-					{
-						for (int nb = 0; nb <= mathVar::nGauss; nb++)
-						{
-							aG = mathVar::GaussPts[na][nb][0];
-							bG = mathVar::GaussPts[na][nb][1];
-							vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
-						}
-					}*/
-					//Compute t at edge DA
-					aG = -1;
-					for (int nG = 0; nG <= mathVar::nGauss; nG++)
-					{
-						bG = mathVar::xGauss[nG];
-						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
-					}
-					//Compute t at edge BC
-					aG = 1;
-					for (int nG = 0; nG <= mathVar::nGauss; nG++)
-					{
-						bG = mathVar::xGauss[nG];
-						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
-					}
-					//Compute t at edge AB
-					bG = -1;
-					for (int nG = 0; nG <= mathVar::nGauss; nG++)
-					{
-						aG = mathVar::xGauss[nG];
-						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
-					}
-					//Compute t at edge CD
-					bG = 1;
-					for (int nG = 0; nG <= mathVar::nGauss; nG++)
-					{
-						aG = mathVar::xGauss[nG];
-						vectort.push_back(math::limiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
-					}
-
-					theta2 = *std::min_element(vectort.begin(), vectort.end());  //find min value of vector
-					if (limitVal::limitFlagLocal == true)
-					{
-						limitVal::numOfLimitCell++;
-					}
-					//Reset limit flag
-					limitVal::limitFlagLocal = false;
-					return std::make_tuple(theta1, theta2);
-				}
-			}
-		}
-
-	}
-
 	double volumeInte(int elem, std::vector< std::vector<double> > &Ui, int order, int direction)
 	{
 		double Int(0.0);
@@ -1866,7 +1807,7 @@ namespace process
 		for (int nG = 0; nG <= mathVar::nGauss; nG++)
 		{
 			std::tie(a, b) = auxUlti::getGaussSurfCoor(edge, elem, nG);
-			math::basisFc(a, b);  //mathVar::B is changed after this command line is excuted
+			math::basisFc(a, b, auxUlti::checkType(elem));  //mathVar::B is changed after this command line is excuted
 			Bi = mathVar::B[order];
 			F[nG] = Bi * FluxVector[nG];
 		}
@@ -1893,14 +1834,38 @@ namespace process
 	{
 		double B1(0.0), B2(0.0), Inte(0.0);
 		std::vector<std::vector<double>> FMatrix(mathVar::nGauss + 1, std::vector<double>(mathVar::nGauss + 1, 0.0));
-		for (int na = 0; na <= mathVar::nGauss; na++)
+		int elemType(auxUlti::checkType(element));
+
+		switch (elemType)
 		{
-			for (int nb = 0; nb <= mathVar::nGauss; nb++)
+		case 3:
+		{
+			for (int na = 0; na <= mathVar::nGauss; na++)
 			{
-				B1 = mathVar::BPts[order1][na][nb];
-				B2 = mathVar::BPts[order2][na][nb];
-				FMatrix[na][nb] = B1 * B2;
+				for (int nb = 0; nb <= mathVar::nGauss; nb++)
+				{
+					B1 = mathVar::BPts_Tri[order1][na][nb];
+					B2 = mathVar::BPts_Tri[order2][na][nb];
+					FMatrix[na][nb] = B1 * B2;
+				}
 			}
+		}
+		break;
+		case 4:
+		{
+			for (int na = 0; na <= mathVar::nGauss; na++)
+			{
+				for (int nb = 0; nb <= mathVar::nGauss; nb++)
+				{
+					B1 = mathVar::BPts_Quad[order1][na][nb];
+					B2 = mathVar::BPts_Quad[order2][na][nb];
+					FMatrix[na][nb] = B1 * B2;
+				}
+			}
+		}
+		break;
+		default:
+			break;
 		}
 		Inte = math::volumeInte(FMatrix, element);
 		return Inte;

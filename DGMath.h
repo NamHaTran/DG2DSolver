@@ -12,10 +12,10 @@ namespace math
 	void GaussLobatto(int nGauss);
 
 	/*Function calculates basis function*/
-	void basisFc(double a, double b);
+	void basisFc(double a, double b, int elemType);
 
 	/*Function calculates derivatives of basis function respect to a, b*/
-	void dBasisFc(double a, double b);
+	void dBasisFc(double a, double b, int elemType);
 
 	/*Function calculates 2D Jacobian*/
 	double J2DCal(int elem, double a, double b);
@@ -24,7 +24,7 @@ namespace math
 	std::tuple<double, double> J1DCal(int edge);
 
 	/*Function calculates integral which used to set initial values for all elements of mesh*/
-	double iniIntegral(int order);
+	double iniIntegral(int elemType, int order);
 
 	/*Function calculates volume integral from Gauss values*/
 	double volumeInte(std::vector< std::vector<double> > &Fvalue, int elem);
@@ -207,6 +207,17 @@ namespace math
 	//Function supports for math::mappingRealToStd
 	double solve_abTri(int option, double A, double B, double C, double inVar);*/
 
+	/*Function computes value of conservative variables at abitrary point with applying limiter
+			valType:
+			1: rho
+			2: rhou
+			3: rhov
+			4: rhoE*/
+	double calcConsvVarWthLimiter(int element, double a, double b, int valType);
+
+	//Function returns id of input number in input array
+	int findIndex(int number, std::vector<int> InArray);
+
 	namespace numericalFluxes
 	{
 		/*Function calculates auxilary flux at Gauss point*/
@@ -260,61 +271,6 @@ namespace math
 		std::tuple<double, double, double, double> calcViscousTermsFromStressHeatFluxMatrix(std::vector< std::vector<double> > &StressHeatFlux, double uVal, double vVal, int dir);
 	}
 
-	namespace limiter
-	{
-		namespace triangleCell
-		{
-			//Function calculates minimum value of rho of tri element
-			double calcMinRho(int element);
-
-			//Function computes theta1 coefficient and omega for Pp limiter
-			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
-
-			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
-			double calcRhoModified(int element, double a, double b, double theta1);
-
-			//Function checks condition of running limiter
-			bool checkLimiter(int element, double theta1, double omega);
-
-			//Function supports for computing limiter
-			std::tuple<double, double> calcXYBySigma(double sigma, double xi, double yi, double xC, double yC);
-			//Function supports for computing limiter
-			double calcP(int element, double x, double y, double theta1);
-
-			//Function computes theta2 for Pp limiter
-			double calcTheta2Coeff(int element, double theta1, double omega);
-		}
-
-		namespace quadratureCell
-		{
-			//Function calculates minimum value of rho of quad element
-			double calcMinRhoQuad(int element);
-
-			//Function calculates minimum value of p of tri element
-			double calcMinPTri(int element);
-
-			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
-			double calcRhoModified(int element, double a, double b, double theta1);
-
-			//Function returns true if element is needed to limit, and value of rho which applied first time limiter
-			std::tuple<bool, double> checkLimiterForQuad(int element, double a, double b);
-
-			//Function computes theta1 coefficient and omega for Pp limiter
-			std::tuple<double, double> calcTheta1Coeff(double meanRho, double minRho, double meanP);
-
-			//Function computes theta2 at 1 Gauss point in input direction
-			double calcTheta2Coeff(int element, double aG, double bG, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE);
-		}
-
-		/*Function computes value of conservative variables at abitrary point with applying limiter
-			valType:
-			1: rho
-			2: rhou
-			3: rhov
-			4: rhoE*/
-		double calcConsvVarWthLimiter(int element, double a, double b, int valType);
-	}
-
 	namespace geometricOp
 	{
 		//Function computes geometric center of polygon, inputs are coordinates of vertexs of polygon
@@ -325,6 +281,15 @@ namespace math
 
 		//Function computes centroid of quad elements, for tri elements, centroid is coincident with geometric center
 		std::tuple<double, double> calcQuadCentroid(int element, double xCG, double yCG, double area);
+
+		//Function calculates edge metrics
+		std::tuple<double, double> calEdgeMetric(int edge);
+
+		//
+		std::tuple<double, double> calDifferenceOfElementsCellCenters(int elem1, int elem2);
+
+		//Function computes local cell size
+		double calLocalCellSize(int element);
 	}
 
 	namespace residualManipulation

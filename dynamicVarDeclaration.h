@@ -10,6 +10,7 @@ namespace meshVar
 	
 	/*Vector contents BC edges name and location of them on BC values arrays*/
 	extern std::vector<int>adressOfBCVals;
+	extern std::vector<std::vector<int>>neighboringElements;
 }
 
 /*Conservative variables declaration*/

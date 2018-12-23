@@ -74,6 +74,7 @@ namespace meshVar
 
 	std::vector<std::vector<double>> geoCenter(elements2DArrSize, std::vector<double>(2, 0.0));
 	std::vector<double> cellSize(elements2DArrSize, 0.0);
+	std::vector<double> localCellSize(elements2DArrSize, 0.0);
 
 	int numBCEdges(0);
 }
@@ -83,7 +84,8 @@ namespace mathVar
 	int nGauss(2), orderElem(0);
 	double wGauss[maxGauss] = {}, xGauss[maxGauss] = {}, wGaussLobatto[maxGauss] = {}, xGaussLobatto[maxGauss] = {};
 	double B[maxOrder] = {}, dBa[maxOrder] = {}, dBb[maxOrder] = {};
-	double BPts[maxOrder][maxGauss][maxGauss] = {}, dBaPts[maxOrder][maxGauss][maxGauss] = {}, dBbPts[maxOrder][maxGauss][maxGauss] = {};
+	double BPts_Quad[maxOrder][maxGauss][maxGauss] = {}, dBaPts_Quad[maxOrder][maxGauss][maxGauss] = {}, dBbPts_Quad[maxOrder][maxGauss][maxGauss] = {},
+		BPts_Tri[maxOrder][maxGauss][maxGauss] = {}, dBaPts_Tri[maxOrder][maxGauss][maxGauss] = {}, dBbPts_Tri[maxOrder][maxGauss][maxGauss] = {};
 	double GaussPts[maxGauss][maxGauss][2] = {}, //coordinate a is array (..,..,0), coordinate b is array (..,..,1)
 		wGaussPts[maxGauss][maxGauss][2] = {}, //weights on a direction (w1) is array (..,..,1), weights on b direction (w2) is array (..,..,2)
 		GaussLobattoPts[maxGauss][maxGauss][2] = {},
@@ -134,4 +136,10 @@ namespace limitVal
 	double rhoEUp(0.0), rhoEDwn(0.0);  //computed at initialValue function
 	bool limitTOrNot(false), limitFlagLocal(false), limitFlagGlobal(false);
 	int numOfLimitCell(0);
+
+	namespace pAdaptive
+	{
+		bool limitFlagLocal(false), limitFlagGlobal(false);
+		int numOfLimitCell(0);
+	}
 }
