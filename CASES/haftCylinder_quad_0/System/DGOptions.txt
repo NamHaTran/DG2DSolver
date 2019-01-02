@@ -13,11 +13,11 @@ DGoptions
 {
 	numberOfGaussPoints			2
 	orderOfAccuracy				2
-	CourantNumber				0.3
+	CourantNumber				0.1
 	totalTime(s)				10
-	writeInterval				200
+	writeInterval				19
 	writeLog					true
-	loadSavedCase				false
+	loadSavedCase				true
 	ddtScheme					Euler
 	limiter						PositivityPreserving
 	refMach						10

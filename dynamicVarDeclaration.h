@@ -43,6 +43,7 @@ Vis_interface_rhoY, Vis_interface_rhouY, Vis_interface_rhovY, Vis_interface_rhoE
 
 //Lax-Friedrich constant
 extern std::vector<double> LxFConst;
+extern std::vector<double> DiffusiveFluxConst;
 
 //time step
 extern double dt, runTime;

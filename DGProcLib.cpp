@@ -645,14 +645,15 @@ namespace process
 			//mu included
 			int masterCell(-1), slaveCell(-1), bcGrp(0);
 			double uMaster(0.0), vMaster(0.0), totalEMaster(0.0), TMaster(0.0), pMaster(0.0),
-				uSlave(0.0), vSlave(0.0), totalESlave(0.0), TSlave(0.0), pSlave(0.0),
+				uSlave(0.0), vSlave(0.0), totalESlave(0.0), TSlave(0.0), pSlave(0.0), eMaster(0.0), eSlave(0.0),
 				uMagM(0.0), uMagP(0.0), aM(0.0), aP(0.0),
 				dRhoXMaster(0.0), dRhouXMaster(0.0), dRhovXMaster(0.0), dRhoEXMaster(0.0),
 				dRhoYMaster(0.0), dRhouYMaster(0.0), dRhovYMaster(0.0), dRhoEYMaster(0.0),
 				dRhoXSlave(0.0), dRhouXSlave(0.0), dRhovXSlave(0.0), dRhoEXSlave(0.0),
 				dRhoYSlave(0.0), dRhouYSlave(0.0), dRhovYSlave(0.0), dRhoEYSlave(0.0);
 			std::vector<double> UMaster(4, 0.0), dUXMaster(4, 0.0), dUYMaster(4, 0.0),
-				USlave(4, 0.0), dUXSlave(4, 0.0), dUYSlave(4, 0.0);
+				USlave(4, 0.0), dUXSlave(4, 0.0), dUYSlave(4, 0.0),
+				CArray(mathVar::nGauss + 1, 0.0), BetaArray(mathVar::nGauss + 1, 0.0), vectorn(2, 0.0);
 			/*StressHeat matrix has form:
 			[tauXx		tauXy		Qx]
 			[tauYx		tauYy		Qy]
@@ -665,6 +666,8 @@ namespace process
 				if (bcGrp == 0)
 				{
 					std::tie(masterCell, slaveCell) = auxUlti::getMasterServantOfEdge(iedge);
+					vectorn[0] = auxUlti::getNormVectorComp(masterCell, iedge, 1);
+					vectorn[1] = auxUlti::getNormVectorComp(masterCell, iedge, 2);
 					for (int nG = 0; nG <= mathVar::nGauss; nG++)
 					{
 						for (int i = 0; i < 4; i++)
@@ -690,6 +693,8 @@ namespace process
 						TSlave = math::CalcTFromConsvVar(USlave[0], USlave[1], USlave[2], USlave[3]);
 						pMaster = math::CalcP(TMaster, UMaster[0]);
 						pSlave = math::CalcP(TSlave, USlave[0]);
+						eMaster = material::Cv*TMaster;
+						eSlave = material::Cv*TSlave;
 
 						/*INVISCID TERMS*/
 						/*calculate velocity magnitude*/
@@ -701,7 +706,7 @@ namespace process
 						aM = math::CalcSpeedOfSound(TSlave);
 
 						/*calculate constant for Lax-Friederich flux*/
-						LxFConst[iedge] = math::numericalFluxes::constantC(uMagP, uMagM, aP, aM);
+						CArray[nG] = math::numericalFluxes::constantC(uMagP, uMagM, aP, aM); 
 
 						/*calculate inviscid terms*/
 						
@@ -719,7 +724,12 @@ namespace process
 						StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(USlave, dUXSlave, dUYSlave);
 						std::tie(Vis_interface_rhoX[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhouX[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhovX[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhoEX[iedge][nG + mathVar::nGauss + 1]) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uSlave, vSlave, 1);
 						std::tie(Vis_interface_rhoY[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhouY[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhovY[iedge][nG + mathVar::nGauss + 1], Vis_interface_rhoEY[iedge][nG + mathVar::nGauss + 1]) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uSlave, vSlave, 2);
+					
+						/*calculate constant for diffusive flux*/
+						//BetaArray[nG] = math::numericalFluxes::constantBeta(uMagP, uMagM, UMaster[0], USlave[0], eMaster, eSlave, pMaster, pSlave, StressHeatP, StressHeatM, vectorn);
 					}
+					LxFConst[iedge] = *std::max_element(CArray.begin(), CArray.end());
+					DiffusiveFluxConst[iedge] = *std::max_element(BetaArray.begin(), BetaArray.end());
 				}
 			}
 		}
@@ -1380,10 +1390,10 @@ namespace process
 			std::tie(termY4P, termY4M) = process::NSFEq::getInternalValuesFromCalculatedArrays(edgeName, element, nGauss, 2, 2, 4);
 
 			/*Calculate fluxes*/
-			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, ny);
-			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, ny);
-			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, ny);
-			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, ny);
+			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, rhoPlus, rhoMinus, DiffusiveFluxConst[edgeName], nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, rhoPlus, rhoMinus, DiffusiveFluxConst[edgeName], ny);
+			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, rhouPlus, rhouMinus, DiffusiveFluxConst[edgeName], nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, rhouPlus, rhouMinus, DiffusiveFluxConst[edgeName], ny);
+			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, rhovPlus, rhovMinus, DiffusiveFluxConst[edgeName], nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, rhovPlus, rhovMinus, DiffusiveFluxConst[edgeName], ny);
+			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, rhoEPlus, rhoEMinus, DiffusiveFluxConst[edgeName], nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, rhoEPlus, rhoEMinus, DiffusiveFluxConst[edgeName], ny);
 
 			return Fluxes;
 		}
@@ -1543,7 +1553,7 @@ namespace process
 					aSound = math::CalcSpeedOfSound(TVal);
 					//LocalMach = velocity / aSound;
 					muVal = math::CalcVisCoef(TVal);
-					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+					vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound) + (muVal / size)));
 				}
 			}
 
@@ -1564,7 +1574,7 @@ namespace process
 				aSound = math::CalcSpeedOfSound(TVal);
 				//LocalMach = velocity / aSound;
 				muVal = math::CalcVisCoef(TVal);
-				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound) + (muVal / size)));
 			}
 
 			na = -1;
@@ -1584,7 +1594,7 @@ namespace process
 				aSound = math::CalcSpeedOfSound(TVal);
 				//LocalMach = velocity / aSound;
 				muVal = math::CalcVisCoef(TVal);
-				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound) + (muVal / size)));
 			}
 
 			int nb = 1;
@@ -1604,7 +1614,7 @@ namespace process
 				aSound = math::CalcSpeedOfSound(TVal);
 				//LocalMach = velocity / aSound;
 				muVal = math::CalcVisCoef(TVal);
-				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound) + (muVal / size)));
 			}
 
 			nb = -1;
@@ -1624,7 +1634,7 @@ namespace process
 				aSound = math::CalcSpeedOfSound(TVal);
 				//LocalMach = velocity / aSound;
 				muVal = math::CalcVisCoef(TVal);
-				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / refValues::Ma) + (muVal / size)));
+				vectorDeltaT.push_back((1.0 / pow((mathVar::orderElem + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound) + (muVal / size)));
 			}
 			//deltaT = (1.0 / pow((mathVar::orderElem + 1 + 1), 2))*(size*systemVar::CFL) / (fabs(velocity) + (aSound / LocalMach) + (muVal / size));
 			deltaT = *std::min_element(vectorDeltaT.begin(), vectorDeltaT.end());
@@ -1711,7 +1721,6 @@ namespace process
 			for (int iRKOrder = 1; iRKOrder <= 3; iRKOrder++)
 			{
 				process::timeDiscretization::TVDRK_1step(iRKOrder);
-
 				for (int nelement = 0; nelement < meshVar::nelem2D; nelement++)
 				{
 					for (int order = 0; order <= mathVar::orderElem; order++)

@@ -475,12 +475,13 @@ namespace math
 	double CalcTFromConsvVar(double rho, double rhou, double rhov, double rhoE)
 	{
 		double T((material::gamma - 1)*(rhoE - 0.5*(pow(rhou, 2) + pow(rhov, 2)) / rho) / (material::R*rho));
-		if ((T <= 0) || (T != T))
+		if ((T <= 0) && (fabs(T) < 0.001))
 		{
 			//std::cout << "Warning!!! limiting T " << T <<std::endl;
 			//T = limitVal::TDwn;
 			//limitVal::limitTOrNot = true;
 			//system("pause");
+			T = fabs(T);
 		}
 		return T;
 	}
@@ -614,10 +615,14 @@ namespace math
 					rhovVal(math::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
 				out = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-				if (out < 0)
+				if ((out < 0) && (fabs(out) < 0.001))
 				{
-					std::cout << "Negative T at cell " << element + meshVar::nelem1D + 1 << std::endl;
+					std::cout << "Negative T" << out << " at cell " << element + meshVar::nelem1D + 1 << std::endl;
 					//system("pause");
+					std::cout << theta1Arr[element] << std::endl;
+					std::cout << theta2Arr[element] << std::endl;
+					std::cout << a << ", " << b << std::endl;
+					out = fabs(out);
 				}
 			}
 			else if (valType == 7)  //mu
@@ -627,11 +632,19 @@ namespace math
 					rhovVal(math::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
 				double TVal(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal));
+				if ((TVal<0) && fabs(TVal) < 0.001)
+				{
+					TVal = fabs(TVal);
+				}
 				out = math::CalcVisCoef(TVal);
 				if (out < 0 || out != out)
 				{
 					std::cout << "unphysical mu at cell " << element + meshVar::nelem1D + 1 << std::endl;
-					std::cout << TVal << std::endl;
+					std::cout << "TVal " << TVal << std::endl;
+					std::cout << "rhoVal " << rhoVal << std::endl;
+					std::cout << "rhouVal " << rhouVal << std::endl;
+					std::cout << "rhovVal " << rhovVal << std::endl;
+					std::cout << "rhoEVal " << rhoEVal << std::endl;
 					std::cout << theta1Arr[element] << std::endl;
 					std::cout << theta2Arr[element] << std::endl;
 					std::cout << a << ", " << b << std::endl;
@@ -990,7 +1003,7 @@ namespace math
 				for (int i = 0; i < 2; i++)
 				{
 					double error(fabs(fabs(vectorRoot_a[i]) - 1) * 100);
-					if ((fabs(vectorRoot_a[i] <= 1)) || (error <= 0.00001))
+					if ((fabs(vectorRoot_a[i]) <= 1) || (error <= 0.00001))
 					{
 						aCoor = vectorRoot_a[i];
 						break;
@@ -1029,7 +1042,7 @@ namespace math
 						for (int i = 0; i < 2; i++)
 						{
 							double error(fabs(fabs(vectorRoot_a[i]) - 1) * 100);
-							if ((fabs(vectorRoot_a[i] <= 1)) || (error <= 0.00001))
+							if ((fabs(vectorRoot_a[i]) <= 1) || (error <= 0.00001))
 							{
 								aCoor = vectorRoot_a[i];
 								break;
@@ -1067,6 +1080,32 @@ namespace math
 		return std::make_tuple(aCoor, bCoor);
 	}
 
+	std::vector<double> tensorVectorDotProduct(std::vector<std::vector<double>> tensor, std::vector<double> vector)
+	{
+		int size(vector.size());
+		std::vector<double> product(size, 0.0);
+		for (int i = 0; i < size; i++)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				product[i] += tensor[i][j] * vector[j];
+			}
+		}
+		return product;
+	}
+
+	double vectorNorm(std::vector<double> vector)
+	{
+		int size(vector.size());
+		double norm(0.0);
+		for (int i = 0; i < size; i++)
+		{
+			norm += pow(vector[i], 2);
+		}
+		norm = pow(norm, 0.5);
+		return norm;
+	}
+
 	namespace numericalFluxes
 	{
 		double auxFlux(double MinusVal, double PlusVar, double vectorComp)
@@ -1079,18 +1118,20 @@ namespace math
 		double advectiveFlux(double FPlus, double FMinus, double UPlus, double UMinus, double C, double vectorComp)
 		{
 			/*use Lax - Friedrich numerical flux*/
-			double flux(0.5*vectorComp*(FPlus + FMinus - C * (UPlus - UMinus)));
+			/*Plus is inside, minus is outside*/
+			double flux(0.5*((FPlus + FMinus)*vectorComp - 0.5 * C * (UMinus - UPlus)));
 			return flux;
 		}
 
-		double diffusiveFlux(double MinusVal, double PlusVar, double vectorComp)
+		double diffusiveFlux(double FPlus, double FMinus, double UPlus, double UMinus, double Beta, double vectorComp)
 		{
 			/*use central numerical flux*/
-			double flux(0.5*(MinusVal + PlusVar)*vectorComp);
+			Beta = 0.0;
+			double flux(0.5*((FPlus + FMinus)*vectorComp + 0.5 * Beta * (UMinus - UPlus)));
 			return flux;
 		}
 
-		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector)
+		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(int edge, std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector)
 		{
 			/*Fluxes array has the following form:
 			- column 0: advective fluxes
@@ -1138,7 +1179,7 @@ namespace math
 				termY3P(0.0), termY3M(0.0),  //(rho*v^2 + p)			or tauyy
 				termY4P(0.0), termY4M(0.0);  //(rho*totalE + p)*v		or tauxy*u + tauyy*v + Qy
 
-			double C(0.0),
+			double C(0.0), Beta(0.0),
 				uMagP(0.0),
 				uMagM(0.0),
 				aP(0.0),
@@ -1161,8 +1202,14 @@ namespace math
 			aP = math::CalcSpeedOfSound(TPlus);
 			aM = math::CalcSpeedOfSound(TMinus);
 
-			/*calculate constant for Lax-Friederich flux*/
-			C = math::numericalFluxes::constantC(uMagP, uMagM, aP, aM);
+			if (auxUlti::getBCType(edge) == 0)
+			{
+				C = LxFConst[edge];
+			}
+			else
+			{
+				C = math::numericalFluxes::constantC(uMagP, uMagM, aP, aM);
+			}
 
 			/*calculate inviscid terms*/
 			std::tie(termX1P, termX2P, termX3P, termX4P) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoPlus, uPlus, vPlus, totalEPlus, pPlus, 1);
@@ -1180,18 +1227,31 @@ namespace math
 			/*VISCOUS TERMS*/
 			/*calculate inviscid terms*/
 			StressHeatP = math::viscousTerms::calcStressTensorAndHeatFlux(UPlus, dUXPlus, dUYPlus);
+			StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(UMinus, dUXMinus, dUYMinus);
+			/*
+			if (auxUlti::getBCType(edge) == 0)
+			{
+				Beta=DiffusiveFluxConst[edge];
+			}
+			else
+			{
+				double eP(material::Cv*TPlus), eM(material::Cv*TMinus);
+				std::vector<double> nP(2, 0.0);
+				nP[0] = nx;
+				nP[0] = ny;
+				Beta = math::numericalFluxes::constantBeta(uMagP, uMagM, UPlus[0], UMinus[0], eP, eM, pPlus, pMinus, StressHeatP, StressHeatM, nP);
+			}
+			*/
 			std::tie(termX1P, termX2P, termX3P, termX4P) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uPlus, vPlus, 1);
 			std::tie(termY1P, termY2P, termY3P, termY4P) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uPlus, vPlus, 2);
-
-			StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(UMinus, dUXMinus, dUYMinus);
 			std::tie(termX1M, termX2M, termX3M, termX4M) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uMinus, vMinus, 1);
 			std::tie(termY1M, termY2M, termY3M, termY4M) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uMinus, vMinus, 2);
 
 			/*Calculate fluxes*/
-			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, ny);
-			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, ny);
-			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, ny);
-			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, ny);
+			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, rhoPlus, rhoMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, rhoPlus, rhoMinus, Beta, ny);
+			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, rhouPlus, rhouMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, rhouPlus, rhouMinus, Beta, ny);
+			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, rhovPlus, rhovMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, rhovPlus, rhovMinus, Beta, ny);
+			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, rhoEPlus, rhoEMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, rhoEPlus, rhoEMinus, Beta, ny);
 
 			return Fluxes;
 		}
@@ -1200,10 +1260,64 @@ namespace math
 		{
 			std::vector<double> CArray(2, 0.0);
 			double C(0.0);
-			CArray[0] = uMagP + aP / refValues::Ma;
-			CArray[1] = uMagM + aM / refValues::Ma;
+			CArray[0] = uMagP + aP;
+			CArray[1] = uMagM + aM;
 			C = *std::max_element(CArray.begin(), CArray.end());  //find max value of vector
 			return C;
+		}
+
+		double constantBeta(double uMagP, double uMagM, double rhoP, double rhoM, double eP, double eM, double pP, double pM, std::vector<std::vector<double>> stressHeatFluxP, std::vector<std::vector<double>> stressHeatFluxM, std::vector<double> nP)
+		{
+			std::vector<std::vector<double>> stressP(2, std::vector<double>(2, 0.0)), stressM(2, std::vector<double>(2, 0.0));
+			std::vector<double> heatP(2, 0.0), heatM(2, 0.0),
+				productStressNP(2, 0.0), productStressNM(2, 0.0), nM(2, 0.0), pMultiN_P(2, 0.0) , pMultiN_M(2, 0.0);
+			double productHeatNP(0.0), productStressNP2(0.0), productHeatNM(0.0), productStressNM2(0.0), BM(0.0), BP(0.0), BOut(0.0);
+			//update variables
+			heatP[0] = stressHeatFluxP[0][2];
+			heatP[1] = stressHeatFluxP[1][2];
+			heatM[0] = stressHeatFluxM[0][2];
+			heatM[1] = stressHeatFluxM[1][2];
+			for (int i = 0; i < 2; i++)
+			{
+				for (int j = 0; j < 2; j++)
+				{
+					stressP[i][j] = stressHeatFluxP[i][j];
+					stressM[i][j] = stressHeatFluxM[i][j];
+				}
+			}
+			nM[0] = -nP[0];
+			nM[1] = -nP[1];
+
+			pMultiN_P[0] = -pP * nP[0];
+			pMultiN_P[1] = -pP * nP[1];
+
+			pMultiN_M[0] = -pM * nM[0];
+			pMultiN_M[1] = -pM * nM[1];
+
+			//calculating
+			productHeatNP = math::vectorDotProduct(heatP, nP);
+			productHeatNM = math::vectorDotProduct(heatM, nM);
+
+			productStressNP = math::tensorVectorDotProduct(stressP, nP);
+			//productStressNP = math::vectorSum(productStressNP, pMultiN_P);
+
+			productStressNM = math::tensorVectorDotProduct(stressM, nM);
+			//productStressNM = math::vectorSum(productStressNM, pMultiN_M);
+
+			productStressNP2 = math::vectorNorm(productStressNP);
+			productStressNM2 = math::vectorNorm(productStressNM);
+
+			BP = (pow(pow(rhoP*productHeatNP, 2) + 2 * rhoP*rhoP*eP*pow(productStressNP2, 2), 0.5) + rhoP * fabs(productHeatNP)) / (2 * rhoP*rhoP*eP);
+			BM = (pow(pow(rhoP*productHeatNM, 2) + 2 * rhoM*rhoM*eM*pow(productStressNM2, 2), 0.5) + rhoM * fabs(productHeatNM)) / (2 * rhoM*rhoM*eM);
+			if (BP > BM)
+			{
+				BOut = BP;
+			}
+			else
+			{
+				BOut = BM;
+			}
+			return BOut;
 		}
 	}//end of namespace numericalFluxes
 

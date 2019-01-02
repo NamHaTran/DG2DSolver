@@ -423,7 +423,7 @@ namespace NSFEqBCs
 				UMinus[2] = 0.0;
 				UMinus[3] = UPlus[0]*material::Cv*bcValues::TBC[edgeGrp - 1];
 				//with isothermal BC, dUXMinus = dUXPlus, dUYMinus = dUYPlus
-				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
+				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(edge, UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
 				return Fluxes;
 			}
 
@@ -458,7 +458,7 @@ namespace NSFEqBCs
 				UMinus[2] = 0.0;
 				UMinus[3] = UPlus[0]*material::Cv*math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3]);
 
-				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
+				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(edge, UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
 				return Fluxes;
 			}
 		}
@@ -558,7 +558,7 @@ namespace NSFEqBCs
 					}
 				}
 
-				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
+				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(edge, UPlus, UMinus, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
 				return Fluxes;
 			}
 		}
@@ -592,7 +592,7 @@ namespace NSFEqBCs
 			UMinus[2] = UPlus[2] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*ny;
 			UMinus[3] = math::pointValue(element, a, b, 4, 2);
 			
-			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
+			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(edge, UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
 			return Fluxes;
 		}
 	}
@@ -677,7 +677,7 @@ namespace NSFEqBCs
 				}
 				UBc = BCSupportFncs::weakPrescribedFluxes::distributeBCValsToArray(nG, edge);
 
-				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(UPlus, UBc, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
+				Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(edge, UPlus, UBc, dUXPlus, dUXPlus, dUYPlus, dUYPlus, norm);
 				return Fluxes;
 			}
 		}

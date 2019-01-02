@@ -575,6 +575,7 @@ namespace auxUlti
 		theta2Arr.resize(meshVar::nelem2D);
 
 		LxFConst.resize(meshVar::inpoedCount);
+		DiffusiveFluxConst.resize(meshVar::inpoedCount);
 
 		auxUlti::resize2DArray(stiffMatrixCoeffs, meshVar::nelem2D, mathVar::orderElem + 1);
 

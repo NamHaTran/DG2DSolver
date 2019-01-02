@@ -106,6 +106,7 @@ Vis_interface_rhoEY(1, std::vector<double>(1, 0.0));
 
 //Lax-Friedrich constant
 std::vector<double> LxFConst(1, 0.0);
+std::vector<double> DiffusiveFluxConst(1, 0.0);
 
 //StiffMatrixCoefficients
 std::vector<std::vector<double>>

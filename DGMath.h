@@ -218,6 +218,12 @@ namespace math
 	//Function returns id of input number in input array
 	int findIndex(int number, std::vector<int> InArray);
 
+	//Function finds product of tensor and vector
+	std::vector<double> tensorVectorDotProduct(std::vector<std::vector<double>> tensor, std::vector<double> vector);
+
+	//Function finds norm of vector
+	double vectorNorm(std::vector<double> vector);
+
 	namespace numericalFluxes
 	{
 		/*Function calculates auxilary flux at Gauss point*/
@@ -227,13 +233,16 @@ namespace math
 		double advectiveFlux(double FPlus, double FMinus, double UPlus, double UMinus, double C, double vectorComp);
 
 		/*Function calculates diffusive flux*/
-		double diffusiveFlux(double MinusVal, double PlusVar, double vectorComp);
+		double diffusiveFlux(double FPlus, double FMinus, double UPlus, double UMinus, double Beta, double vectorComp);
 
 		/*Function calculates fluxes of all advective and diffusive terms of NSF equation from conservative variables*/
-		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector);
+		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(int edge, std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector);
 
 		/*Function calculates constant C for advective flux*/
 		double constantC(double uMagP, double uMagM, double aP, double aM);
+
+		/*Function calculates constant Beta for diffusive flux*/
+		double constantBeta(double uMagP, double uMagM, double rhoP, double rhoM, double eP, double eM, double pP, double pM, std::vector<std::vector<double>> stressHeatFluxP, std::vector<std::vector<double>> stressHeatFluxM, std::vector<double> nP);
 	}
 
 	namespace inviscidTerms

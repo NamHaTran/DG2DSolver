@@ -12,10 +12,11 @@ namespace limiter
 {
 	void limiter()
 	{
-		if (systemVar::limiter == 1)  //positivity preserving
+		if (systemVar::limiter == 1 && mathVar::orderElem != 0)  //positivity preserving
 		{
 			for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 			{
+				/*
 				for (int valType = 1; valType <= 4; valType++)
 				{
 					//p-Adaptive limiter
@@ -26,7 +27,7 @@ namespace limiter
 					limitVal::pAdaptive::numOfLimitCell++;
 				}
 				limitVal::pAdaptive::limitFlagLocal = false;
-
+				*/
 				//Positivity preserving
 				std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::calcPpLimiterCoef(nelem);
 			}
@@ -41,7 +42,7 @@ namespace limiter
 				std::cout << "Posivity preserving limiter is applied at " << limitVal::numOfLimitCell << " cell(s)\n";
 			}
 		}
-		else if (systemVar::limiter == 0)  //No limiter
+		else  //No limiter
 		{
 			for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 			{
@@ -115,6 +116,7 @@ namespace limiter
 				std::vector<double> vectort;
 
 				//Compute t at all internal Gauss point
+				
 				for (int na = 0; na <= mathVar::nGauss; na++)
 				{
 					for (int nb = 0; nb <= mathVar::nGauss; nb++)
@@ -124,7 +126,7 @@ namespace limiter
 						vectort.push_back(limiter::mathForLimiter::quadratureCell::calcTheta2Coeff(element, aG, bG, theta1, omega, meanRho, meanRhou, meanRhov, meanRhoE));
 					}
 				}
-
+				
 				//Compute t at edge DA
 				aG = -1;
 				for (int nG = 0; nG <= mathVar::nGauss; nG++)
@@ -177,114 +179,13 @@ namespace limiter
 			{
 			case 3:
 			{
-				std::cout << "p-adaptive limiter is applied at cell " << element << " for variable type " << valType << std::endl;
-				//compute U at midpoints of AB, BC, CD, DA
-				double UBC(math::pointValueNoLimiter(element, 1.0, 0.0, valType)), UAD(math::pointValueNoLimiter(element, -1.0, 0.0, valType)),
-					UAB(math::pointValueNoLimiter(element, 0.0, -1.0, valType)),
-					UBCMod(0.0), UADMod(0.0), UCDMod(0.0), UABMod(0.0);
-				std::vector<double> inputArgument(3, 0.0);
-
-				elemIPlus = meshVar::neighboringElements[element][1];
-				elemIMinus = meshVar::neighboringElements[element][2];
-				if (mathVar::orderElem > 1)
-				{
-					elemJMinus = meshVar::neighboringElements[element][0];
-				}
-
-				switch (valType)
-				{
-				case 1:
-				{
-					inputArgument[0] = UBC;
-					inputArgument[1] = rho[elemIPlus][0] - rho[element][0];
-					inputArgument[2] = rho[element][0] - rho[elemIMinus][0];
-					UBCMod = limiter::mathForLimiter::minmod(inputArgument);
-
-					inputArgument[0] = UAD;
-					UADMod = limiter::mathForLimiter::minmod(inputArgument);
-					rho[element][1] = (UBCMod - UADMod);
-
-					if (mathVar::orderElem > 1)
-					{
-						inputArgument[0] = UAB;
-						inputArgument[1] = rho[element][0] - rho[elemJMinus][0];
-						inputArgument[2] = rho[element][0] - rho[elemJMinus][0];
-						UABMod = limiter::mathForLimiter::minmod(inputArgument);
-						rho[element][2] = UABMod;
-					}
-				}
-				break;
-				case 2:
-				{
-					inputArgument[0] = UBC;
-					inputArgument[1] = rhou[elemIPlus][0] - rhou[element][0];
-					inputArgument[2] = rhou[element][0] - rhou[elemIMinus][0];
-					UBCMod = limiter::mathForLimiter::minmod(inputArgument);
-
-					inputArgument[0] = UAD;
-					UADMod = limiter::mathForLimiter::minmod(inputArgument);
-					rhou[element][1] = (UBCMod - UADMod);
-
-					if (mathVar::orderElem > 1)
-					{
-						inputArgument[0] = UAB;
-						inputArgument[1] = rhou[element][0] - rhou[elemJMinus][0];
-						inputArgument[2] = rhou[element][0] - rhou[elemJMinus][0];
-						UABMod = limiter::mathForLimiter::minmod(inputArgument);
-						rhou[element][2] = UABMod;
-					}
-				}
-				break;
-				case 3:
-				{
-					inputArgument[0] = UBC;
-					inputArgument[1] = rhov[elemIPlus][0] - rhov[element][0];
-					inputArgument[2] = rhov[element][0] - rhov[elemIMinus][0];
-					UBCMod = limiter::mathForLimiter::minmod(inputArgument);
-
-					inputArgument[0] = UAD;
-					UADMod = limiter::mathForLimiter::minmod(inputArgument);
-					rhov[element][1] = (UBCMod - UADMod);
-
-					if (mathVar::orderElem > 1)
-					{
-						inputArgument[0] = UAB;
-						inputArgument[1] = rhov[element][0] - rhov[elemJMinus][0];
-						inputArgument[2] = rhov[element][0] - rhov[elemJMinus][0];
-						UABMod = limiter::mathForLimiter::minmod(inputArgument);
-						rhov[element][2] = UABMod;
-					}
-				}
-				break;
-				case 4:
-				{
-					inputArgument[0] = UBC;
-					inputArgument[1] = rhoE[elemIPlus][0] - rhoE[element][0];
-					inputArgument[2] = rhoE[element][0] - rhoE[elemIMinus][0];
-					UBCMod = limiter::mathForLimiter::minmod(inputArgument);
-
-					inputArgument[0] = UAD;
-					UADMod = limiter::mathForLimiter::minmod(inputArgument);
-					rhoE[element][1] = (UBCMod - UADMod);
-
-					if (mathVar::orderElem > 1)
-					{
-						inputArgument[0] = UAB;
-						inputArgument[1] = rhoE[element][0] - rhoE[elemJMinus][0];
-						inputArgument[2] = rhoE[element][0] - rhoE[elemJMinus][0];
-						UABMod = limiter::mathForLimiter::minmod(inputArgument);
-						rhoE[element][2] = UABMod;
-					}
-				}
-				break;
-				default:
-					break;
-				}
+				
 			}
 			break;
 			case 4:
 			{
 				std::vector<double> outputVar(mathVar::orderElem, 0.0);
+				bool internalElem(true);
 				elemIPlus = meshVar::neighboringElements[element][1];
 				elemIMinus = meshVar::neighboringElements[element][3];
 				if (mathVar::orderElem > 1)
@@ -296,18 +197,22 @@ namespace limiter
 				if (elemIPlus < 0)
 				{
 					elemIPlus = element;
+					//internalElem = false;
 				}
 				if (elemIMinus < 0)
 				{
 					elemIMinus = element;
+					//internalElem = false;
 				}
 				if (elemJPlus < 0)
 				{
 					elemJPlus = element;
+					//internalElem = false;
 				}
 				if (elemJMinus < 0)
 				{
 					elemJMinus = element;
+					//internalElem = false;
 				}
 
 				switch (valType)
@@ -368,12 +273,12 @@ namespace limiter
 			inputArgument[1] = IPlus - elementConsValOfOrder[0];
 			inputArgument[2] = elementConsValOfOrder[0] - IMinus;
 			UBCMod = limiter::mathForLimiter::minmod(inputArgument);
-			UBC_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1);
+			UBC_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1); //*fabs(elementConsValOfOrder[0])
 
 			inputArgument[0] = -UAD;
 			UADMod = -limiter::mathForLimiter::minmod(inputArgument);
 			inputArgument[0] = UAD;
-			UAD_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1);
+			UAD_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1);  //*fabs(elementConsValOfOrder[0])
 			if ((UBC != UBC_check) || (UAD != UAD_check))
 			{
 				//std::cout << "p-adaptive limiter is applied at cell " << element << " for variable type " << valType << std::endl;
@@ -382,6 +287,10 @@ namespace limiter
 					limitVal::pAdaptive::limitFlagLocal = true;
 				}
 				output[0] = 0.5*(UBCMod - UADMod);
+			}
+			else
+			{
+				output[0] = elementConsValOfOrder[1];
 			}
 
 			if (mathVar::orderElem > 1)
@@ -398,6 +307,10 @@ namespace limiter
 				{
 					//std::cout << "p-adaptive limiter is applied at cell " << element << " for variable type " << valType << std::endl;
 					output[1] = 0.5*(UCDMod - UABMod);
+				}
+				else
+				{
+					output[1] = elementConsValOfOrder[2];
 				}
 			}
 			return output;
@@ -590,6 +503,7 @@ namespace limiter
 				double aG(0.0), bG(0.0), min(0.0);
 
 				//Compute rho at all internal Gauss point
+				/*
 				for (int na = 0; na <= mathVar::nGauss; na++)
 				{
 					for (int nb = 0; nb <= mathVar::nGauss; nb++)
@@ -599,7 +513,7 @@ namespace limiter
 						vectorRho.push_back(math::pointValue(element, aG, bG, 1, 2));
 					}
 				}
-
+				*/
 				//Compute rho at edge DA
 				aG = -1;
 				for (int nG = 0; nG <= mathVar::nGauss; nG++)
