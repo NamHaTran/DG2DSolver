@@ -573,6 +573,8 @@ namespace auxUlti
 
 		theta1Arr.resize(meshVar::nelem2D);
 		theta2Arr.resize(meshVar::nelem2D);
+		//debug::minRhoArr.resize(meshVar::nelem2D);
+		//debug::minRhoeArr.resize(meshVar::nelem2D);
 
 		LxFConst.resize(meshVar::inpoedCount);
 		DiffusiveFluxConst.resize(meshVar::inpoedCount);

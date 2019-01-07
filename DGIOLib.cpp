@@ -353,17 +353,16 @@ namespace IO
 		/*Read DGOptions*/
 		std::string DGOptfileName("DGOptions.txt");
 		std::string DGOptLoc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System");
-		std::string DGOptkeyWordsDouble[3] = { "CourantNumber", "totalTime(s)", "refMach" }, DGOptkeyWordsInt[2] = {"orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[2] = { "writeLog", "loadSavedCase"}, DGOptkeyWordsStr[2] = {"ddtScheme", "limiter"};
+		std::string DGOptkeyWordsDouble[2] = { "CourantNumber", "totalTime(s)" }, DGOptkeyWordsInt[2] = {"orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[2] = { "writeLog", "loadSavedCase"}, DGOptkeyWordsStr[1] = {"ddtScheme"};
 		double DGOptoutDB[3] = {};
 		int DGOptoutInt[3] = {};
 		bool DGOptoutBool[2] = {};
 		std::string DGOptoutStr[2] = {};
 
-		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 3, 2, 2, 2);
+		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 2, 2, 2, 1);
 		
 		systemVar::CFL = DGOptoutDB[0];
 		systemVar::Ttime = DGOptoutDB[1];
-		refValues::Ma = DGOptoutDB[2];
 		mathVar::orderElem = DGOptoutInt[0];
 		systemVar::wrtI = DGOptoutInt[1]; 
 		systemVar::wrtLog = DGOptoutBool[0];
@@ -380,15 +379,6 @@ namespace IO
 		else if (DGOptoutStr[0].compare("TVDRK3") == 0)
 		{
 			systemVar::ddtScheme = 3;
-		}
-
-		if (DGOptoutStr[1].compare("PositivityPreserving") == 0)
-		{
-			systemVar::limiter = 1;
-		}
-		else
-		{
-			systemVar::limiter = 0;
 		}
 
 		if (mathVar::orderElem>pow(mathVar::nGauss,2))
@@ -414,6 +404,94 @@ namespace IO
 
 		material::Cp = material::R*material::gamma / (material::gamma - 1);
 		material::Cv = material::Cp - material::R;
+	}
+
+	void loadLimiterSettings()
+	{
+		std::string FileDir(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System"), fileName("LimiterSettings.txt");
+		std::string FileLoc(FileDir + "\\" + fileName);
+		std::ifstream FileFlux(FileLoc.c_str());
+		if (FileFlux)
+		{
+			std::string line, Word;
+			while (std::getline(FileFlux, line))
+			{
+			label:
+				std::istringstream line2str(line);
+				std::vector<std::string> ptr;
+				//Split <line2str> stringstream into array of words
+				while ((line2str >> Word))
+				{
+					ptr.push_back(Word);
+				}
+
+				int numWrd = ptr.size();
+				if (numWrd >= 2)
+				{
+					std::istringstream strdata(ptr[1]);
+
+					if (ptr[0].compare("limiter") == 0) //get selected limiter(s)
+					{
+						for (int i = 0; i < numWrd - 1; i++)
+						{
+							limitVal::limiterName.push_back(ptr[i + 1]);
+						}
+					}
+
+					if (limitVal::limiterName.size() > 0)
+					{
+						for (int ilimiter = 0; ilimiter < limitVal::limiterName.size(); ilimiter++)
+						{
+							if (limitVal::limiterName[ilimiter].compare("PositivityPreserving") == 0) //PositivityPreserving settings
+							{
+								limitVal::PositivityPreserving = true;
+								std::getline(FileFlux, line); //jump
+								while (std::getline(FileFlux, line))
+								{
+									std::istringstream line2str(line);
+									while ((line2str >> Word))
+									{
+										if (Word.compare("version") == 0)
+										{
+											line2str >> Word;
+											if (Word.compare("simplified") == 0)
+											{
+												limitVal::PositivityPreservingSettings::version = 2;
+											}
+											else if (Word.compare("full") == 0)
+											{
+												limitVal::PositivityPreservingSettings::version = 1;
+											}
+											else
+											{
+												std::cout << Word << " is not available version of Positivity Preserving limiter, version will be set to Simplified as a default\n";
+												limitVal::PositivityPreservingSettings::version = 2;
+											}
+											line2str >> Word;
+											goto label;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
+		}
+
+		if (limitVal::limiterName.size() > 0)
+		{
+			std::cout << "Selected limiter(s): ";
+			for (int i = 0; i < limitVal::limiterName.size(); i++)
+			{
+				std::cout << limitVal::limiterName[i] << ", ";
+			}
+			std::cout << "\n";
+		}
 	}
 
 	void loadpTU()
@@ -768,7 +846,7 @@ namespace IO
 									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "patch"));
 								}
 							}
-							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)  //SYMMETRY BO SUNG SAU
+							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)
 							{
 								if ((str0.compare("symmetry") == 0))  //Type symmetry
 								{
@@ -870,7 +948,7 @@ namespace IO
 									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "patch"));
 								}
 							}
-							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)  //SYMMETRY BO SUNG SAU
+							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)
 							{
 								if ((str0.compare("symmetry") == 0))  //Type symmetry
 								{

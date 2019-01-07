@@ -17,7 +17,6 @@ namespace systemVar
 	bool wrtLog("true"), loadSavedCase("false");
 
 	int ddtScheme(1);
-	int limiter(1);
 	double epsilon(1e-13);
 
 	int iterCount(0), savingCout(0);
@@ -121,7 +120,6 @@ namespace bcValues
 
 namespace refValues
 {
-	double Ma(0.0);
 	bool subsonic(false);
 }
 
@@ -141,5 +139,16 @@ namespace limitVal
 	{
 		bool limitFlagLocal(false), limitFlagGlobal(false);
 		int numOfLimitCell(0);
+	}
+
+	std::vector<std::string> limiterName;
+	bool PositivityPreserving(true), PAdaptive(false);
+	namespace PositivityPreservingSettings
+	{
+		/*version:
+		- 1: full
+		- 2: simplified
+		*/
+		int version(2);
 	}
 }

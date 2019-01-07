@@ -28,6 +28,9 @@ namespace IO
 	/*Function reads scalar values from file*/
 	void readScalar(std::string fileName);
 
+	/*Function read informations of limiters*/
+	void loadLimiterSettings();
+
 	/*User's guide:
 	This function returns datas of type double and type int read from files.
 	Input arguments:

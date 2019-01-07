@@ -132,3 +132,11 @@ namespace SurfaceBCFields
 		rhoEBc(1, std::vector<double>(1, 0.0));
 	std::vector<int>BCPoints;
 }
+
+//for debugging
+namespace debug
+{
+	//std::vector<double>
+		//minRhoArr(1, 1.0),
+		//minRhoeArr(1, 1.0);
+}

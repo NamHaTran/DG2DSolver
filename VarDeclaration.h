@@ -30,14 +30,6 @@ namespace systemVar
 	----------------------------|-----------|-----------|*/
 	extern int ddtScheme;
 
-	/*
-	limiting scheme				|keyWord	|index		|
-	----------------------------|-----------|-----------|
-	-Positivity preserving		|Pp			|1			|
-	-off						|off		|0			|
-	----------------------------|-----------|-----------|*/
-	extern int limiter;
-
 	//constant for limiter
 	extern double epsilon;
 
@@ -141,7 +133,6 @@ namespace bcValues
 
 namespace refValues
 {
-	extern double Ma;
 	extern bool subsonic;
 }
 
@@ -161,6 +152,17 @@ namespace limitVal
 	{
 		extern bool limitFlagLocal, limitFlagGlobal;
 		extern int numOfLimitCell;
+	}
+
+	extern std::vector<std::string> limiterName;
+	extern bool PositivityPreserving, PAdaptive;
+	namespace PositivityPreservingSettings
+	{
+		/*version:
+		- 1: full
+		- 2: simplified
+		*/
+		extern int version;
 	}
 }
 #endif // VARDECLARATION_H_INCLUDED

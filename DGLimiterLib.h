@@ -19,6 +19,11 @@ namespace limiter
 		{
 			//Function computes coefficients theta1 theta2 for positivity preserving limiter
 			std::tuple<double, double> calcPpLimiterCoef(int element);
+
+			namespace simplifiedVersion
+			{
+				std::tuple<double, double> calcPpLimiterCoef(int element);
+			}
 		}
 	}
 
@@ -27,6 +32,8 @@ namespace limiter
 		void pAdaptiveLimiter(int element, int valType);
 
 		std::vector<double> pAdaptiveChildFunction_Quad(int element, int valType, double IPlus, double IMinus, double JPlus, double JMinus);
+
+		std::vector<double> pAdaptiveChildFunction_Tri(int element, int valType, double IPlus, double IMinus, double JMinus);
 	}
 
 	namespace mathForLimiter
@@ -59,9 +66,6 @@ namespace limiter
 			//Function calculates minimum value of rho of quad element
 			double calcMinRhoQuad(int element);
 
-			//Function calculates minimum value of p of tri element
-			double calcMinPTri(int element);
-
 			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
 			double calcRhoModified(int element, double a, double b, double theta1);
 
@@ -73,6 +77,17 @@ namespace limiter
 
 			//Function computes theta2 at 1 Gauss point in input direction
 			double calcTheta2Coeff(int element, double aG, double bG, double theta1, double omega, double meanRho, double meanRhou, double meanRhov, double meanRhoE);
+
+			namespace simplifiedVersion
+			{
+				double calcMinRhoeQuad(int element, double theta1);
+
+				double calRhoeFromConserVars(double rho, double rhou, double rhov, double rhoE);
+
+				double calcTheta1Coeff(double minRho, double meanRho);
+
+				double calcTheta2Coeff(double meanRhoe, double minRhoe, double meanRho);
+			}
 		}
 
 		//Function gets sign of input double number (return -1, 0, 1 if input number is negative, zero or positive, respectively)

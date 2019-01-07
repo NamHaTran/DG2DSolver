@@ -7,16 +7,67 @@
 #include "DGMath.h"
 #include "DGAuxUltilitiesLib.h"
 #include <algorithm>
+#include "DGPostProcessLib.h"
 
 namespace limiter
 {
 	void limiter()
 	{
-		if (systemVar::limiter == 1 && mathVar::orderElem != 0)  //positivity preserving
+		if (mathVar::orderElem != 0)
+		{
+			if (limitVal::PositivityPreserving)
+			{
+				if (limitVal::PositivityPreservingSettings::version == 1)
+				{
+					for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+					{
+						if (auxUlti::checkType(nelem) == 3)
+						{
+							std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::triangleCell::calcPpLimiterCoef(nelem);
+						}
+						else
+						{
+							std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::calcPpLimiterCoef(nelem);
+						}
+					}
+				}
+				else if (limitVal::PositivityPreservingSettings::version == 2)
+				{
+					for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+					{
+						if (auxUlti::checkType(nelem) == 3)
+						{
+							std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::simplifiedVersion::calcPpLimiterCoef(nelem);
+						}
+						else
+						{
+							std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::simplifiedVersion::calcPpLimiterCoef(nelem);
+						}
+					}
+				}
+				if (limitVal::numOfLimitCell > 0)
+				{
+					std::cout << "Posivity preserving limiter is applied at " << limitVal::numOfLimitCell << " cell(s)\n";
+					//std::cout << "Max theta1: " << *std::max_element(theta1Arr.begin(), theta1Arr.end()) << ". Min theta1: " << *std::min_element(theta1Arr.begin(), theta1Arr.end()) << std::endl
+						//<< "Max theta2: " << *std::max_element(theta2Arr.begin(), theta2Arr.end()) << ". Min theta2: " << *std::min_element(theta2Arr.begin(), theta2Arr.end()) << std::endl;
+					double averageTheta1(0.0), averageTheta2(0.0);
+					for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+					{
+						averageTheta1 += theta1Arr[nelem];
+						averageTheta2 += theta2Arr[nelem];
+					}
+					averageTheta1 = averageTheta1 / meshVar::nelem2D;
+					averageTheta2 = averageTheta2 / meshVar::nelem2D;
+					std::cout << "Average theta1: " << averageTheta1 << ". Average theta2: " << averageTheta2 << std::endl;
+					limitVal::numOfLimitCell = 0;
+				}
+			}
+		}
+		else if (limitVal::PAdaptive)
 		{
 			for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 			{
-				/*
+
 				for (int valType = 1; valType <= 4; valType++)
 				{
 					//p-Adaptive limiter
@@ -25,21 +76,13 @@ namespace limiter
 				if (limitVal::pAdaptive::limitFlagLocal == true)
 				{
 					limitVal::pAdaptive::numOfLimitCell++;
+					limitVal::pAdaptive::limitFlagLocal = false;
 				}
-				limitVal::pAdaptive::limitFlagLocal = false;
-				*/
-				//Positivity preserving
-				std::tie(theta1Arr[nelem], theta2Arr[nelem]) = limiter::Pp::quadratureCell::calcPpLimiterCoef(nelem);
 			}
-
-			//Display informations
 			if (limitVal::pAdaptive::numOfLimitCell > 0)
 			{
 				std::cout << "P-adaptive limiter is applied at " << limitVal::pAdaptive::numOfLimitCell << " cell(s)\n";
-			}
-			if (limitVal::numOfLimitCell > 0)
-			{
-				std::cout << "Posivity preserving limiter is applied at " << limitVal::numOfLimitCell << " cell(s)\n";
+				limitVal::pAdaptive::numOfLimitCell = 0;
 			}
 		}
 		else  //No limiter
@@ -165,6 +208,44 @@ namespace limiter
 				limitVal::limitFlagLocal = false;
 				return std::make_tuple(theta1, theta2);
 			}
+
+			namespace simplifiedVersion
+			{
+				std::tuple<double, double> calcPpLimiterCoef(int element)
+				{
+					double meanRho(0.0), minRho(0.0), theta1(0.0), theta2(0.0), meanRhoe(0.0), minRhoe(0.0),
+						meanRhou(0.0), meanRhov(0.0), meanRhoE(0.0), aG(0.0), bG(0.0);
+					int elemType(auxUlti::checkType(element));
+
+					//Find theta1
+					minRho = limiter::mathForLimiter::quadratureCell::calcMinRhoQuad(element);
+					meanRho = rho[element][0];
+					meanRhou = rhou[element][0];
+					meanRhov = rhov[element][0];
+					meanRhoE = rhoE[element][0];
+					//std::cout << "Cell " << element << ": minRho=" << minRho << std::endl;
+
+					//Compute theta1
+					theta1 = limiter::mathForLimiter::quadratureCell::simplifiedVersion::calcTheta1Coeff(minRho, meanRho);
+
+					//Find theta2
+					meanRhoe = limiter::mathForLimiter::quadratureCell::simplifiedVersion::calRhoeFromConserVars(meanRho, meanRhou, meanRhov, meanRhoE);
+					minRhoe = limiter::mathForLimiter::quadratureCell::simplifiedVersion::calcMinRhoeQuad(element, theta1);
+					theta2 = limiter::mathForLimiter::quadratureCell::simplifiedVersion::calcTheta2Coeff(meanRhoe, minRhoe, meanRho);
+
+					//for debugging
+					//debug::minRhoArr[element] = minRho;
+					//debug::minRhoeArr[element] = minRhoe;
+					
+					if ((theta2 < 1))
+					{
+						limitVal::numOfLimitCell++;
+					}
+					//Reset limit flag
+					limitVal::limitFlagLocal = false;
+					return std::make_tuple(theta1, theta2);
+				}
+			}
 		}
 	}
 
@@ -179,7 +260,64 @@ namespace limiter
 			{
 			case 3:
 			{
-				
+				std::vector<double> outputVar(mathVar::orderElem, 0.0);
+				bool internalElem(true);
+				elemIPlus = meshVar::neighboringElements[element][1];
+				elemIMinus = meshVar::neighboringElements[element][2];
+				if (mathVar::orderElem > 1)
+				{
+					elemJMinus = meshVar::neighboringElements[element][0];
+				}
+
+				if (elemIPlus < 0)
+				{
+					elemIPlus = element;
+					//internalElem = false;
+				}
+				if (elemIMinus < 0)
+				{
+					elemIMinus = element;
+					//internalElem = false;
+				}
+				if (elemJMinus < 0)
+				{
+					elemJMinus = element;
+					//internalElem = false;
+				}
+
+				switch (valType)
+				{
+				case 1:
+				{
+					outputVar = limiter::pAdaptive::pAdaptiveChildFunction_Tri(element, valType, rho[elemIPlus][0], rho[elemIMinus][0], rho[elemJMinus][0]);
+					rho[element][1] = outputVar[0];
+					rho[element][2] = outputVar[1];
+				}
+				break;
+				case 2:
+				{
+					outputVar = limiter::pAdaptive::pAdaptiveChildFunction_Tri(element, valType, rhou[elemIPlus][0], rhou[elemIMinus][0], rhou[elemJMinus][0]);
+					rhou[element][1] = outputVar[0];
+					rhou[element][2] = outputVar[1];
+				}
+				break;
+				case 3:
+				{
+					outputVar = limiter::pAdaptive::pAdaptiveChildFunction_Tri(element, valType, rhov[elemIPlus][0], rhov[elemIMinus][0], rhov[elemJMinus][0]);
+					rhov[element][1] = outputVar[0];
+					rhov[element][2] = outputVar[1];
+				}
+				break;
+				case 4:
+				{
+					outputVar = limiter::pAdaptive::pAdaptiveChildFunction_Tri(element, valType, rhoE[elemIPlus][0], rhoE[elemIMinus][0], rhoE[elemJMinus][0]);
+					rhoE[element][1] = outputVar[0];
+					rhoE[element][2] = outputVar[1];
+				}
+				break;
+				default:
+					break;
+				}
 			}
 			break;
 			case 4:
@@ -296,6 +434,8 @@ namespace limiter
 			if (mathVar::orderElem > 1)
 			{
 				inputArgument[0] = UCD;
+				inputArgument[1] = JPlus - elementConsValOfOrder[0];
+				inputArgument[2] = elementConsValOfOrder[0] - JMinus;
 				UCDMod = limiter::mathForLimiter::minmod(inputArgument);
 				UCD_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1);
 
@@ -307,6 +447,64 @@ namespace limiter
 				{
 					//std::cout << "p-adaptive limiter is applied at cell " << element << " for variable type " << valType << std::endl;
 					output[1] = 0.5*(UCDMod - UABMod);
+				}
+				else
+				{
+					output[1] = elementConsValOfOrder[2];
+				}
+			}
+			return output;
+		}
+
+		std::vector<double> pAdaptiveChildFunction_Tri(int element, int valType, double IPlus, double IMinus, double JMinus)
+		{
+			std::vector<double>elementConsValOfOrder(mathVar::orderElem + 1, 0.0),
+				inputArgument(3, 0.0), output(mathVar::orderElem, 0.0);
+			elementConsValOfOrder = auxUlti::getElementConserValuesOfOrder(element, valType);
+
+			double UBC(math::pointValueNoLimiter(element, 1.0, 0.0, valType) - elementConsValOfOrder[0]),
+				UAD(math::pointValueNoLimiter(element, -1.0, 0.0, valType) - elementConsValOfOrder[0]),
+				UAB(math::pointValueNoLimiter(element, 0.0, -1.0, valType) - elementConsValOfOrder[0]),
+				UBCMod(0.0), UADMod(0.0), UABMod(0.0),
+				UBC_check(0.0), UAD_check(0.0), UAB_check(0.0),
+				M(limiter::mathForLimiter::calM(element, valType)), Lxy(meshVar::localCellSize[element]);
+
+			inputArgument[0] = UBC;
+			inputArgument[1] = IPlus - elementConsValOfOrder[0];
+			inputArgument[2] = elementConsValOfOrder[0] - IMinus;
+			UBCMod = limiter::mathForLimiter::minmod(inputArgument);
+			UBC_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1); //*fabs(elementConsValOfOrder[0])
+
+			inputArgument[0] = -UAD;
+			UADMod = -limiter::mathForLimiter::minmod(inputArgument);
+			inputArgument[0] = UAD;
+			UAD_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1);  //*fabs(elementConsValOfOrder[0])
+			if ((UBC != UBC_check) || (UAD != UAD_check))
+			{
+				//std::cout << "p-adaptive limiter is applied at cell " << element << " for variable type " << valType << std::endl;
+				if (limitVal::pAdaptive::limitFlagLocal == false)
+				{
+					limitVal::pAdaptive::limitFlagLocal = true;
+				}
+				output[0] = UBCMod - UADMod;
+			}
+			else
+			{
+				output[0] = elementConsValOfOrder[1];
+			}
+
+			if (mathVar::orderElem > 1)
+			{
+				inputArgument[0] = -UAB;
+				inputArgument[1] = elementConsValOfOrder[0] - JMinus;
+				inputArgument[2] = elementConsValOfOrder[0] - JMinus;
+				UABMod = -limiter::mathForLimiter::minmod(inputArgument);
+				inputArgument[0] = UAB;
+				UAB_check = limiter::mathForLimiter::modifiedMinmod(inputArgument, M*Lxy*Lxy + 0.1);
+				if ((UAB != UAB_check))
+				{
+					//std::cout << "p-adaptive limiter is applied at cell " << element << " for variable type " << valType << std::endl;
+					output[1] = UABMod;
 				}
 				else
 				{
@@ -503,7 +701,7 @@ namespace limiter
 				double aG(0.0), bG(0.0), min(0.0);
 
 				//Compute rho at all internal Gauss point
-				/*
+				
 				for (int na = 0; na <= mathVar::nGauss; na++)
 				{
 					for (int nb = 0; nb <= mathVar::nGauss; nb++)
@@ -513,7 +711,7 @@ namespace limiter
 						vectorRho.push_back(math::pointValue(element, aG, bG, 1, 2));
 					}
 				}
-				*/
+			
 				//Compute rho at edge DA
 				aG = -1;
 				for (int nG = 0; nG <= mathVar::nGauss; nG++)
@@ -544,38 +742,6 @@ namespace limiter
 				}
 				min = *std::min_element(vectorRho.begin(), vectorRho.end());  //find min value of vector
 				return min;
-			}
-
-			//Function calculates minimum value of p of tri element
-			double calcMinPTri(int element)
-			{
-				double rhoVal(0.0), rhouVal(0.0), rhovVal(0.0), rhoEVal(0.0), TVal(0.0);
-				std::vector<double> vectorP(3, 0.0);
-				double minVal(0.0);
-
-				rhoVal = math::pointValueNoLimiter(element, -1.0, -1.0, 1);
-				rhouVal = math::pointValueNoLimiter(element, -1.0, -1.0, 2);
-				rhovVal = math::pointValueNoLimiter(element, -1.0, -1.0, 3);
-				rhoEVal = math::pointValueNoLimiter(element, -1.0, -1.0, 4);
-				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-				vectorP[0] = math::CalcP(TVal, rhoVal);
-
-				rhoVal = math::pointValueNoLimiter(element, -1.0, 1.0, 1);
-				rhouVal = math::pointValueNoLimiter(element, -1.0, 1.0, 2);
-				rhovVal = math::pointValueNoLimiter(element, -1.0, 1.0, 3);
-				rhoEVal = math::pointValueNoLimiter(element, -1.0, 1.0, 4);
-				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-				vectorP[1] = math::CalcP(TVal, rhoVal);
-
-				rhoVal = math::pointValueNoLimiter(element, 1.0, -1.0, 1);
-				rhouVal = math::pointValueNoLimiter(element, 1.0, -1.0, 2);
-				rhovVal = math::pointValueNoLimiter(element, 1.0, -1.0, 3);
-				rhoEVal = math::pointValueNoLimiter(element, 1.0, -1.0, 4);
-				TVal = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
-				vectorP[2] = math::CalcP(TVal, rhoVal);
-
-				minVal = *std::min_element(vectorP.begin(), vectorP.end());
-				return minVal;
 			}
 
 			//Function calculates modified value of Rho at abitrary point (for calculating theta2)
@@ -697,6 +863,125 @@ namespace limiter
 					theta2 = 1.0;
 				}
 				return theta2;
+			}
+
+			namespace simplifiedVersion
+			{
+				double calcMinRhoeQuad(int element, double theta1)
+				{
+					std::vector<double> vectorRhoe;
+					double aG(0.0), bG(0.0), min(0.0), rhoMod(0.0), rhouOrg(0.0), rhovOrg(0.0), rhoEOrg(0.0);
+
+					//Compute rho at all internal Gauss point
+					for (int na = 0; na <= mathVar::nGauss; na++)
+					{
+						for (int nb = 0; nb <= mathVar::nGauss; nb++)
+						{
+							aG = mathVar::GaussPts[na][nb][0];
+							bG = mathVar::GaussPts[na][nb][1];
+							rhoMod = limiter::mathForLimiter::quadratureCell::calcRhoModified(element, aG, bG, theta1);
+							rhouOrg = math::pointValueNoLimiter(element, aG, bG, 2);
+							rhovOrg = math::pointValueNoLimiter(element, aG, bG, 3);
+							rhoEOrg = math::pointValueNoLimiter(element, aG, bG, 4);
+							vectorRhoe.push_back(limiter::mathForLimiter::quadratureCell::simplifiedVersion::calRhoeFromConserVars(rhoMod,rhouOrg,rhovOrg,rhoEOrg));
+						}
+					}
+
+					//Compute rho at edge DA
+					aG = -1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						bG = mathVar::xGauss[nG];
+						rhoMod = limiter::mathForLimiter::quadratureCell::calcRhoModified(element, aG, bG, theta1);
+						rhouOrg = math::pointValueNoLimiter(element, aG, bG, 2);
+						rhovOrg = math::pointValueNoLimiter(element, aG, bG, 3);
+						rhoEOrg = math::pointValueNoLimiter(element, aG, bG, 4);
+						vectorRhoe.push_back(limiter::mathForLimiter::quadratureCell::simplifiedVersion::calRhoeFromConserVars(rhoMod, rhouOrg, rhovOrg, rhoEOrg));
+					}
+					//Compute rho at edge BC
+					aG = 1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						bG = mathVar::xGauss[nG];
+						rhoMod = limiter::mathForLimiter::quadratureCell::calcRhoModified(element, aG, bG, theta1);
+						rhouOrg = math::pointValueNoLimiter(element, aG, bG, 2);
+						rhovOrg = math::pointValueNoLimiter(element, aG, bG, 3);
+						rhoEOrg = math::pointValueNoLimiter(element, aG, bG, 4);
+						vectorRhoe.push_back(limiter::mathForLimiter::quadratureCell::simplifiedVersion::calRhoeFromConserVars(rhoMod, rhouOrg, rhovOrg, rhoEOrg));
+					}
+					//Compute rho at edge AB
+					bG = -1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						aG = mathVar::xGauss[nG];
+						rhoMod = limiter::mathForLimiter::quadratureCell::calcRhoModified(element, aG, bG, theta1);
+						rhouOrg = math::pointValueNoLimiter(element, aG, bG, 2);
+						rhovOrg = math::pointValueNoLimiter(element, aG, bG, 3);
+						rhoEOrg = math::pointValueNoLimiter(element, aG, bG, 4);
+						vectorRhoe.push_back(limiter::mathForLimiter::quadratureCell::simplifiedVersion::calRhoeFromConserVars(rhoMod, rhouOrg, rhovOrg, rhoEOrg));
+					}
+					//Compute rho at edge CD
+					bG = 1;
+					for (int nG = 0; nG <= mathVar::nGauss; nG++)
+					{
+						aG = mathVar::xGauss[nG];
+						rhoMod = limiter::mathForLimiter::quadratureCell::calcRhoModified(element, aG, bG, theta1);
+						rhouOrg = math::pointValueNoLimiter(element, aG, bG, 2);
+						rhovOrg = math::pointValueNoLimiter(element, aG, bG, 3);
+						rhoEOrg = math::pointValueNoLimiter(element, aG, bG, 4);
+						vectorRhoe.push_back(limiter::mathForLimiter::quadratureCell::simplifiedVersion::calRhoeFromConserVars(rhoMod, rhouOrg, rhovOrg, rhoEOrg));
+					}
+					min = *std::min_element(vectorRhoe.begin(), vectorRhoe.end());  //find min value of vector
+					return min;
+				}
+
+				double calRhoeFromConserVars(double rho, double rhou, double rhov, double rhoE)
+				{
+					double rhoe(0.0);
+					rhoe = rhoE - 0.5*(rhou*rhou + rhov * rhov) / rho;
+					return rhoe;
+				}
+
+				double calcTheta1Coeff(double minRho, double meanRho)
+				{
+					double temp1(0.0), theta(0.0);
+					std::vector<double> vectorOmega(2, 0.0);
+					vectorOmega[0] = systemVar::epsilon;
+					vectorOmega[1] = meanRho;
+					double omega(*std::min_element(vectorOmega.begin(), vectorOmega.end()));  //find min value of vector
+
+					temp1 = (meanRho - omega) / (meanRho - minRho);
+					if (temp1 < 1.0)
+					{
+						theta = temp1;
+					}
+					else
+					{
+						theta = 1.0;
+					}
+					return theta;
+				}
+
+				double calcTheta2Coeff(double meanRhoe, double minRhoe, double meanRho)
+				{
+					double temp1(0.0), theta(0.0);
+					std::vector<double> vectorOmega(3, 0.0);
+					vectorOmega[0] = systemVar::epsilon;
+					vectorOmega[1] = meanRho;
+					vectorOmega[2] = meanRhoe;
+					double omega(*std::min_element(vectorOmega.begin(), vectorOmega.end()));  //find min value of vector
+
+					temp1 = (meanRhoe - omega) / (meanRhoe - minRhoe);
+					if (temp1 < 1.0)
+					{
+						theta = temp1;
+					}
+					else
+					{
+						theta = 1.0;
+					}
+					return theta;
+				}
 			}
 		}
 

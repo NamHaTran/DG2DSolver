@@ -92,7 +92,7 @@ void Processing()
 		process::timeDiscretization::globalErrorEstimate();
 	
 		systemVar::savingCout++;
-		if (systemVar::savingCout == systemVar::wrtI) //
+		if (systemVar::savingCout == systemVar::wrtI)
 		{
 			std::cout << "Saving case...\n" << std::endl;
 			IO::saveCase();
@@ -102,7 +102,7 @@ void Processing()
 		}
 
 		loadConstCount++;
-		if (loadConstCount == 10) //
+		if (loadConstCount == 10)
 		{
 			IO::loadConstants();
 			loadConstCount = 0;
@@ -117,6 +117,7 @@ void PreProcessing()
 
 	/*LOAD CONSTANTS*/
 	IO::loadConstants();
+	IO::loadLimiterSettings();
 
 	/*LOAD p T U*/
 	IO::loadpTU();

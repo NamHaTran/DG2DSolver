@@ -2,18 +2,19 @@
   ConstDeclaration.cpp
   DG2D.cpp
   DGAuxUltilitiesLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(613): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(615): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGBCsLib.cpp
   DGController.cpp
   DGIOLib.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(48): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(164): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(466): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(569): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(720): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(804): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(428): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(544): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(647): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(798): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(882): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGLimiterLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dglimiterlib.cpp(705): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dglimiterlib.cpp(990): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGMath.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(748): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1085): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
@@ -22,12 +23,12 @@ d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1703): wa
   DGMeshReaderLib.cpp
   DGMessagesLib.cpp
   DGPostProcessLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(128): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(156): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
   DGProcLib.cpp
   dynamicVarDeclaration.cpp
   VarDeclaration.cpp
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
   Generating code
-  All 1239 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  All 1277 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Release\DG2DSolver.exe

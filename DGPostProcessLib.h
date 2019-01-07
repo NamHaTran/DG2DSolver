@@ -8,6 +8,7 @@ namespace debugTool
 	void checkElemsSurElem(int ielem);
 	void checkElemInfor(int elem);
 	void checkPointValue(int element);
+	//void writeMinRho_MinRhoe();
 }
 
 namespace DG2Tecplot

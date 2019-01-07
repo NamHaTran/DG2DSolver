@@ -64,4 +64,10 @@ namespace SurfaceBCFields
 	extern std::vector<std::vector<double>> rhoBc, rhouBc, rhovBc, rhoEBc;
 	extern std::vector<int>BCPoints;
 }
+
+//for debuging
+namespace debug
+{
+	//extern std::vector<double> minRhoArr, minRhoeArr;
+}
 #endif // DYNAMICVARDECLARATION_H_INCLUDED

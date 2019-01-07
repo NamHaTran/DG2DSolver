@@ -653,7 +653,7 @@ namespace process
 				dRhoYSlave(0.0), dRhouYSlave(0.0), dRhovYSlave(0.0), dRhoEYSlave(0.0);
 			std::vector<double> UMaster(4, 0.0), dUXMaster(4, 0.0), dUYMaster(4, 0.0),
 				USlave(4, 0.0), dUXSlave(4, 0.0), dUYSlave(4, 0.0),
-				CArray(mathVar::nGauss + 1, 0.0), BetaArray(mathVar::nGauss + 1, 0.0), vectorn(2, 0.0);
+				CArray(mathVar::nGauss + 1, 0.0), vectorn(2, 0.0); // BetaArray(mathVar::nGauss + 1, 0.0),
 			/*StressHeat matrix has form:
 			[tauXx		tauXy		Qx]
 			[tauYx		tauYy		Qy]
@@ -729,7 +729,7 @@ namespace process
 						//BetaArray[nG] = math::numericalFluxes::constantBeta(uMagP, uMagM, UMaster[0], USlave[0], eMaster, eSlave, pMaster, pSlave, StressHeatP, StressHeatM, vectorn);
 					}
 					LxFConst[iedge] = *std::max_element(CArray.begin(), CArray.end());
-					DiffusiveFluxConst[iedge] = *std::max_element(BetaArray.begin(), BetaArray.end());
+					//DiffusiveFluxConst[iedge] = *std::max_element(BetaArray.begin(), BetaArray.end());
 				}
 			}
 		}
@@ -1731,9 +1731,6 @@ namespace process
 						rhoE[nelement][order] = rhoEN[nelement][order];
 					}
 				}
-
-				limitVal::pAdaptive::numOfLimitCell = 0;
-				limitVal::numOfLimitCell = 0;
 				limiter::limiter();
 			}
 		}
