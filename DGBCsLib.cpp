@@ -586,11 +586,13 @@ namespace NSFEqBCs
 				dUYPlus[i] = math::pointAuxValue(element, a, b, i + 1, 2);
 				dUXMinus[i] = dUXPlus[i] - 2 * (dUXPlus[i] * nx + dUYPlus[i] * ny)*nx;
 				dUYMinus[i] = dUYPlus[i] - 2 * (dUXPlus[i] * nx + dUYPlus[i] * ny)*ny;
+				//dUXMinus[i] = dUXPlus[i];
+				//dUYMinus[i] = dUYPlus[i];
 			}
-			UMinus[0] = math::pointValue(element, a, b, 1, 2);
+			UMinus[0] = UPlus[0];
 			UMinus[1] = UPlus[1] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*nx;
 			UMinus[2] = UPlus[2] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*ny;
-			UMinus[3] = math::pointValue(element, a, b, 4, 2);
+			UMinus[3] = UPlus[3];
 			
 			Fluxes = math::numericalFluxes::NSFEqAdvDiffFluxFromConserVars(edge, UPlus, UMinus, dUXPlus, dUXMinus, dUYPlus, dUYMinus, norm);
 			return Fluxes;
@@ -887,10 +889,10 @@ namespace auxilaryBCs
 			UPlus[i] = math::pointValue(element, a, b, i + 1, 2);
 		}
 		double muP(math::CalcVisCoef(math::CalcTFromConsvVar(UPlus[0], UPlus[1], UPlus[2], UPlus[3])));
-		UMinus[0] = math::pointValue(element, a, b, 1, 2);
+		UMinus[0] = UPlus[0];
 		UMinus[1] = UPlus[1] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*nx;
 		UMinus[2] = UPlus[2] - 2 * (UPlus[1] * nx + UPlus[2] * ny)*ny;
-		UMinus[3] = math::pointValue(element, a, b, 4, 2);
+		UMinus[3] = UPlus[4];
 
 		for (int i = 0; i < 4; i++)
 		{

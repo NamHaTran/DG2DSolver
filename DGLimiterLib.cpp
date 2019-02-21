@@ -15,6 +15,31 @@ namespace limiter
 	{
 		if (mathVar::orderElem != 0)
 		{
+			//p-Adaptive first
+			if (limitVal::PAdaptive)
+			{
+				for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
+				{
+
+					for (int valType = 1; valType <= 4; valType++)
+					{
+						//p-Adaptive limiter
+						limiter::pAdaptive::pAdaptiveLimiter(nelem, valType);
+					}
+					if (limitVal::pAdaptive::limitFlagLocal == true)
+					{
+						limitVal::pAdaptive::numOfLimitCell++;
+						limitVal::pAdaptive::limitFlagLocal = false;
+					}
+				}
+				if (limitVal::pAdaptive::numOfLimitCell > 0)
+				{
+					std::cout << "P-adaptive limiter is applied at " << limitVal::pAdaptive::numOfLimitCell << " cell(s)\n";
+					limitVal::pAdaptive::numOfLimitCell = 0;
+				}
+			}
+
+			//PositivityPreserving second
 			if (limitVal::PositivityPreserving)
 			{
 				if (limitVal::PositivityPreservingSettings::version == 1)
@@ -61,28 +86,6 @@ namespace limiter
 					std::cout << "Average theta1: " << averageTheta1 << ". Average theta2: " << averageTheta2 << std::endl;
 					limitVal::numOfLimitCell = 0;
 				}
-			}
-		}
-		else if (limitVal::PAdaptive)
-		{
-			for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
-			{
-
-				for (int valType = 1; valType <= 4; valType++)
-				{
-					//p-Adaptive limiter
-					limiter::pAdaptive::pAdaptiveLimiter(nelem, valType);
-				}
-				if (limitVal::pAdaptive::limitFlagLocal == true)
-				{
-					limitVal::pAdaptive::numOfLimitCell++;
-					limitVal::pAdaptive::limitFlagLocal = false;
-				}
-			}
-			if (limitVal::pAdaptive::numOfLimitCell > 0)
-			{
-				std::cout << "P-adaptive limiter is applied at " << limitVal::pAdaptive::numOfLimitCell << " cell(s)\n";
-				limitVal::pAdaptive::numOfLimitCell = 0;
 			}
 		}
 		else  //No limiter
@@ -568,7 +571,7 @@ namespace limiter
 
 			bool checkLimiter(int element, double theta1, double omega)
 			{
-				double TTemp(0.0), rhoOrg(0.0), rhouOrg(0.0), rhovOrg(0.0), rhoEOrg(0.0);
+				double TTemp(0.0), rhoMod(0.0), rhouOrg(0.0), rhovOrg(0.0), rhoEOrg(0.0);
 				std::vector<double> vectorP(3, 0.0),
 					aCoors = { -1.0, 1.0, -1.0 }, bCoors = { -1.0, -1.0, 1.0 };
 				bool out(true);
@@ -581,12 +584,12 @@ namespace limiter
 					rhovOrg = math::pointValue(element, aCoors[i], bCoors[i], 3, 2);
 					rhoEOrg = math::pointValue(element, aCoors[i], bCoors[i], 4, 2);
 					*/
-					rhoOrg = math::pointValueNoLimiter(element, aCoors[i], bCoors[i], 1);
+					rhoMod = limiter::mathForLimiter::triangleCell::calcRhoModified(element, aCoors[i], bCoors[i], theta1);
 					rhouOrg = math::pointValueNoLimiter(element, aCoors[i], bCoors[i], 2);
 					rhovOrg = math::pointValueNoLimiter(element, aCoors[i], bCoors[i], 3);
 					rhoEOrg = math::pointValueNoLimiter(element, aCoors[i], bCoors[i], 4);
-					TTemp = math::CalcTFromConsvVar(rhoOrg, rhouOrg, rhovOrg, rhoEOrg);
-					vectorP[i] = math::CalcP(TTemp, rhoOrg);
+					TTemp = math::CalcTFromConsvVar(rhoMod, rhouOrg, rhovOrg, rhoEOrg);
+					vectorP[i] = math::CalcP(TTemp, rhoMod);
 				}
 				double minP(*std::min_element(vectorP.begin(), vectorP.end()));
 				if (minP >= omega)
@@ -819,7 +822,7 @@ namespace limiter
 				rhouOrigin = math::pointValueNoLimiter(element, aG, bG, 2);
 				rhovOrigin = math::pointValueNoLimiter(element, aG, bG, 3);
 				rhoEOrigin = math::pointValueNoLimiter(element, aG, bG, 4);
-				pTemp = math::CalcP(math::CalcTFromConsvVar(rhoOrigin, rhouOrigin, rhovOrigin, rhoEOrigin), rhoOrigin);
+				pTemp = math::CalcP(math::CalcTFromConsvVar(rhoMod, rhouOrigin, rhovOrigin, rhoEOrigin), rhoMod);
 
 				if (pTemp < omega)
 				{
@@ -1075,7 +1078,7 @@ namespace limiter
 				break;
 				case 4:
 				{
-					M += rhov[element][0] - rhov[neighborElemId][0];
+					M += rhoE[element][0] - rhoE[neighborElemId][0];
 				}
 				break;
 				default:

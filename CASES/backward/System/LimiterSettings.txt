@@ -10,7 +10,7 @@
 	Program ran at (d-m-y_h-m-s) time
 	Note: all parameter are in SI unit.
 LimiterSettings
-limiter		PositivityPreserving	PAdaptive
+limiter		PAdaptive
 PositivityPreserving
 {
 	version	simplified

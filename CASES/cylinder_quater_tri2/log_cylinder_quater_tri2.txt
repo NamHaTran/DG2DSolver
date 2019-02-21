@@ -1,0 +1,2 @@
+log was created at 11-02-2019_13-48-55
+Boundary condition <symmetry> of file U is not valid for type <wall>

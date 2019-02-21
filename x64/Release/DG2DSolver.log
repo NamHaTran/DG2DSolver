@@ -9,12 +9,12 @@ d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.c
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(48): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(164): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(428): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(544): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(647): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(798): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(882): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(550): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(653): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(804): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgiolib.cpp(888): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGLimiterLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dglimiterlib.cpp(990): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dglimiterlib.cpp(993): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGMath.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(748): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1085): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data

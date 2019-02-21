@@ -181,7 +181,6 @@ namespace process
 			iniRhou = process::calcIniValues(iniValues::rhoIni*iniValues::uIni, nelement);
 			iniRhov = process::calcIniValues(iniValues::rhoIni*iniValues::vIni, nelement);
 			iniRhoE = process::calcIniValues(iniValues::rhoIni*(iniValues::eIni + 0.5*(pow(iniValues::uIni, 2) + pow(iniValues::vIni, 2))), nelement);
-
 			for (int i = 0; i <= mathVar::orderElem; i++)
 			{
 				rho[nelement][i] = iniRho[i];

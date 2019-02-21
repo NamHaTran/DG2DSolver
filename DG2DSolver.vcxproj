@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{434CB2A6-A171-4834-9C60-86F22AD26A34}</ProjectGuid>
     <RootNamespace>DG2DSolver</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -89,16 +89,16 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <HeapReserveSize>41943040</HeapReserveSize>
+      <HeapReserveSize>1048576</HeapReserveSize>
     </Link>
     <Link>
-      <HeapCommitSize>41943040</HeapCommitSize>
+      <HeapCommitSize>1048576</HeapCommitSize>
     </Link>
     <Link>
-      <StackReserveSize>41943040</StackReserveSize>
+      <StackReserveSize>16777216</StackReserveSize>
     </Link>
     <Link>
-      <StackCommitSize>41943040</StackCommitSize>
+      <StackCommitSize>16777216</StackCommitSize>
       <AdditionalLibraryDirectories>E:\Phan mem ky thuat\Visual Studio 2017\AdditionalLibraries\armadillo\examples\lib_win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;blas_win64_MT.lib;lapack_win64_MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -113,13 +113,13 @@
       <AdditionalIncludeDirectories>E:\Phan mem ky thuat\Visual Studio 2017\AdditionalLibraries\armadillo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <StackReserveSize>41943040</StackReserveSize>
+      <StackReserveSize>16777216</StackReserveSize>
     </Link>
     <Link>
-      <StackCommitSize>41943040</StackCommitSize>
-      <HeapReserveSize>41943040</HeapReserveSize>
+      <StackCommitSize>16777216</StackCommitSize>
+      <HeapReserveSize>1048576</HeapReserveSize>
       <SubSystem>Console</SubSystem>
-      <HeapCommitSize>41943040</HeapCommitSize>
+      <HeapCommitSize>1048576</HeapCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -137,11 +137,11 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <HeapReserveSize>41943040</HeapReserveSize>
-      <StackReserveSize>41943040</StackReserveSize>
-      <StackCommitSize>41943040</StackCommitSize>
+      <HeapReserveSize>1048576</HeapReserveSize>
+      <StackReserveSize>16777216</StackReserveSize>
+      <StackCommitSize>16777216</StackCommitSize>
       <AdditionalLibraryDirectories>E:\Phan mem ky thuat\Visual Studio 2017\AdditionalLibraries\armadillo\examples\lib_win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <HeapCommitSize>41943040</HeapCommitSize>
+      <HeapCommitSize>1048576</HeapCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -159,11 +159,11 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <StackReserveSize>41943040</StackReserveSize>
-      <StackCommitSize>41943040</StackCommitSize>
-      <HeapReserveSize>41943040</HeapReserveSize>
+      <StackReserveSize>16777216</StackReserveSize>
+      <StackCommitSize>16777216</StackCommitSize>
+      <HeapReserveSize>1048576</HeapReserveSize>
       <SubSystem>Console</SubSystem>
-      <HeapCommitSize>41943040</HeapCommitSize>
+      <HeapCommitSize>1048576</HeapCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

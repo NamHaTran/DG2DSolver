@@ -473,6 +473,12 @@ namespace IO
 									}
 								}
 							}
+							if (limitVal::limiterName[ilimiter].compare("PAdaptive") == 0) //PositivityPreserving settings
+							{
+								limitVal::PAdaptive = true;
+								std::getline(FileFlux, line); //jump
+								goto label;
+							}
 						}
 					}
 				}

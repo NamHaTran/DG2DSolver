@@ -142,7 +142,7 @@ namespace limitVal
 	}
 
 	std::vector<std::string> limiterName;
-	bool PositivityPreserving(true), PAdaptive(false);
+	bool PositivityPreserving(false), PAdaptive(false);
 	namespace PositivityPreservingSettings
 	{
 		/*version:
