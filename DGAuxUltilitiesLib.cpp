@@ -97,23 +97,6 @@ namespace auxUlti
 		return std::make_tuple(x, y);
 	}
 	
-	/*
-	void ConserToPri()
-	{
-		for (int ielem = 0; ielem < meshVar::nelem2D; ielem++)
-		{
-			for (int i = 0; i <= mathVar::orderElem; i++)
-			{
-				u[ielem][i] = rhou[ielem][i] / rho[ielem][i];
-				v[ielem][i] = rhov[ielem][i] / rho[ielem][i];
-				T[ielem][i] = math::CalcTFromConsvVar(rho[ielem][i], rhou[ielem][i], rhov[ielem][i], rhoE[ielem][i]);
-				e[ielem][i] = material::Cv*T[ielem][i];
-				p[ielem][i] = math::CalcP(T[ielem][i], rho[ielem][i]);
-				mu[ielem][i] = math::CalcVisCoef(T[ielem][i]);
-			}
-		}
-	}
-	*/
 	std::string workingdir()
 	{
 		char buf[256];
@@ -236,11 +219,11 @@ namespace auxUlti
 		bool master(auxUlti::checkMaster(elem, edge));
 		if (dir == 1)  //x direction
 		{
-			n = meshVar::normalVector[0][edge];
+			n = meshVar::normalVector[edge][0];
 		}
 		else if (dir == 2)  //y direction
 		{
-			n = meshVar::normalVector[1][edge];
+			n = meshVar::normalVector[edge][1];
 		}
 
 		if (master == false)
@@ -288,6 +271,41 @@ namespace auxUlti
 			}
 		}
 		
+		return Out;
+	}
+
+	std::vector<double> getResidualValuesOfOrder(int element, int type)
+	{
+		std::vector<double> Out(mathVar::orderElem + 1, 0.0);
+		if (type == 1)  //rho
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				Out[iorder] = rhoResArr[element][iorder];
+			}
+		}
+		else if (type == 2)  //rhou
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				Out[iorder] = rhouResArr[element][iorder];
+			}
+		}
+		else if (type == 3)  //rhov
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				Out[iorder] = rhovResArr[element][iorder];
+			}
+		}
+		else if (type == 4)  //rhoE
+		{
+			for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+			{
+				Out[iorder] = rhoEResArr[element][iorder];
+			}
+		}
+
 		return Out;
 	}
 
@@ -386,7 +404,7 @@ namespace auxUlti
 		bool Out(true);
 		for (int i = 0; i < meshVar::nBc; i++)
 		{
-			if (bcValues::UBcType[i]==1 || bcValues::UBcType[i] == 3) //subsonic checking is applied only for inOutFlow and fixedValue boudary condition
+			if (bcValues::UBcType[i]==1 || bcValues::UBcType[i] == 4)
 			{
 				TInf = bcValues::TBC[i];
 				uInf = bcValues::uBC[i];
@@ -460,6 +478,26 @@ namespace auxUlti
 			{
 				Array[i][j].resize(direct3);
 			}
+		}
+	}
+
+	void addRowTo2DIntArray(std::vector<std::vector<int>> &Array, int numCol)
+	{
+		int length(Array.size());
+		Array.push_back(std::vector<int>());
+		for (int icol = 0; icol < numCol; icol++)
+		{
+			Array[length].push_back(-1);
+		}
+	}
+
+	void addRowTo2DDoubleArray(std::vector<std::vector<double>> &Array, int numCol)
+	{
+		int length(Array.size());
+		Array.push_back(std::vector<double>());
+		for (int icol = 0; icol < numCol; icol++)
+		{
+			Array[length].push_back(0.0);
 		}
 	}
 
@@ -617,6 +655,20 @@ namespace auxUlti
 		vector.erase(vector.begin(), vector.begin() + vectorLenth);
 		/*Shrink to fit*/
 		vector.shrink_to_fit();
+	}
+
+	int findVertexOrder(int point, int element)
+	{
+		int elemType(auxUlti::checkType(element)), order(-1);
+		for (int i = 0; i < elemType; i++)
+		{
+			if (point == meshVar::Elements2D[element][i])
+			{
+				order = i;
+				break;
+			}
+		}
+		return order;
 	}
 
 	namespace postProcess

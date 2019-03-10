@@ -1,8 +1,0 @@
-log was created at 26-12-2018_20-08-04
-Boundary method <patch> is unknown, available boundary methods in file boundaryPatch are:
-	weakRiemann
-	weakPrescibed
-log was created at 26-12-2018_20-08-25
-Boundary condition <inOutFlow> of file U is not valid for type <wall>
-log was created at 28-12-2018_23-19-42
-Cannot open file <rho.txt> located at D:\Working\Code C++ for fun\DGProject\DG2DSolver\DG2DSolver\CASES\Ma548_JCP14\2969

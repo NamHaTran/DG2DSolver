@@ -21,7 +21,10 @@ void Executer(std::string cmd)
 	}
 	else if (processKey::checkDGRun(cmd))
 	{
-		PreProcessing();
+		if (systemVar::runPreProcess == false)
+		{
+			PreProcessing();
+		}
 		Processing();
 	}
 	else if (postProcessKey::checkExit(cmd))
@@ -41,6 +44,13 @@ void Executer(std::string cmd)
 		IO::getCase();
 		//PreProcessing();
 	}
+	else if (preProcessKey::mappResults(cmd))
+	{
+		PreProcessing();
+		meshParam::calcStiffMatrixCoeffs();
+		IO::importCase::importResultsFromAnotherCase();
+		systemVar::initializedOrNot = true;
+	}
 	else if (preProcessKey::debug::checkElement(cmd))
 	{
 		int input(-1);
@@ -57,16 +67,20 @@ void Executer(std::string cmd)
 
 void Processing()
 {
-	meshParam::calcStiffMatrixCoeffs();
 	if (systemVar::loadSavedCase)
 	{
+		meshParam::calcStiffMatrixCoeffs();
 		std::cout << "Loading case...\n" << std::endl;
 		IO::loadCase();
 	}
 	else
 	{
 		/*SET INITIAL VALUES*/
-		process::setIniValues();
+		if (systemVar::initializedOrNot == false)
+		{
+			meshParam::calcStiffMatrixCoeffs();
+			process::setIniValues();
+		}
 	}
 
 	std::cout << " \n" << "Simulation is started\n";
@@ -97,6 +111,7 @@ void Processing()
 			std::cout << "Saving case...\n" << std::endl;
 			IO::saveCase();
 			std::cout << "Exporting data to Tecplot...\n" << std::endl;
+			//DG2Tecplot::exportNodeData(systemVar::iterCount);
 			DG2Tecplot::exportCellCenteredData(systemVar::iterCount);
 			systemVar::savingCout = 0;
 		}
@@ -123,6 +138,16 @@ void PreProcessing()
 	IO::loadpTU();
 	//Check subsonic
 	refValues::subsonic = auxUlti::checkSubSonic();
+	if (refValues::subsonic)
+	{
+		std::cout << "Flow is subsonic.\n";
+	}
+	else
+	{
+		std::cout << "Flow is supersonic.\n";
+	}
+	/*SORT POINTS ID OF ELEMENTS*/
+	//MshReader::sortPointsOfElements();
 
 	/*PROCESS MESH*/
 	MshReader::meshProcess();
@@ -142,6 +167,8 @@ void PreProcessing()
 	auxUlti::resizeDGArrays();
 
 	auxUlti::mappingEdges();
+
+	systemVar::runPreProcess = true;
 }
 
 void PostProcessing()

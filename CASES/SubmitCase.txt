@@ -11,6 +11,5 @@
 
 SubmitCase
 {
-	//caseName Ma548_JCP14
-	caseName cylinder_quater_tri2
+caseName FlatPlateCoarse1
 }

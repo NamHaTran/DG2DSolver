@@ -5,6 +5,7 @@
 #include "VarDeclaration.h"
 #include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
+#include "DGProcLib.h"
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -87,6 +88,7 @@ namespace IO
 			meshVar::npoin = 0;
 			while (std::getline(ptFlux, line))
 			{
+				auxUlti::addRowTo2DDoubleArray(meshVar::Points, 3);
 				std::istringstream ptData(line);
 				ptData >> meshVar::npoin >> x >> y >> z;
 				meshVar::Points[meshVar::npoin - 1][0] = x;
@@ -107,6 +109,7 @@ namespace IO
 			std::string line(" ");
 			while (std::getline(Elem1DFlux, line))
 			{
+				auxUlti::addRowTo2DIntArray(meshVar::Elements1D, 3);
 				std::istringstream elData(line);
 				elData >> meshVar::nelem1D >> node1 >> node2 >> bcGrp;
 				meshVar::Elements1D[meshVar::nelem1D - 1][0] = node1 - 1;
@@ -128,6 +131,7 @@ namespace IO
 			meshVar::nelem2D = 0;
 			while (std::getline(Elem2DFlux, line))
 			{
+				auxUlti::addRowTo2DIntArray(meshVar::Elements2D, 4);
 				meshVar::nelem2D++;
 				std::istringstream elData(line);
 				elData >> temp >> node1 >> node2 >> node3 >> node4;
@@ -175,6 +179,7 @@ namespace IO
 					{
 						if ((boundIndex <= bcSize))
 						{
+							auxUlti::addRowTo2DIntArray(meshVar::BoundaryType, 3);
 							meshVar::BoundaryType[boundIndex - 1][0] = boundIndex;
 							std::string str2 = ptr[1];
 							if (str1.compare("Type") == 0)
@@ -317,9 +322,9 @@ namespace IO
 		if (FluxnormVector)
 		{
 			FluxnormVector << headerFile << std::endl << "	normalVector array\n" << "\n";
-			for (int i = 0; i < 2; i++)
+			for (int i = 0; i < meshVar::inpoedCount; i++)
 			{
-				for (int j = 0; j < meshVar::inpoedCount; j++)
+				for (int j = 0; j < 2; j++)
 				{
 					FluxnormVector << meshVar::normalVector[i][j] << " ";
 				}
@@ -473,7 +478,7 @@ namespace IO
 									}
 								}
 							}
-							if (limitVal::limiterName[ilimiter].compare("PAdaptive") == 0) //PositivityPreserving settings
+							if ((limitVal::limiterName[ilimiter].compare("PAdaptive") == 0) || (limitVal::limiterName[ilimiter].compare("pAdaptive") == 0)) //PositivityPreserving settings
 							{
 								limitVal::PAdaptive = true;
 								std::getline(FileFlux, line); //jump
@@ -494,7 +499,7 @@ namespace IO
 			std::cout << "Selected limiter(s): ";
 			for (int i = 0; i < limitVal::limiterName.size(); i++)
 			{
-				std::cout << limitVal::limiterName[i] << ", ";
+				std::cout << limitVal::limiterName[i] << " ";
 			}
 			std::cout << "\n";
 		}
@@ -618,7 +623,7 @@ namespace IO
 		Boundary conditions compatibility
 		|U					|T					|p					|
 		+-------------------+-------------------+-------------------+
-		|1. inOutFlow		|1. inOutFlow		|1. inOutFlow		|
+		|1. inFlow			|1. inFlow			|1. inFlow			|
 		|	Value u v w		|	Value T			|	Value p			|
 		+-------------------+-------------------+-------------------+
 		|2. noSlip			|2. WallIsothermal	|2. zeroGradient	|
@@ -627,6 +632,9 @@ namespace IO
 		|2. noSlip			|3. WallAdiabatic	|2. zeroGradient	|
 		+-------------------+-------------------+-------------------+
 		|7.	symmetry		|7. symmetry		|7. symmetry		|
+		+-------------------+-------------------+-------------------+
+		|4. outFlow			|4. outFlow			|4. outFlow			|
+		|	Value u v w		|	Value T			|	Value p			|
 		+-------------------+-------------------+-------------------+
 		*/
 
@@ -702,28 +710,19 @@ namespace IO
 						}
 						else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
 						{
-							if ((str0.compare("fixedValue") == 0))  //Type fixedValue
-							{
-								bcValues::UBcType[bcGrp - 1] = 3;
-								std::getline(FileFlux, line);
-								std::istringstream fixedUStream(line);
-								fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
-							}
-							else if ((str0.compare("inOutFlow") == 0))  //Type inletOutlet
+							if ((str0.compare("inFlow") == 0))  //Type inletOutlet
 							{
 								bcValues::UBcType[bcGrp - 1] = 1;
 								std::getline(FileFlux, line);
 								std::istringstream fixedUStream(line);
 								fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
 							}
-							else if ((str0.compare("zeroGradient") == 0))  //Type zeroGradient
+							else if ((str0.compare("outFlow") == 0))  //Type inletOutlet
 							{
 								bcValues::UBcType[bcGrp - 1] = 4;
-								//std::getline(FileFlux, line);
-								//std::istringstream fixedUStream(line);
-								//fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
-								bcValues::uBC[bcGrp - 1] = iniValues::uIni;
-								bcValues::vBC[bcGrp - 1] = iniValues::vIni;
+								std::getline(FileFlux, line);
+								std::istringstream fixedUStream(line);
+								fixedUStream >> tempStr >> bcValues::uBC[bcGrp - 1] >> bcValues::vBC[bcGrp - 1] >> bcValues::wBC[bcGrp - 1];
 							}
 							else
 							{
@@ -765,13 +764,16 @@ namespace IO
 		Boundary conditions compatibility
 		|U					|T					|p					|
 		+-------------------+-------------------+-------------------+
-		|1. inOutFlow		|1. inOutFlow		|1. inOutFlow		|
-		|	Value u v w		|	Value T			|	Value p			|
+		|1. inFlow			|1. inFlow			|1. inFlow			|
+		|	value u v w		|	value T			|	value p			|
 		+-------------------+-------------------+-------------------+
 		|2. noSlip			|2. WallIsothermal	|2. zeroGradient	|
 		|					|	Value T			|					|
 		+-------------------+-------------------+-------------------+
 		|2. noSlip			|3. WallAdiabatic	|2. zeroGradient	|
+		+-------------------+-------------------+-------------------+
+		|4. outFlow			|4. outFlow			|4. outFlow			|
+		|	value u v w		|	value T			|	value p			|
 		+-------------------+-------------------+-------------------+
 		|7.	symmetry		|7. symmetry		|7. symmetry		|
 		+-------------------+-------------------+-------------------+
@@ -828,14 +830,7 @@ namespace IO
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
 							{
-								if ((str0.compare("symmetry") == 0))  //Type inOutZeroGrad
-								{
-									bcValues::pBcType[bcGrp - 1] = 3;
-									std::getline(FileFlux, line);
-									std::istringstream Stream(line);
-									Stream >> tempStr >> bcValues::pBC[bcGrp - 1];
-								}
-								else if ((str0.compare("inOutFlow") == 0))  //Type inletOutlet
+								if ((str0.compare("inFlow") == 0))  //Type inletOutlet
 								{
 									bcValues::pBcType[bcGrp - 1] = 1;
 									std::getline(FileFlux, line);
@@ -846,6 +841,13 @@ namespace IO
 								{
 									bcValues::pBcType[bcGrp - 1] = 2;
 									bcValues::pBC[bcGrp - 1] = iniValues::pIni;
+								}
+								else if ((str0.compare("outFlow") == 0))  //Type inletOutlet
+								{
+									bcValues::pBcType[bcGrp - 1] = 4;
+									std::getline(FileFlux, line);
+									std::istringstream Stream(line);
+									Stream >> tempStr >> bcValues::pBC[bcGrp - 1];
 								}
 								else
 								{
@@ -927,27 +929,19 @@ namespace IO
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
 							{
-								if ((str0.compare("inOutFlow") == 0))
+								if ((str0.compare("inFlow") == 0))
 								{
 									bcValues::TBcType[bcGrp - 1] = 1;
 									std::getline(FileFlux, line);
 									std::istringstream Stream(line);
 									Stream >> tempStr >> bcValues::TBC[bcGrp - 1];
 								}
-								else if ((str0.compare("symmetry") == 0))
+								else if ((str0.compare("outFlow") == 0))
 								{
 									bcValues::TBcType[bcGrp - 1] = 4;
 									std::getline(FileFlux, line);
 									std::istringstream Stream(line);
 									Stream >> tempStr >> bcValues::TBC[bcGrp - 1];
-								}
-								else if ((str0.compare("zeroGradient") == 0))
-								{
-									bcValues::TBcType[bcGrp - 1] = 5;
-									//std::getline(FileFlux, line);
-									//std::istringstream Stream(line);
-									//Stream >> tempStr >> bcValues::TBC[bcGrp - 1];
-									bcValues::TBC[bcGrp - 1] = iniValues::TIni;
 								}
 								else
 								{
@@ -991,14 +985,28 @@ namespace IO
 		}
 	}
 
-	void residualOutput(std::vector<double> &rhoRes, std::vector<double> &rhouRes, std::vector<double> &rhovRes, std::vector<double> &rhoERes)
+	void residualOutput(double rhoResGlobal, double rhouResGlobal, double rhovResGlobal, double rhoEResGlobal)
 	{
-		std::cout << "Time step: " << dt << std::endl;
-		for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+		if (systemVar::iterCount==1)
 		{
-			std::cout << "Order " << iorder << std::endl;
-			std::cout << "Residuals: ddt(rho)=" << rhoRes[iorder] << ", ddt(rhou)=" << rhouRes[iorder] << ", ddt(rhov)=" << rhovRes[iorder] << ", ddt(rhoE)=" << rhoERes[iorder] << std::endl;
+			systemVar::rhoResNorm = rhoResGlobal;
+			systemVar::rhouResNorm = rhouResGlobal;
+			systemVar::rhovResNorm = rhovResGlobal;
+			systemVar::rhoEResNorm = rhoEResGlobal;
+			rhoResGlobal = 1.0;
+			rhouResGlobal = 1.0;
+			rhovResGlobal = 1.0;
+			rhoEResGlobal = 1.0;
 		}
+		else
+		{
+			rhoResGlobal /= systemVar::rhoResNorm;
+			rhouResGlobal /= systemVar::rhouResNorm;
+			rhovResGlobal /= systemVar::rhovResNorm;
+			rhoEResGlobal /= systemVar::rhoEResNorm;
+		}
+		std::cout << "Time step: " << dt << std::endl;
+		std::cout << "Residuals: ddt(rho)=" << rhoResGlobal << ", ddt(rhou)=" << rhouResGlobal << ", ddt(rhov)=" << rhovResGlobal << ", ddt(rhoE)=" << rhoEResGlobal << std::endl;
 		std::cout << std::endl;
 	}
 
@@ -1197,6 +1205,84 @@ namespace IO
 		else
 		{
 			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+		}
+	}
+
+	namespace importCase
+	{
+		void importResultsFromAnotherCase()
+		{
+			std::string sourceCaseName(" "), sourceLoc(" "), timeLoc(" "), fileName(" "), fileLoc(" ");
+			std::cout << "NOTE: source case must has the same mesh with current case\n" << "Enter source name: ";
+			std::cin >> sourceCaseName;
+			sourceLoc = systemVar::wD + "\\CASES\\" + sourceCaseName;
+			timeLoc = sourceLoc + "\\time.txt";
+
+			//get time at source folder
+			std::ifstream timeFlux(timeLoc.c_str());
+			if (timeFlux)
+			{
+				int time(0);
+				std::string line;
+				std::getline(timeFlux, line);
+				std::istringstream lineflux(line);
+				lineflux >> time;
+
+				std::cout << "Source time: " << std::to_string(time) <<std::endl;
+				std::cout << "Mapping fields:\n";
+				//read results from source folder
+				fileName = "rho.txt";
+				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+				mappSourceToCurrent(fileLoc, rho);
+				std::cout << "	rho\n";
+
+				fileName = "rhou.txt";
+				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+				mappSourceToCurrent(fileLoc, rhou);
+				std::cout << "	rhou\n";
+
+				fileName = "rhov.txt";
+				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+				mappSourceToCurrent(fileLoc, rhov);
+				std::cout << "	rhov\n";
+
+				fileName = "rhoE.txt";
+				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+				mappSourceToCurrent(fileLoc, rhoE);
+				std::cout << "	rhoE\n";
+				std::cout << "DONE\n";
+			}
+			else
+			{
+				message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError("time.txt", sourceLoc));
+			}
+		}
+
+		void mappSourceToCurrent(std::string fileLoc, std::vector<std::vector<double>> &currentResult)
+		{
+			std::ifstream FileFluxRho(fileLoc.c_str());
+			std::vector<double> iniValue(mathVar::orderElem + 1, 0.0);
+			if (FileFluxRho)
+			{
+				int nelement(0);
+				double value(0.0);
+				std::string line;
+				while (std::getline(FileFluxRho, line))
+				{
+					std::istringstream lineflux(line);
+					lineflux >> value;
+					iniValue = process::calcIniValues(value, nelement);
+					for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+					{
+						currentResult[nelement][iorder] = iniValue[iorder];
+					}
+					nelement++;
+				}
+			}
+			else
+			{
+				message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileLoc, fileLoc));
+			}
 		}
 	}
 }
