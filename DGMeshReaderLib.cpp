@@ -5,6 +5,7 @@
 #include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
 #include "DGMath.h"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <math.h>
@@ -304,10 +305,11 @@ namespace MshReader
 
 	void EdgesInfor()
 	{
-		int helpArrIndexI(0), helpArrIndexJ(0), jpoin(0), ipoinIndex(0), jpoinIndex(0);
-		int helpArray[20][pointsArrSize] = {};
+        int helpArrIndexI(0), helpArrIndexJ(0), jpoin(0), ipoinIndex(0), jpoinIndex(0);
+        //int helpArray[20][pointsArrSize] = {};
+        std::vector<std::vector<int>> helpArray(20,std::vector<int>(pointsArrSize,0));
 		int iHelpArray[20];
-		int flag(0), flag2(0);
+        int flag(0), flag2(0);
 
 		//Set initial values for helpArray array
 		for (int row = 0; row < 20; row++)
@@ -351,12 +353,12 @@ namespace MshReader
 							meshVar::inpoed[0][ninpoed] = jpoin;
 							meshVar::inpoed[1][ninpoed] = ipoin;
 
-							ipoinIndex = edgesOfPoint[20][ipoin] + 1;
-							jpoinIndex = edgesOfPoint[20][jpoin] + 1;
+                            ipoinIndex = edgesOfPoint[19][ipoin] + 1;
+                            jpoinIndex = edgesOfPoint[19][jpoin] + 1;
 							edgesOfPoint[ipoinIndex][ipoin] = ninpoed;
 							edgesOfPoint[jpoinIndex][ipoin] = ninpoed;
-							edgesOfPoint[20][ipoin] = ipoinIndex;
-							edgesOfPoint[20][jpoin] = jpoinIndex;
+                            edgesOfPoint[19][ipoin] = ipoinIndex;
+                            edgesOfPoint[19][jpoin] = jpoinIndex;
 
 							getBcGrpTp(ipoin, jpoin, ninpoed);
 						}
@@ -380,6 +382,7 @@ namespace MshReader
 			}
 		}
 		meshVar::inpoedCount = ninpoed + 1;
+        auxUlti::clear2DIntVector(helpArray);
 	}
 
 	void EdgesOfElem()
@@ -713,8 +716,8 @@ namespace MshReader
 		int elemType(0), pointAId(-1);
 		for (int ielem = 0; ielem < meshVar::nelem2D; ielem++)
 		{
-			std::vector<std::vector<double>> transLatedCoor(elemType, std::vector<double>(2, 0.0));
-			std::vector<int> vectorPts;
+			std::vector<double> filterdPointsCoor;
+			std::vector<int> vectorPts, filterdPoints;
 			elemType = auxUlti::checkType(ielem);
 			std::vector<double> xCoor(elemType, 0.0),
 				yCoor(elemType, 0.0);
@@ -724,16 +727,36 @@ namespace MshReader
 			}
 			std::tie(xCG, yCG) = math::geometricOp::calcGeoCenter(xCoor, yCoor, elemType);
 
+			//Filter 1:
 			for (int i = 0; i < elemType; i++)
 			{
 				xTranslate = xCoor[i] - xCG;
 				yTranslate = yCoor[i] - yCG;
-				if ((xTranslate <= 0.0) && (yTranslate <= 0.0))
+				if (yTranslate <= 0.0)
 				{
-					pointAId = i;
-					goto jumpHere;
+					filterdPoints.push_back(i);
+					filterdPointsCoor.push_back(xTranslate);
 				}
 			}
+
+			//Filter 2:
+			if (filterdPoints.size() > 1)
+			{
+				double minXCoor(*std::min_element(filterdPointsCoor.begin(), filterdPointsCoor.end()));
+                for (int id = 0; id < static_cast<int>(filterdPoints.size()); id++)
+				{
+                    if (fabs(minXCoor - filterdPointsCoor[id]) < 1e-10)
+					{
+						pointAId = filterdPoints[id];
+						goto jumpHere;
+					}
+				}
+			}
+			else
+			{
+				pointAId = filterdPoints[0];
+			}
+
 		jumpHere:
 
 			if (pointAId != 0)
@@ -749,13 +772,13 @@ namespace MshReader
 				}
 
 				//Put point ids back to Elements2D array
-				std::cout << "Element " << ielem + meshVar::nelem1D + 1 << ". new order: \n";
+				//std::cout << "Element " << ielem + meshVar::nelem1D + 1 << ". new order: \n";
 				for (int i = 0; i < elemType; i++)
 				{
 					meshVar::Elements2D[ielem][i] = vectorPts[i];
-					std::cout << vectorPts[i] << " ";
+					//std::cout << vectorPts[i] << " ";
 				}
-				std::cout << std::endl;
+				//std::cout << std::endl;
 			}
 		}
 
@@ -764,7 +787,7 @@ namespace MshReader
 		std::ofstream Flux(sortedElemLoc.c_str());
 		if (Flux)
 		{
-			for (int i = 0; i < sortedElement.size(); i++)
+            for (int i = 0; i < static_cast<int>(sortedElement.size()); i++)
 			{
 				Flux << sortedElement[i] << std::endl;
 			}

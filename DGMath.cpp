@@ -35,6 +35,48 @@ namespace math
 			mathVar::wGauss[nGauss - 1] = 0.888888888888888888888;
 			mathVar::wGauss[nGauss] = 0.55555555555555555555555;
 		}
+        else if (nGauss==3)
+        {
+            mathVar::xGauss[nGauss - 3] = -0.8611363115940526;
+            mathVar::xGauss[nGauss - 2] = -0.3399810435848563;
+            mathVar::xGauss[nGauss - 1] = 0.3399810435848563;
+            mathVar::xGauss[nGauss] = 0.8611363115940526;
+
+            mathVar::wGauss[nGauss - 3] = 0.3478548451374538;
+            mathVar::wGauss[nGauss - 2] = 0.6521451548625461;
+            mathVar::wGauss[nGauss - 1] = 0.6521451548625461;
+            mathVar::wGauss[nGauss] = 0.3478548451374538	;
+        }
+        else if (nGauss==4)
+        {
+            mathVar::xGauss[nGauss - 4] = -0.9061798459386640;
+            mathVar::xGauss[nGauss - 3] = -0.5384693101056831;
+            mathVar::xGauss[nGauss - 2] = 0.0000000000000000;
+            mathVar::xGauss[nGauss - 1] = 0.5384693101056831;
+            mathVar::xGauss[nGauss] = 0.9061798459386640;
+
+            mathVar::wGauss[nGauss - 4] = 0.2369268850561891;
+            mathVar::wGauss[nGauss - 3] = 0.4786286704993665;
+            mathVar::wGauss[nGauss - 2] = 0.5688888888888889;
+            mathVar::wGauss[nGauss - 1] = 0.4786286704993665;
+            mathVar::wGauss[nGauss] = 0.2369268850561891;
+        }
+        else if (nGauss==5)
+        {
+            mathVar::xGauss[nGauss - 5] = -0.9324695142031521;
+            mathVar::xGauss[nGauss - 4] = -0.6612093864662645;
+            mathVar::xGauss[nGauss - 3] = -0.2386191860831969;
+            mathVar::xGauss[nGauss - 2] = 0.2386191860831969;
+            mathVar::xGauss[nGauss - 1] = 0.6612093864662645;
+            mathVar::xGauss[nGauss] = 0.9324695142031521;
+
+            mathVar::wGauss[nGauss - 5] = 0.1713244923791704;
+            mathVar::wGauss[nGauss - 4] = 0.3607615730481386;
+            mathVar::wGauss[nGauss - 3] = 0.4679139345726910;
+            mathVar::wGauss[nGauss - 2] = 0.4679139345726910;
+            mathVar::wGauss[nGauss - 1] = 0.3607615730481386;
+            mathVar::wGauss[nGauss] = 0.1713244923791704;
+        }
 	}
 
 	void GaussLobatto(int nGauss)
@@ -88,6 +130,30 @@ namespace math
 				{
 					mathVar::B[i] = -0.5 + b + 5.0*pow(b, 2) / 2.0;
 				}
+                else if (i == 4)
+                {
+                    mathVar::B[i] = a*(1-b)*(1.5+2.5*b);
+                }
+                else if (i == 5)
+                {
+                    mathVar::B[i] = (1.5*a*a-0.5)*(1-b)*(1-b);
+                }
+                else if (i == 6)
+                {
+                    mathVar::B[i] = -(3.0/8.0)-(15.0/8.0)*b+(15.0/8.0)*b*b+(35.0/8.0)*b*b*b;
+                }
+                else if (i == 7)
+                {
+                    mathVar::B[i] = a*(1-b)*(0.25+4.5*b+(21.0/4.0)*b*b);
+                }
+                else if (i == 8)
+                {
+                    mathVar::B[i] = (1.5*a*a-0.5*(1-b)*(1-b))*(2.5+3.5*b);
+                }
+                else if (i == 9)
+                {
+                    mathVar::B[i] = (2.5*a*a*a-1.5)*pow((1-b),3.0);
+                }
 			}
 		}
 		break;
@@ -142,12 +208,41 @@ namespace math
 					mathVar::dBa[i] = 1 - b;
 					mathVar::dBb[i] = -a;
 				}
-				else if (i == 3)
-				{
-					//correct it
-					mathVar::dBa[i] = 1;
-					mathVar::dBb[i] = 1;
-				}
+                else if (i == 3)
+                {
+                    mathVar::dBa[i] = 0;
+                    mathVar::dBb[i] = 1+5*b;
+                }
+                else if (i == 4)
+                {
+                    mathVar::dBa[i] = 1.5+b-2.5*b*b;
+                    mathVar::dBb[i] = a*(1-5*b);
+                }
+                else if (i == 5)
+                {
+                    mathVar::dBa[i] = 3*a*(1-b)*(1-b);
+                    mathVar::dBb[i] = 2*(b-1)*(1.5*a*a-0.5);
+                }
+                else if (i == 6)
+                {
+                    mathVar::dBa[i] = 0;
+                    mathVar::dBb[i] = (-15.0/8.0)+(15.0/4.0)*b+(35.0/24.0)*b*b;
+                }
+                else if (i == 7)
+                {
+                    mathVar::dBa[i] = (1-b)*(0.25+4.5*b+(21.0/4.0)*b*b);
+                    mathVar::dBb[i] = a*(17.0/4.0+3*b/8.0+7*b*b/4.0);
+                }
+                else if (i == 8)
+                {
+                    mathVar::dBa[i] = 3*a*(2.5+3.5*b);
+                    mathVar::dBb[i] = (21.0/4.0)*(a*a-b*b)+9.0*b/2.0+3.0/4.0;
+                }
+                else if (i == 9)
+                {
+                    mathVar::dBa[i] = (15.0/2.0)*a*a*pow(1-b,3.0);
+                    mathVar::dBb[i] = -3*pow(1-b,2.0)*(5*a*a*a/2.0-1.5);
+                }
 			}
 		}
 		break;
@@ -313,15 +408,15 @@ namespace math
 
 	double volumeInte(std::vector< std::vector<double> > &Fvalue, int elem)
 	{
-		double J2D(0.0), w1(0.0), w2(0.0), integral(0.0);
+        double J2D(0.0), w1(0.0), w2(0.0), integral(0.0);
 		for (int na = 0; na <= mathVar::nGauss; na++)
 		{
 			for (int nb = 0; nb <= mathVar::nGauss; nb++)
 			{
 				w1 = mathVar::wGaussPts[na][nb][0];
 				w2 = mathVar::wGaussPts[na][nb][1];
-				J2D = meshVar::J2D[elem][na][nb];
-				integral += w1 * w2*(J2D)*Fvalue[na][nb];
+                J2D = meshVar::J2D[elem][na][nb];
+                integral += w1 * w2*(J2D)*Fvalue[na][nb];
 			}
 		}
 		return integral;
@@ -405,7 +500,7 @@ namespace math
 			dx = C * (xA - xB) / 4.0 + (-xA - xB + 2 * xC) / 4.0;
 			dy = C * (yA - yB) / 4.0 + (-yA - yB + 2 * yC) / 4.0;
 		}
-		else if ((edgeIndex == 0))  //AB
+        else if (edgeIndex == 0)  //AB
 		{
 			C = -1.0;
 			dx = (1 - C)*(xB - xA) / 4.0;
@@ -449,7 +544,7 @@ namespace math
 	{
 		/* Calculate a*No-b */
 		int n = static_cast<int>(b.size());
-		double rVal(0.0), error(1.0);
+        double error(1.0);
 		std::vector<double> R(n, 0.0);
 
 		for (int i = 0; i < n; i++)
@@ -516,17 +611,17 @@ namespace math
 		if (elemType==4)  //Quad
 		{
 			std::tie(xD, yD) = auxUlti::getElemCornerCoord(elem, 3);
-			dxa = 0.25*(-xA + xB - xD + xC) + 0.25*(xA - xB - xD + xC)*b;
-			dxb = 0.25*(-xA - xB + xD + xC) + 0.25*(xA - xB - xD + xC)*a;
-			dya = 0.25*(-yA + yB - yD + yC) + 0.25*(yA - yB - yD + yC)*b;
-			dyb = 0.25*(-yA - yB + yD + xC) + 0.25*(yA - yB - yD + yC)*a;
+            dxa = (1.0 / 4.0)*(-xA + xB - xD + xC) + (1.0 / 4.0)*(xA - xB - xD + xC)*b;
+            dxb = (1.0 / 4.0)*(-xA - xB + xD + xC) + (1.0 / 4.0)*(xA - xB - xD + xC)*a;
+            dya = (1.0 / 4.0)*(-yA + yB - yD + yC) + (1.0 / 4.0)*(yA - yB - yD + yC)*b;
+            dyb = (1.0 / 4.0)*(-yA - yB + yD + yC) + (1.0 / 4.0)*(yA - yB - yD + yC)*a;
 		}
 		else if (elemType == 3)  //Tri
 		{
-			dxa = 0.25*(-xA + xB) + 0.25*(xA - xB)*b;
-			dxb = 0.25*(-xA - xB + 2 * xC) + 0.25*(xA - xB)*a;
-			dya = 0.25*(-yA + yB) + 0.25*(yA - yB)*b;
-			dyb = 0.25*(-yA - yB + 2 * yC) + 0.25*(yA - yB)*a;
+            dxa = (1 - b)*(xB - xA) / 4.0;
+            dxb = a * (xA - xB) / 4.0 + (-xA - xB + 2 * xC) / 4.0;
+            dya = (1 - b)*(yB - yA) / 4.0;
+            dyb = a * (yA - yB) / 4.0 + (-yA - yB + 2 * yC) / 4.0;
 		}
 		
 		return std::make_tuple(dxa, dxb, dya, dyb);
@@ -570,7 +665,7 @@ namespace math
 
 	double surfaceInte(std::vector<double> &Fvalue, int edge, int elem)
 	{
-		double inte(0.0), J(auxUlti::getJ1D(elem, edge)), w(0.0);
+        double inte(0.0), J(meshVar::J1D[edge]), w(0.0);
 		for (int nG = 0; nG <= mathVar::nGauss; nG++)
 		{
 			w = mathVar::wGauss[nG];
@@ -816,17 +911,17 @@ namespace math
 
 	std::tuple<bool, double, double> solvQuadraticEq(double A, double B, double C)
 	{
-		double delta(B*B - 4 * A*C), out(0.0), root1(0.0), root2(0.0);
+        double delta(B*B - 4 * A*C), root1(0.0), root2(0.0);
 		bool realRoot(true);
 
-		if (A != 0)
+        if (A != 0.0)
 		{
 			if (delta>0)
 			{
 				root1 = ((-B + sqrt(delta)) / (2 * A));
 				root2 = ((-B - sqrt(delta)) / (2 * A));
 			}
-			else if (delta == 0)
+            else if (delta == 0.0)
 			{
 				root1 = (-B / (2 * A));
 				root2 = root1;
@@ -836,7 +931,7 @@ namespace math
 				realRoot = false;
 			}
 		}
-		else if (A == 0.0 && B !=0)
+        else if (A == 0.0 && B !=0.0)
 		{
 			root1 = -C / B;
 			root2 = root1;
@@ -902,9 +997,7 @@ namespace math
 
 	std::tuple<double, double> mappingRealToStd(int edge, int element, double xCoor, double yCoor)
 	{
-		double A1(0.0), B1(0.0), C1(0.0), D1(0.0),
-			A2(0.0), B2(0.0), C2(0.0), D2(0.0),
-			xA(0.0), xB(0.0), xC(0.0),
+        double xA(0.0), xB(0.0), xC(0.0),
 			yA(0.0), yB(0.0), yC(0.0),
 			aCoor(0.0), bCoor(0.0),
 			xCal(0.0), yCal(0.0), eX(100.0), eY(100.0);
@@ -1129,7 +1222,7 @@ namespace math
 		{
 			/*use Lax - Friedrich numerical flux*/
 			/*Plus is inside, minus is outside*/
-			double flux(0.5*((FPlus + FMinus)*vectorComp - 0.5 * C * (UMinus - UPlus)));
+            double flux(0.5*((FPlus + FMinus)*vectorComp - 0.5 * C * (UMinus - UPlus)));
 			return flux;
 		}
 
@@ -1708,20 +1801,29 @@ namespace math
 			return perimeter;
 		}
 
-		std::tuple<double, double> calROfInscribedCircleOfTriElement(int element) {
-			int elemType(auxUlti::checkType(element)), ptId(0.0);
+        std::tuple<double, double> calROfInscribedCircleOfTriElement(std::vector<double> &xCoor, std::vector<double> &yCoor) {
 			double rIn(0.0), cellArea(0.0);
-			std::vector<std::vector<double>> vertexCoors(elemType, std::vector<double>(2, 0.0));
-			std::vector<double> xCoor(elemType, 0.0),
-				yCoor(elemType, 0.0);
-			for (int i = 0; i < elemType; i++)
-			{
-				std::tie(xCoor[i], yCoor[i]) = auxUlti::getElemCornerCoord(element, i);
-			}
-			cellArea = math::geometricOp::calcPolygonArea(xCoor, yCoor, elemType);
-			rIn = 2 * cellArea / math::geometricOp::calPolygonPerimeter(xCoor, yCoor, elemType);
+            cellArea = math::geometricOp::calcPolygonArea(xCoor, yCoor, 3);
+            rIn = 2 * cellArea / math::geometricOp::calPolygonPerimeter(xCoor, yCoor, 3);
 			return std::make_tuple(rIn, cellArea);
 		}
+
+        std::tuple<double, double> calSizeOfQuadElement(std::vector<double> &xCoor, std::vector<double> &yCoor) {
+            int elemType(4);
+            double size(0.0), size1(0.0), size2(0.0), cellArea(0.0);
+            cellArea = math::geometricOp::calcPolygonArea(xCoor, yCoor, elemType);
+            size1 = math::geometricOp::calDistBetween2Points(xCoor[0], yCoor[0], xCoor[2], yCoor[2]);
+            size2 = math::geometricOp::calDistBetween2Points(xCoor[1], yCoor[1], xCoor[3], yCoor[3]);
+            if (size1>size2)
+            {
+                size=size2;
+            }
+            else
+            {
+                size=size1;
+            }
+            return std::make_tuple(size, cellArea);
+        }
 	}
 
 	namespace residualManipulation

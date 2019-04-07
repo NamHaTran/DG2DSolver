@@ -4,10 +4,10 @@
 #include "DGAuxUltilitiesLib.h"
 #include "DGMath.h"
 #include "DGMessagesLib.h"
+#include <math.h>
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <direct.h>
 
 namespace debugTool
 {
@@ -117,9 +117,9 @@ namespace debugTool
 		//forDebugging
 		std::string iter_str = std::to_string(systemVar::iterCount);
 		std::string fileName_rho("rho_" + iter_str + ".txt"), fileName_rhoe("rhoe_" + iter_str + ".txt"),
-			Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\forDebugging"), code;
+            Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/forDebugging"), code;
 
-		std::string fileLoc_rho(Loc + "\\" + fileName_rho), fileLoc_rhoe(Loc + "\\" + fileName_rhoe);
+        std::string fileLoc_rho(Loc + "/" + fileName_rho), fileLoc_rhoe(Loc + "/" + fileName_rhoe);
 		std::ofstream fileFlux_rho(fileLoc_rho.c_str()), fileFlux_rhoe(fileLoc_rhoe.c_str());
 
 		if (fileFlux_rho && fileFlux_rhoe)
@@ -283,10 +283,10 @@ namespace DG2Tecplot
 		}
 
 		std::string iter_str = std::to_string(iter);
-		std::string fileName(systemVar::caseName + "_node.dat"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\TecplotFile\\" + iter_str), code;
-		_mkdir(Loc.c_str());
+        std::string fileName(systemVar::caseName + "_node.dat"), Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/TecplotFile/" + iter_str), code;
+        auxUlti::createFolder(Loc);
 		
-		std::string fileLoc(Loc + "\\" + fileName);
+        std::string fileLoc(Loc + "/" + fileName);
 		std::ofstream fileFlux(fileLoc.c_str());
 
 		code = R"(
@@ -450,17 +450,16 @@ DATAPACKING=BLOCK)";
 		node_v = DG2Tecplot::calcCellCenteredValues(3);
 		node_p = DG2Tecplot::calcCellCenteredValues(5);
 		node_T = DG2Tecplot::calcCellCenteredValues(6);
-		double xC(0.0), yC(0.0);
 		for (int i = 0; i < meshVar::nelem2D; i++)
 		{
 			node_uMag[i] = sqrt(pow(node_u[i], 2) + pow(node_v[i], 2));
 		}
 
 		std::string iter_str = std::to_string(iter);
-		std::string fileName(systemVar::caseName + "cellCentered.dat"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\TecplotFile\\" + iter_str), code;
-		_mkdir(Loc.c_str());
+        std::string fileName(systemVar::caseName + "cellCentered.dat"), Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/TecplotFile/" + iter_str), code;
+        auxUlti::createFolder(Loc);
 
-		std::string fileLoc(Loc + "\\" + fileName);
+        std::string fileLoc(Loc + "/" + fileName);
 		std::ofstream fileFlux(fileLoc.c_str());
 
 		code = R"(

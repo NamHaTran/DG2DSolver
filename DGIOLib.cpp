@@ -6,12 +6,13 @@
 #include "dynamicVarDeclaration.h"
 #include "DGAuxUltilitiesLib.h"
 #include "DGProcLib.h"
+#include <math.h>
 #include <fstream>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <direct.h>
+#include <cstdlib> //include this library to create folder in linux
 
 namespace IO
 {
@@ -29,13 +30,13 @@ namespace IO
 
 		/*Get caseName from SubmitCase*/
 		std::string submitLoc(" ");  //submitLoc contents location of submitingCase
-		submitLoc = systemVar::wD + "\\CASES\\SubmitCase.txt";
+        submitLoc = systemVar::wD + "/CASES/SubmitCase.txt";
 
 		std::ifstream submitCaseFlux(submitLoc.c_str());
 		if (submitCaseFlux)
 		{
 			std::string line, keyWord;
-			int numLine(0), keyWFlag(0);
+            int keyWFlag(0);
 			while (std::getline(submitCaseFlux, line))  //Read submitCaseFlux line by line
 			{
 				std::istringstream line2str(line);
@@ -46,7 +47,7 @@ namespace IO
 					ptr.push_back(keyWord);
 				}
 
-				int numWrd = ptr.size();
+                int numWrd = static_cast<int>(ptr.size());
 
 				if (numWrd == 2)
 				{
@@ -66,18 +67,18 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\"), "", message::opFError("SubmitCase.txt", submitLoc));
+            message::writeLog((systemVar::wD + "/CASES/"), "", message::opFError("SubmitCase.txt", submitLoc));
 		}
-		systemVar::pwd = systemVar::wD + "\\CASES\\" + systemVar::caseName;
+        systemVar::pwd = systemVar::wD + "/CASES/" + systemVar::caseName;
 	}
 
 	void loadMesh()
 	{
 		/*Declare loading locations*/
-		std::string  Elem1DLoc = systemVar::pwd + "\\Constant\\Mesh\\Elements1D.txt";
-		std::string  ptLoc = systemVar::pwd + "\\Constant\\Mesh\\Points.txt";
-		std::string  Elem2DLoc = systemVar::pwd + "\\Constant\\Mesh\\Elements2D.txt";
-		std::string  bcLoc = systemVar::pwd + "\\Constant\\boundaryPatch.txt";
+        std::string  Elem1DLoc = systemVar::pwd + "/Constant/Mesh/Elements1D.txt";
+        std::string  ptLoc = systemVar::pwd + "/Constant/Mesh/Points.txt";
+        std::string  Elem2DLoc = systemVar::pwd + "/Constant/Mesh/Elements2D.txt";
+        std::string  bcLoc = systemVar::pwd + "/Constant/boundaryPatch.txt";
 
 		/*Load Points*/
 		std::ifstream ptFlux(ptLoc.c_str());
@@ -165,7 +166,7 @@ namespace IO
 					}
 				}
 
-				int numWrd = ptr.size();
+                int numWrd = static_cast<int>(ptr.size());
 				if (numWrd != 0)
 				{
 					std::string str1(ptr[0]);
@@ -254,11 +255,11 @@ namespace IO
 		- MasterElemOfEdge: array content master element of iedge, use it with normalVector to get information of normal vector of edge*/
 
 		std::string headerFile(message::headerFile());
-		std::string  inedelLoc = systemVar::pwd + "\\Constant\\Mesh\\inedel.txt";
-		std::string  ineledLoc = systemVar::pwd + "\\Constant\\Mesh\\ineled.txt";
-		std::string  inpoedLoc = systemVar::pwd + "\\Constant\\Mesh\\inpoed.txt";
-		std::string  normVectorLoc = systemVar::pwd + "\\Constant\\Mesh\\normalVector.txt";
-		std::string  MasterElemOfEdgeLoc = systemVar::pwd + "\\Constant\\Mesh\\MasterElemOfEdge.txt";
+        std::string  inedelLoc = systemVar::pwd + "/Constant/Mesh/inedel.txt";
+        std::string  ineledLoc = systemVar::pwd + "/Constant/Mesh/ineled.txt";
+        std::string  inpoedLoc = systemVar::pwd + "/Constant/Mesh/inpoed.txt";
+        std::string  normVectorLoc = systemVar::pwd + "/Constant/Mesh/normalVector.txt";
+        std::string  MasterElemOfEdgeLoc = systemVar::pwd + "/Constant/Mesh/MasterElemOfEdge.txt";
 
 		/*inedel*/
 		std::ofstream Fluxinedel(inedelLoc.c_str());
@@ -357,19 +358,20 @@ namespace IO
 	{
 		/*Read DGOptions*/
 		std::string DGOptfileName("DGOptions.txt");
-		std::string DGOptLoc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System");
-		std::string DGOptkeyWordsDouble[2] = { "CourantNumber", "totalTime(s)" }, DGOptkeyWordsInt[2] = {"orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[2] = { "writeLog", "loadSavedCase"}, DGOptkeyWordsStr[1] = {"ddtScheme"};
+        std::string DGOptLoc(systemVar::wD + "/CASES/" + systemVar::caseName + "/System");
+        std::string DGOptkeyWordsDouble[2] = { "CourantNumber", "totalTime(s)" }, DGOptkeyWordsInt[3] = {"numberOfGaussPoints","orderOfAccuracy", "writeInterval" }, DGOptkeyWordsBool[2] = { "writeLog", "loadSavedCase"}, DGOptkeyWordsStr[1] = {"ddtScheme"};
 		double DGOptoutDB[3] = {};
 		int DGOptoutInt[3] = {};
 		bool DGOptoutBool[2] = {};
 		std::string DGOptoutStr[2] = {};
 
-		readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 2, 2, 2, 1);
+        readDataFile(DGOptfileName, DGOptLoc, DGOptkeyWordsDouble, DGOptkeyWordsInt, DGOptkeyWordsBool, DGOptkeyWordsStr, DGOptoutDB, DGOptoutInt, DGOptoutBool, DGOptoutStr, 2, 3, 2, 1);
 		
 		systemVar::CFL = DGOptoutDB[0];
 		systemVar::Ttime = DGOptoutDB[1];
-		mathVar::orderElem = DGOptoutInt[0];
-		systemVar::wrtI = DGOptoutInt[1]; 
+        mathVar::nGauss = DGOptoutInt[0];
+        mathVar::orderElem = DGOptoutInt[1];
+        systemVar::wrtI = DGOptoutInt[2];
 		systemVar::wrtLog = DGOptoutBool[0];
 		systemVar::loadSavedCase = DGOptoutBool[1];
 
@@ -385,15 +387,10 @@ namespace IO
 		{
 			systemVar::ddtScheme = 3;
 		}
-
-		if (mathVar::orderElem>pow(mathVar::nGauss,2))
-		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::nGaussOrderElemError());
-		}
 		
 		/*Read Material*/
 		std::string MatfileName("Material.txt");
-		std::string MatLoc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\Constant");
+        std::string MatLoc(systemVar::wD + "/CASES/" + systemVar::caseName + "/Constant");
 		std::string MatkeyWordsDouble[5] = { "gammaRatio", "gasConstant", "PrandtlNumber", "SutherlandAs", "SutherlandTs" }, MatkeyWordsInt[1] = {}, MatkeyWordsBool[1] = {}, MatkeyWordsStr[1] = {};
 		double MatoutDB[5] = {};
 		int MatoutInt[1] = {};
@@ -413,8 +410,8 @@ namespace IO
 
 	void loadLimiterSettings()
 	{
-		std::string FileDir(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\System"), fileName("LimiterSettings.txt");
-		std::string FileLoc(FileDir + "\\" + fileName);
+        std::string FileDir(systemVar::wD + "/CASES/" + systemVar::caseName + "/System"), fileName("LimiterSettings.txt");
+        std::string FileLoc(FileDir + "/" + fileName);
 		std::ifstream FileFlux(FileLoc.c_str());
 		if (FileFlux)
 		{
@@ -430,7 +427,7 @@ namespace IO
 					ptr.push_back(Word);
 				}
 
-				int numWrd = ptr.size();
+                int numWrd = static_cast<int>(ptr.size());
 				if (numWrd >= 2)
 				{
 					std::istringstream strdata(ptr[1]);
@@ -445,7 +442,7 @@ namespace IO
 
 					if (limitVal::limiterName.size() > 0)
 					{
-						for (int ilimiter = 0; ilimiter < limitVal::limiterName.size(); ilimiter++)
+                        for (int ilimiter = 0; ilimiter < static_cast<int>(limitVal::limiterName.size()); ilimiter++)
 						{
 							if (limitVal::limiterName[ilimiter].compare("PositivityPreserving") == 0) //PositivityPreserving settings
 							{
@@ -491,13 +488,13 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
 		}
 
 		if (limitVal::limiterName.size() > 0)
 		{
 			std::cout << "Selected limiter(s): ";
-			for (int i = 0; i < limitVal::limiterName.size(); i++)
+            for (int i = 0; i < static_cast<int>(limitVal::limiterName.size()); i++)
 			{
 				std::cout << limitVal::limiterName[i] << " ";
 			}
@@ -523,7 +520,7 @@ namespace IO
 		This function returns datas of type double and type int read from files.
 		Input arguments:
 		- fileName: name of file you want to read (file name and extension)
-		- direction: working diectory contents data file (with no "\\" characters at the end)
+        - direction: working diectory contents data file (with no "/" characters at the end)
 		- keyWordsDbl: array contents keyWords of double values listed in file
 		- keyWordsInt: array contents keyWords of int values listed in file
 		- keyWordsBool: array contents keyWords of bool values listed in file
@@ -536,7 +533,7 @@ namespace IO
 		int dataInt(0);
 		std::string dataStr("abc");
 		std::cout << "	Reading " << fileName <<"\n";
-		std::string FileLoc(direction + "\\" + fileName);
+        std::string FileLoc(direction + "/" + fileName);
 		std::ifstream FileFlux(FileLoc.c_str());
 		int indexDbl(0), indexInt(0), indexBool(0), indexStr(0);
 		if (FileFlux)
@@ -552,7 +549,7 @@ namespace IO
 					ptr.push_back(keyWord);
 				}
 
-				int numWrd = ptr.size();
+                int numWrd = static_cast<int>(ptr.size());
 
 				if (numWrd >= 2)
 				{
@@ -613,7 +610,7 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
 		}
 	}
 
@@ -636,14 +633,18 @@ namespace IO
 		|4. outFlow			|4. outFlow			|4. outFlow			|
 		|	Value u v w		|	Value T			|	Value p			|
 		+-------------------+-------------------+-------------------+
+        U:
+        + 3:
+        movingWall
+        velocity        u v w
 		*/
 
 		std::string fileName("U.txt"), tempStr("");
-		std::string Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\0");
+        std::string Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/0");
 		std::cout << "	Reading " << fileName << "\n";
-		std::string FileLoc(Loc + "\\" + fileName);
+        std::string FileLoc(Loc + "/" + fileName);
 		std::ifstream FileFlux(FileLoc.c_str());
-		int bcGrp(0), type(0);
+        int bcGrp(0);
 
 		if (FileFlux)
 		{
@@ -658,7 +659,7 @@ namespace IO
 					ptr.push_back(keyWord);
 				}
 
-				int numWrd = ptr.size();
+                int numWrd = static_cast<int>(ptr.size());
 				if (numWrd != 0)
 				{
 					std::string str1(ptr[0]);
@@ -696,7 +697,7 @@ namespace IO
 								std::istringstream fixedUStream(line);
 								fixedUStream >> tempStr >> bcValues::uWall[bcGrp - 1] >> bcValues::vWall[bcGrp - 1] >> bcValues::wWall[bcGrp - 1];
 							}
-							else if ((str0.compare("fixedValue") == 0))  //Type fixedValue
+                            else if ((str0.compare("movingWall") == 0))  //Type movingWall
 							{
 								bcValues::UBcType[bcGrp - 1] = 3;
 								std::getline(FileFlux, line);
@@ -705,7 +706,7 @@ namespace IO
 							}
 							else
 							{
-								message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "U", "wall"));
+                                message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "U", "wall"));
 							}
 						}
 						else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
@@ -726,7 +727,7 @@ namespace IO
 							}
 							else
 							{
-								message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "U", "patch"));
+                                message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "U", "patch"));
 							}
 						}
 						else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)  //SYMMETRY
@@ -740,7 +741,7 @@ namespace IO
 							}
 							else
 							{
-								message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "U", "symmetry"));
+                                message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "U", "symmetry"));
 							}
 						}
 					}
@@ -754,7 +755,7 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
 		}
 	}
 
@@ -781,12 +782,12 @@ namespace IO
 
 		fileName = fileName + ".txt";
 		std::string tempStr("");
-		std::string Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\0");
+        std::string Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/0");
 		std::cout << "	Reading " << fileName << "\n";
-		std::string FileLoc(Loc + "\\" + fileName);
+        std::string FileLoc(Loc + "/" + fileName);
 		std::ifstream FileFlux(FileLoc.c_str());
 		
-		int bcGrp(0), type(0);
+        int bcGrp(0);
 
 		if (FileFlux)
 		{
@@ -803,7 +804,7 @@ namespace IO
 						ptr.push_back(keyWord);
 					}
 
-					int numWrd = ptr.size();
+                    int numWrd = static_cast<int>(ptr.size());
 					if (numWrd != 0)
 					{
 						std::string str1(ptr[0]);
@@ -825,7 +826,7 @@ namespace IO
 								}
 								else
 								{
-									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "wall"));
+                                    message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "wall"));
 								}
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
@@ -851,7 +852,7 @@ namespace IO
 								}
 								else
 								{
-									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "patch"));
+                                    message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "patch"));
 								}
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)
@@ -863,7 +864,7 @@ namespace IO
 								}
 								else
 								{
-									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "symmetry"));
+                                    message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "p", "symmetry"));
 								}
 							}
 						}
@@ -887,7 +888,7 @@ namespace IO
 						ptr.push_back(keyWord);
 					}
 
-					int numWrd = ptr.size();
+                    int numWrd = static_cast<int>(ptr.size());
 					if (numWrd != 0)
 					{
 						std::string str1(ptr[0]);
@@ -924,7 +925,7 @@ namespace IO
 								}
 								else
 								{
-									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "wall"));
+                                    message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "wall"));
 								}
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 2)  //PATCH
@@ -945,7 +946,7 @@ namespace IO
 								}
 								else
 								{
-									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "patch"));
+                                    message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "patch"));
 								}
 							}
 							else if (meshVar::BoundaryType[bcGrp - 1][1] == 3)
@@ -957,7 +958,7 @@ namespace IO
 								}
 								else
 								{
-									message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "symmetry"));
+                                    message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::undfBcType(str0, "T", "symmetry"));
 								}
 							}
 						}
@@ -973,14 +974,14 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
 		}
 
 		for (int i = 0; i < meshVar::nBc; i++)
 		{
 			if ((bcValues::UBcType[i]!= bcValues::TBcType[i])&&(bcValues::UBcType[i]==5))
 			{
-				message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::SlipBcCompatibleError(i+1));
+                message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::SlipBcCompatibleError(i+1));
 			}
 		}
 	}
@@ -1013,11 +1014,11 @@ namespace IO
 	void saveCase()
 	{
 		std::string iter_str = std::to_string(systemVar::iterCount);
-		std::string fileName("rho.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\" + iter_str);
-		_mkdir(Loc.c_str());
+        std::string fileName("rho.txt"), Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/" + iter_str);
+        auxUlti::createFolder(Loc);
 
 		/*Conservative variables*/
-		std::string fileLoc(Loc + "\\" + fileName);
+        std::string fileLoc(Loc + "/" + fileName);
 		std::ofstream fileFluxRho(fileLoc.c_str());
 		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 		{
@@ -1029,7 +1030,7 @@ namespace IO
 		}
 
 		fileName = "rhou.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ofstream fileFluxRhou(fileLoc.c_str());
 		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 		{
@@ -1041,7 +1042,7 @@ namespace IO
 		}
 
 		fileName = "rhov.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ofstream fileFluxRhov(fileLoc.c_str());
 		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 		{
@@ -1053,7 +1054,7 @@ namespace IO
 		}
 
 		fileName = "rhoE.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ofstream fileFluxRhoE(fileLoc.c_str());
 		for (int nelem = 0; nelem < meshVar::nelem2D; nelem++)
 		{
@@ -1067,22 +1068,22 @@ namespace IO
 
 		/*Residual normalized coeffs*/
 		fileName = "ResidualNormCoeffs.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ofstream fileFluxResNorm(fileLoc.c_str());
 		fileFluxResNorm << systemVar::rhoResNorm << " " << systemVar::rhouResNorm << " " << systemVar::rhovResNorm << " " << systemVar::rhoEResNorm << std::endl;
 
 		/*Time informations*/
-		Loc = systemVar::wD + "\\CASES\\" + systemVar::caseName;
+        Loc = systemVar::wD + "/CASES/" + systemVar::caseName;
 		fileName = "time.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ofstream fileFluxTime(fileLoc.c_str());
 		fileFluxTime << systemVar::iterCount << std::endl;
 	}
 
 	void loadCase()
 	{
-		std::string fileName("time.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName);
-		std::string fileLoc(Loc + "\\" + fileName);
+        std::string fileName("time.txt"), Loc(systemVar::wD + "/CASES/" + systemVar::caseName);
+        std::string fileLoc(Loc + "/" + fileName);
 		std::ifstream FileFluxTime(fileLoc.c_str());
 		if (FileFluxTime)
 		{
@@ -1093,15 +1094,15 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
 		}
 
 		std::string iter_str = std::to_string(systemVar::iterCount);
-		Loc = systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\" + iter_str;
+        Loc = systemVar::wD + "/CASES/" + systemVar::caseName + "/" + iter_str;
 
 		//Read rho
 		fileName = "rho.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ifstream FileFluxRho(fileLoc.c_str());
 		if (FileFluxRho)
 		{
@@ -1119,12 +1120,12 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
 		}
 
 		//Read rhou
 		fileName = "rhou.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ifstream FileFluxRhou(fileLoc.c_str());
 		if (FileFluxRhou)
 		{
@@ -1142,12 +1143,12 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
 		}
 
 		//Read rhov
 		fileName = "rhov.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ifstream FileFluxRhov(fileLoc.c_str());
 		if (FileFluxRhov)
 		{
@@ -1165,12 +1166,12 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
 		}
 
 		//Read rhoE
 		fileName = "rhoE.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ifstream FileFluxRhoE(fileLoc.c_str());
 		if (FileFluxRhoE)
 		{
@@ -1188,12 +1189,12 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
 		}
 
 		//Read residual norm coeffs
 		fileName = "ResidualNormCoeffs.txt";
-		fileLoc = (Loc + "\\" + fileName);
+        fileLoc = (Loc + "/" + fileName);
 		std::ifstream FileFluxResNorm(fileLoc.c_str());
 		if (FileFluxResNorm)
 		{
@@ -1204,7 +1205,7 @@ namespace IO
 		}
 		else
 		{
-			message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
+            message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, Loc));
 		}
 	}
 
@@ -1215,8 +1216,8 @@ namespace IO
 			std::string sourceCaseName(" "), sourceLoc(" "), timeLoc(" "), fileName(" "), fileLoc(" ");
 			std::cout << "NOTE: source case must has the same mesh with current case\n" << "Enter source name: ";
 			std::cin >> sourceCaseName;
-			sourceLoc = systemVar::wD + "\\CASES\\" + sourceCaseName;
-			timeLoc = sourceLoc + "\\time.txt";
+            sourceLoc = systemVar::wD + "/CASES/" + sourceCaseName;
+            timeLoc = sourceLoc + "/time.txt";
 
 			//get time at source folder
 			std::ifstream timeFlux(timeLoc.c_str());
@@ -1232,29 +1233,29 @@ namespace IO
 				std::cout << "Mapping fields:\n";
 				//read results from source folder
 				fileName = "rho.txt";
-				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+                fileLoc = (sourceLoc + "/" + std::to_string(time) + "/" + fileName);
 				mappSourceToCurrent(fileLoc, rho);
 				std::cout << "	rho\n";
 
 				fileName = "rhou.txt";
-				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+                fileLoc = (sourceLoc + "/" + std::to_string(time) + "/" + fileName);
 				mappSourceToCurrent(fileLoc, rhou);
 				std::cout << "	rhou\n";
 
 				fileName = "rhov.txt";
-				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+                fileLoc = (sourceLoc + "/" + std::to_string(time) + "/" + fileName);
 				mappSourceToCurrent(fileLoc, rhov);
 				std::cout << "	rhov\n";
 
 				fileName = "rhoE.txt";
-				fileLoc = (sourceLoc + "\\" + std::to_string(time) + "\\" + fileName);
+                fileLoc = (sourceLoc + "/" + std::to_string(time) + "/" + fileName);
 				mappSourceToCurrent(fileLoc, rhoE);
 				std::cout << "	rhoE\n";
 				std::cout << "DONE\n";
 			}
 			else
 			{
-				message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError("time.txt", sourceLoc));
+                message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError("time.txt", sourceLoc));
 			}
 		}
 
@@ -1281,7 +1282,7 @@ namespace IO
 			}
 			else
 			{
-				message::writeLog((systemVar::wD + "\\CASES\\" + systemVar::caseName), systemVar::caseName, message::opFError(fileLoc, fileLoc));
+                message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileLoc, fileLoc));
 			}
 		}
 	}

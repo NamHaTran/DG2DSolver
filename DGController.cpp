@@ -8,7 +8,6 @@
 #include "DGProcLib.h"
 #include "DGAuxUltilitiesLib.h"
 #include <iostream>
-#include <windows.h>
 #include "dynamicVarDeclaration.h"
 #include "DGLimiterLib.h"
 
@@ -16,7 +15,7 @@ void Executer(std::string cmd)
 {
 	if (preProcessKey::checkUnvReader(cmd))
 	{
-		std::string UnvReaderLoc(systemVar::wD + "\\Ultilities\\MeshReader\\UnvReader.exe");
+        std::string UnvReaderLoc(systemVar::wD + "/Ultilities/MeshReader/UnvToDG");
 		auxUlti::openFileEXE(UnvReaderLoc);
 	}
 	else if (processKey::checkDGRun(cmd))
@@ -111,7 +110,6 @@ void Processing()
 			std::cout << "Saving case...\n" << std::endl;
 			IO::saveCase();
 			std::cout << "Exporting data to Tecplot...\n" << std::endl;
-			//DG2Tecplot::exportNodeData(systemVar::iterCount);
 			DG2Tecplot::exportCellCenteredData(systemVar::iterCount);
 			systemVar::savingCout = 0;
 		}
@@ -137,20 +135,21 @@ void PreProcessing()
 	/*LOAD p T U*/
 	IO::loadpTU();
 	//Check subsonic
-	refValues::subsonic = auxUlti::checkSubSonic();
-	if (refValues::subsonic)
-	{
-		std::cout << "Flow is subsonic.\n";
-	}
-	else
-	{
-		std::cout << "Flow is supersonic.\n";
-	}
-	/*SORT POINTS ID OF ELEMENTS*/
-	//MshReader::sortPointsOfElements();
+    refValues::subsonic = auxUlti::checkSubSonic();
+    if (refValues::subsonic)
+    {
+        std::cout << "Flow is subsonic.\n";
+    }
+    else
+    {
+        std::cout << "Flow is supersonic.\n";
+    }
 
 	/*PROCESS MESH*/
 	MshReader::meshProcess();
+
+    /*RESIZE ARRAYS*/
+    auxUlti::resizeDGArrays();
 
 	/*CALCULATE JACOBIAN, BASIS FUNCTION AND GAUSSIAN*/
 	meshParam::GaussParam();
@@ -159,12 +158,10 @@ void PreProcessing()
 
 	/*CALCULATE CELL METRICS*/
 	meshParam::calcCellMetrics();
+    meshParam::calcEdgeLength();
 
 	/*CALCULATE COORDINATES DERIVATIVES*/
 	meshParam::derivCoordinates();
-
-	/*RESIZE ARRAYS*/
-	auxUlti::resizeDGArrays();
 
 	auxUlti::mappingEdges();
 

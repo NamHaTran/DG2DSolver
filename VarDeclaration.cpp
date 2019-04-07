@@ -14,9 +14,9 @@ namespace systemVar
 	double CFL(0.5); //Courant number
 	double Ttime(0.0); //Total time
 	int wrtI(0); //write interval
-	bool wrtLog("true"), loadSavedCase("false");
+    bool wrtLog(true), loadSavedCase(false);
 
-	int ddtScheme(1);
+    int ddtScheme(1);
 	double epsilon(1e-13);
 
 	int iterCount(0), savingCout(0);
@@ -27,7 +27,7 @@ namespace systemVar
 
 namespace meshVar
 {
-	int nelem1D(0), nelem2D(0), npoin(0), nBc(0);
+    int nelem1D(0), nelem2D(0), npoin(0), nBc(0);
 
 	/*Default value*/
 	//number of nodes per element
@@ -56,33 +56,12 @@ namespace meshVar
 	/*Variables help to save mesh data*/
 	int inpoedCount(0);  //can be used for normalVector, MasterElemOfEdge, ineled
 
-	/*Jacobian*/
-	double J2D[elements2DArrSize][maxGauss][maxGauss] = {}, J1D[pointsArrSize][2] = {};
-
-	/*derivatives dx/da, dx/db, dy/da, dy/db*/
-	double dxa[elements2DArrSize][maxGauss][maxGauss] = {},
-		dxb[elements2DArrSize][maxGauss][maxGauss] = {},
-		dya[elements2DArrSize][maxGauss][maxGauss] = {},
-		dyb[elements2DArrSize][maxGauss][maxGauss] = {};
-
-	std::vector<std::vector<double>> geoCenter(elements2DArrSize, std::vector<double>(2, 0.0));
-	std::vector<double> cellSize(elements2DArrSize, 0.0);
-	std::vector<double> localCellSize(elements2DArrSize, 0.0);
-
 	int numBCEdges(0);
 }
 
 namespace mathVar
 {
-	int nGauss(2), orderElem(0);
-	double wGauss[maxGauss] = {}, xGauss[maxGauss] = {}, wGaussLobatto[maxGauss] = {}, xGaussLobatto[maxGauss] = {};
-	double B[maxOrder] = {}, dBa[maxOrder] = {}, dBb[maxOrder] = {};
-	double BPts_Quad[maxOrder][maxGauss][maxGauss] = {}, dBaPts_Quad[maxOrder][maxGauss][maxGauss] = {}, dBbPts_Quad[maxOrder][maxGauss][maxGauss] = {},
-		BPts_Tri[maxOrder][maxGauss][maxGauss] = {}, dBaPts_Tri[maxOrder][maxGauss][maxGauss] = {}, dBbPts_Tri[maxOrder][maxGauss][maxGauss] = {};
-	double GaussPts[maxGauss][maxGauss][2] = {}, //coordinate a is array (..,..,0), coordinate b is array (..,..,1)
-		wGaussPts[maxGauss][maxGauss][2] = {}, //weights on a direction (w1) is array (..,..,1), weights on b direction (w2) is array (..,..,2)
-		GaussLobattoPts[maxGauss][maxGauss][2] = {},
-		wGaussLobattoPts[maxGauss][maxGauss][2] = {};
+    int nGauss(2), orderElem(0), orderOfAccuracy(0);
 }
 
 namespace material
@@ -115,6 +94,11 @@ namespace bcValues
 namespace refValues
 {
 	bool subsonic(true);
+}
+
+namespace flowProperties
+{
+    bool viscous(false);
 }
 
 //time step
