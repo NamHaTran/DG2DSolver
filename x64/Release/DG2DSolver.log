@@ -2,9 +2,9 @@
   ConstDeclaration.cpp
   DG2D.cpp
   DGAuxUltilitiesLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(471): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(481): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(670): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(472): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(482): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(671): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGBCsLib.cpp
   DGController.cpp
   DGIOLib.cpp
@@ -29,6 +29,6 @@ d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp
   VarDeclaration.cpp
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
   Generating code
-  All 1374 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  All 1371 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Release\DG2DSolver.exe

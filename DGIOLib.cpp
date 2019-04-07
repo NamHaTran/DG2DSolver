@@ -1014,7 +1014,7 @@ namespace IO
 	void saveCase()
 	{
 		std::string iter_str = std::to_string(systemVar::iterCount);
-        std::string fileName("rho.txt"), Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/" + iter_str);
+		std::string fileName("rho.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\" + iter_str);
         auxUlti::createFolder(Loc);
 
 		/*Conservative variables*/

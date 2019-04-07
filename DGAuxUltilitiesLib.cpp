@@ -5,7 +5,8 @@
 #include <vector>
 #include <math.h>
 #include <windows.h>
-#include <tuple>  
+#include <tuple> 
+#include <direct.h>
 
 namespace auxUlti
 {
@@ -817,12 +818,6 @@ namespace auxUlti
 
     void createFolder(std::string location)
     {
-        std::string command("mkdir -p "+location);
-        const int dir_err = system(command.c_str());
-        if (-1 == dir_err)
-        {
-            printf("Error creating directory!n");
-            exit(1);
-        }
+		_mkdir(location.c_str());
     }
 }
