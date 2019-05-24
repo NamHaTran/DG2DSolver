@@ -56,6 +56,9 @@ namespace math
 	/*Function calculates T from rho, rhou, rhov, rhoE (ver 2)*/
 	double CalcTFromConsvVar(double rho, double rhou, double rhov, double rhoE);
 
+    /*Function calculates T from rho, rhou, rhov, rhoE, rhoX, rhoY in case of mass diffusion*/
+    double CalcTFromConsvVar_massDiff(double rho, double rhou, double rhov, double rhoE, double rhox, double rhoy);
+
 	/*Function calculates p from T and rho*/
 	double CalcP(double T, double rho);
 
@@ -66,7 +69,7 @@ namespace math
 	double Calc_dBxdBy(int elem, int order, int na, int nb, int opt);
 
 	/*Function calculates surface integral (for 2D case, surface integral is equal to line integral)*/
-	double surfaceInte(std::vector<double> &Fvalue, int edge, int elem);
+    double surfaceInte(std::vector<double> &Fvalue, int edge);
 
 	/*Function calculates values of primary and conservative variables at arbitrary point of arbitrary element.
 	ValKind 1: primary variable
@@ -99,6 +102,8 @@ namespace math
 		3: rhov
 		4: rhoE*/
 	double pointValueNoLimiter(int element, double a, double b, int valType);
+
+    double pointDerivRho(int element, double a, double b, int dir);
 
 	/*Function calculates dot product of 2 vectors*/
 	double vectorDotProduct(std::vector<double> &a, std::vector<double> &b);
@@ -226,6 +231,14 @@ namespace math
 
 	double calcResidualFromResidualOfOrder(int element, double a, double b, int valType);
 
+    namespace solvePolynomialsEq {
+        double NewtonRaphson(std::vector<double> &power, std::vector<double> &coefs, double initialValue);
+
+        double Bisection(std::vector<double> &power, std::vector<double> &coefs, double initialValue);
+
+        double subValToPolynomial(std::vector<double> &power, std::vector<double> &coefs, double Value);
+    }
+
 	namespace numericalFluxes
 	{
 		/*Function calculates auxilary flux at Gauss point*/
@@ -237,20 +250,17 @@ namespace math
 		/*Function calculates diffusive flux*/
 		double diffusiveFlux(double FPlus, double FMinus, double UPlus, double UMinus, double Beta, double vectorComp);
 
-		/*Function calculates fluxes of all advective and diffusive terms of NSF equation from conservative variables*/
-		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(int edge, std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector);
-
 		/*Function calculates constant C for advective flux*/
 		double constantC(double uMagP, double uMagM, double aP, double aM);
 
 		/*Function calculates constant Beta for diffusive flux*/
-		double constantBeta(double uMagP, double uMagM, double rhoP, double rhoM, double eP, double eM, double pP, double pM, std::vector<std::vector<double>> stressHeatFluxP, std::vector<std::vector<double>> stressHeatFluxM, std::vector<double> nP);
+        double constantBeta(double uMagP, double uMagM, double rhoP, double rhoM, double eP, double eM, double pP, double pM, std::vector<std::vector<double>> stressHeatFluxP, std::vector<std::vector<double>> stressHeatFluxM, std::vector<double> nP);
 	}
 
 	namespace inviscidTerms
 	{
 		/*Function calculates inviscid terms of NSF equation from primary variables*/
-		std::tuple<double, double, double, double> calcInvisTermsFromPriVars(double rhoVal, double uVal, double vVal, double totalE, double pVal, int dir);
+        std::tuple<double, double, double, double> calcInvisTermsFromPriVars(double rhoVal, double uVal, double umVal, double vVal, double vmVal, double totalE, double pVal, int dir);
 	}
 
 	namespace viscousTerms
@@ -273,13 +283,13 @@ namespace math
 		[tau_xx	    tau_xy		Qx]
 		[tau_yx	    tau_yy		Qy]
 		*/
-		std::vector<std::vector<double>> calcStressTensorAndHeatFlux(std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy);
+        std::vector<std::vector<double>> calcStressTensorAndHeatFlux(std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy, double TVal);
 
 		/*Function calculates heat flux terms Qx, Qy*/
 		std::tuple<double, double> calcHeatFluxTerms(double dTx, double dTy, double k);
 
 		/*Function calculates viscous terms of NSF equation from Stress and Heat flux matrix returned from calcStressTensorAndHeatFlux function*/
-		std::tuple<double, double, double, double> calcViscousTermsFromStressHeatFluxMatrix(std::vector< std::vector<double> > &StressHeatFlux, double uVal, double vVal, int dir);
+        std::tuple<double, double, double, double> calcViscousTermsFromStressHeatFluxMatrix(std::vector< std::vector<double> > &StressHeatFlux, double uVal, double vVal, double dRho, int dir);
 	}
 
 	namespace geometricOp
@@ -318,6 +328,10 @@ namespace math
 	}
 
 	double calcMaxT(int element);
+
+    namespace massDiffusionFncs {
+    double calcTotalVelocity(double rho, double advecV, double mudRho);
+    }
 }
 
 #endif // DGMATH_H_INCLUDED

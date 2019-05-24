@@ -53,7 +53,7 @@ void Executer(std::string cmd)
 	else if (preProcessKey::debug::checkElement(cmd))
 	{
 		int input(-1);
-		std::cout << "Input element ID (ID supplied by SALOME): ";
+        std::cout << "Input element ID (ID is supplied by SALOME): ";
 		std::cin >> input;
 		std::cout << " \n";
 		debugTool::checkElemInfor(input);
@@ -134,16 +134,11 @@ void PreProcessing()
 
 	/*LOAD p T U*/
 	IO::loadpTU();
+
 	//Check subsonic
     refValues::subsonic = auxUlti::checkSubSonic();
-    if (refValues::subsonic)
-    {
-        std::cout << "Flow is subsonic.\n";
-    }
-    else
-    {
-        std::cout << "Flow is supersonic.\n";
-    }
+    //Check case's information
+    message::checkCaseInformations();
 
 	/*PROCESS MESH*/
 	MshReader::meshProcess();

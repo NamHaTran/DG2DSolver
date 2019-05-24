@@ -121,6 +121,14 @@ namespace auxUlti
     //Function create folder at input location
     void createFolder(std::string location);
 
+    std::tuple<double, double> getUAtInterfaces(int edge, int element, int nG, int valType);
+    double getUPlusAtBC(int edge, int nG, int valType);
+
+    std::tuple<double, double> getTAtInterfaces(int edge, int element, int nG);
+    double getTPlusAtBC(int edge, int nG);
+
+    void saveUAtBCToSurfaceFields(int edge, int nG, std::vector<double>&UPlus, std::vector<double>&UMinus);
+
 	//Auxilary functions support for postProcessing
 	namespace postProcess
 	{

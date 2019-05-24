@@ -26,74 +26,48 @@ std::vector<std::vector<double>> NSFEqBCsImplement(int element, int edge, int nG
 /*Function applies auxilary boundary conditions to edges in auxilary equation, it returns values of auxiraly flux at Gauss point*/
 std::vector<std::vector<double>> auxEqBCsImplement(int element, int edge, int nG);
 
+//Implement bondary condition of Rho (use when massDiffusion is on)
+//Method weakRiemann is used
+std::tuple<double, double> rhoBCsImplement(int element, int edge, int nG);
+
 namespace NSFEqBCs
 {
-	namespace weakRiemann
-	{
-		namespace wall
-		{
-			/*Function computes numerical flux at isothermal wall by using weakRiemann approach*/
-            std::vector <std::vector<double>> wallIsoThermal(int element, int edge, int edgeGrp, int nG);
+    namespace wall
+    {
+        /*Function computes numerical flux at isothermal wall by using weakRiemann approach*/
+        std::vector <std::vector<double>> wallIsoThermal(int element, int edge, int edgeGrp, int nG);
 
-			/*Function computes numerical flux at adiabatic wall by using weakRiemann approach*/
-            std::vector <std::vector<double>> wallAdiabatic(int element, int edge, int edgeGrp, int nG);
-		}
+        /*Function computes numerical flux at adiabatic wall by using weakRiemann approach*/
+        std::vector <std::vector<double>> wallAdiabatic(int element, int edge, int edgeGrp, int nG);
+    }
 
-		namespace patch
-		{
-			/*Function computes numerical flux at inflow/outflow by using weakRiemann approach*/
-			std::vector <std::vector<double>> inFlow(int element, int edge, int edgeGrp, int nG);
+    namespace patch
+    {
+        /*Function computes numerical flux at inflow/outflow by using weakRiemann approach*/
+        std::vector <std::vector<double>> inFlow(int element, int edge, int edgeGrp, int nG);
 
-			/*Function computes numerical flux at inflow/outflow by using weakRiemann approach*/
-			std::vector <std::vector<double>> outFlow(int element, int edge, int edgeGrp, int nG);
-		}
+        /*Function computes numerical flux at inflow/outflow by using weakRiemann approach*/
+        std::vector <std::vector<double>> outFlow(int element, int edge, int edgeGrp, int nG);
+    }
 
-		/*Function computes numerical flux at symmetry BC by using weakRiemann approach*/
-		std::vector <std::vector<double>> Symmetry(int element, int edge, int nG);
-	}
-	
-	namespace weakPrescribed
-	{
-		namespace wall
-		{
-			//Function computes numerical flux at isothermal wall by using weakPrescribed approach
-            std::vector <std::vector<double>> wallIsoThermal(int element, int edge, int nG);
-
-			//Function computes numerical flux at adiabatic wall by using weakPrescribed approach
-            std::vector <std::vector<double>> wallAdiabatic(int element, int edge, int nG);
-		}
-
-		namespace patch
-		{
-			//Function computes numerical flux at inflow/outflow by using weakPrescribed approach
-			std::vector <std::vector<double>> inOutFlow(int element, int edge, int nG);
-		}
-	}
+    /*Function computes numerical flux at symmetry BC by using weakRiemann approach*/
+    std::vector <std::vector<double>> Symmetry(int element, int edge, int nG);
 }
 
 namespace auxilaryBCs
-{
-	namespace weakPrescribed
-	{
-		/*Function computes numerical flux of auxilary variables at in/out flow using weakPrescribed approach*/
-        std::vector <std::vector<double>> auxFluxesAtBC(int element, int edge,  int edgeGrp, int nG);
-	}
-	
-	namespace weakRiemann
-	{
-		namespace wall
-		{
-            std::vector <std::vector<double>> wallIsoThermal(int element, int edge, int edgeGrp, int nG);
+{	
+    namespace wall
+    {
+        std::vector <std::vector<double>> wallIsoThermal(int element, int edge, int edgeGrp, int nG);
 
-            std::vector <std::vector<double>> wallAdiabatic(int element, int edge, int edgeGrp, int nG);
-		}
+        std::vector <std::vector<double>> wallAdiabatic(int element, int edge, int edgeGrp, int nG);
+    }
 
-		namespace patch {
-			std::vector <std::vector<double>> inFlow(int element, int edge, int edgeGrp, int nG);
+    namespace patch {
+        std::vector <std::vector<double>> inFlow(int element, int edge, int edgeGrp, int nG);
 
-			std::vector <std::vector<double>> outFlow(int element, int edge, int edgeGrp, int nG);
-		}
-	}
+        std::vector <std::vector<double>> outFlow(int element, int edge, int edgeGrp, int nG);
+    }
 
 	/*Function computes numerical flux of auxilary variables at symmetry BC by using weakRiemann approach*/
 	std::vector <std::vector<double>> Symmetry(int element, int edge, int nG);
@@ -105,29 +79,18 @@ namespace BCSupportFncs
 	- nx, ny are surface unit normal vector components.*/
 	bool checkInflow(double u, double v, double nx, double ny);
 
-	/*Function supports for inflow/outflow boundary condition, it calculates inflow/outflow velocity components at surface*/
-	std::tuple<double, double> calcInOutFlowVelocity(double vExternx, double vExterny, double nx, double ny, double vBCMag);
+    namespace auxilaryBCs {
+        void calcUPlus(int element, int edge, int nG, std::vector<double> &UPlus);
+    }
 
-	namespace weakPrescribedFluxes
-	{
-		/*Function computes numerical fluxes at wall by using weakPrescribed approach*/
-		std::vector<std::vector<double>> NSFEqFluxes_Wall(std::vector<double> &UBc, std::vector<double> &dUXBc, std::vector<double> &dUYBc, std::vector<double> &norm);
+    namespace NSFEqBCs {
+        void calcdUPlus(int element, double a, double b, std::vector<double> &dUXPlus, std::vector<double> &dUYPlus);
 
-		/*Function computes BC values at inflow*/
-		void calcInFlowBCVals(int element, int edge, int edgeGrp, int nG);
+        /*Function calculates fluxes of all advective and diffusive terms of NSF equation from conservative variables*/
+        std::vector<std::vector<double>> NSFEqFluxes(int edge, int BCType, double TPlus, double TMinus, std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector);
 
-		/*Function computes BC values at outflow*/
-		void calcOutFlowBCVals(int element, int edge, int edgeGrp, int nG);
-
-		/*Function computes BC values at isothermal wall*/
-		void calcWallIsothermalBCVals(int element, int edge, int edgeGrp, int nG);
-
-		/*Function computes BC values at adiabatic wall*/
-        void calcWallAdiabaticBCVals(int element, int edge, int edgeGrp, int nG);
-
-		/*Function distributes BC values to output Array*/
-		std::vector<double> distributeBCValsToArray(int nG, int edge);
-	}
+        std::tuple<double, double, double, double> calcTotalVelocity(int BCType, double rhoP, double rhoM, double uP, double uM, double vP, double vM, double mudRhoXP, double mudRhoXM, double mudRhoYP, double mudRhoYM);
+    }
 }
 
 #endif // DGBCSLIB_H_INCLUDED

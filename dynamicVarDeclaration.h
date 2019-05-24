@@ -35,33 +35,51 @@ namespace mathVar {
         BPts_Quad, dBaPts_Quad, dBbPts_Quad, BPts_Tri, dBaPts_Tri, dBbPts_Tri;
 }
 
-/*Conservative variables declaration*/
+/*Conservative variables declaration
+NOTE: in case of mass diffusion:
+- rho, rhou, rhov are computed using advective velocity (u, v)
+- rhoE is conputed using mass velocity which is defined as um=u+Jd/rho (Jd is mass diffusive flux Jd = -Dm*grad(rho))
+At initial condition i assume that grad(rho) = 0 so (rhoE)initial is conputed using advective velocity.
+*/
 extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE, rhoN, rhouN, rhovN, rhoEN, rho0, rhou0, rhov0, rhoE0, rhoResArr, rhouResArr, rhovResArr, rhoEResArr;
 
 /*Primary variables declaration
 extern std::vector<std::vector<double>>u, v, e, p, T, mu;*/
 
 /*Auxilary variables
-//X direction*/
+NOTE: in case of mass diffusion:
+- S=mu*grad(U) with all components of vector U being computed by using advective velocity
+(now i define rhoE_adv is total energy with advective kinetic energy)
+*/
+//X direction
 extern std::vector<std::vector<double>> rhoX, rhouX, rhovX, rhoEX;
 
 /*Y direction*/
 extern std::vector<std::vector<double>> rhoY, rhouY, rhovY, rhoEY;
 
-/*Interface values*/
-//conservative variable
-extern std::vector<std::vector<double>> interface_rho, interface_rhou, interface_rhov, interface_rhoE;
+namespace surfaceFields {
+    /*Interface values*/
+    //conservative variable
+    extern std::vector<std::vector<double>> rho, rhou, rhov, rhoE;
 
-//auxilary equaiton
-extern std::vector<std::vector<double>> aux_interface_rho, aux_interface_rhou, aux_interface_rhov, aux_interface_rhoE;
+    //auxilary equaiton
+    extern std::vector<std::vector<double>> aux_rho, aux_rhou, aux_rhov, aux_rhoE;
 
-//X direction*/
-extern std::vector<std::vector<double>> invis_interface_rhoX, invis_interface_rhouX, invis_interface_rhovX, invis_interface_rhoEX,
-Vis_interface_rhoX, Vis_interface_rhouX, Vis_interface_rhovX, Vis_interface_rhoEX;
+    //X direction*/
+    extern std::vector<std::vector<double>> invis_rhoX, invis_rhouX, invis_rhovX, invis_rhoEX,
+    Vis_rhoX, Vis_rhouX, Vis_rhovX, Vis_rhoEX;
 
-/*Y direction*/
-extern std::vector<std::vector<double>> invis_interface_rhoY, invis_interface_rhouY, invis_interface_rhovY, invis_interface_rhoEY,
-Vis_interface_rhoY, Vis_interface_rhouY, Vis_interface_rhovY, Vis_interface_rhoEY;
+    /*Y direction*/
+    extern std::vector<std::vector<double>> invis_rhoY, invis_rhouY, invis_rhovY, invis_rhoEY,
+    Vis_rhoY, Vis_rhouY, Vis_rhovY, Vis_rhoEY;
+
+    extern std::vector<std::vector<double>> T;
+}
+
+namespace volumeFields {
+    //Volume values
+    extern std::vector<std::vector<std::vector<double>>> rhoVolGauss, rhouVolGauss, rhovVolGauss, rhoEVolGauss, drhoXVolGauss, drhoYVolGauss, T;
+}
 
 //Lax-Friedrich constant
 extern std::vector<double> LxFConst;
@@ -79,9 +97,6 @@ theta2Arr;
 
 //StiffMatrixCoefficients
 extern std::vector<std::vector<double>> stiffMatrixCoeffs;
-
-//Volume values
-extern std::vector<std::vector<std::vector<double>>> rhoVolGauss, rhouVolGauss, rhovVolGauss, rhoEVolGauss;
 
 namespace SurfaceBCFields
 {

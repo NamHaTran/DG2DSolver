@@ -12,7 +12,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <cstdlib> //include this library to create folder in linux
 
 namespace IO
 {
@@ -151,7 +150,7 @@ namespace IO
 		std::ifstream bcFlux(bcLoc.c_str());
 		if (bcFlux)
 		{
-			int bcType(0), boundIndex(0);
+            int boundIndex(0);
 			std::string line(" "), keyWord(" ");
 			while (std::getline(bcFlux, line))
 			{
@@ -206,28 +205,6 @@ namespace IO
 									message::writeLog(systemVar::pwd, systemVar::caseName, errorStr);
 								}
 							}
-							else if (str1.compare("Method") == 0)
-							{
-								if (str2.compare("weakRiemann") == 0)
-								{
-									meshVar::BoundaryType[boundIndex - 1][2] = 1;  //type 1 weak Riemann
-								}
-								else if (str2.compare("weakPrescribed") == 0)
-								{
-									meshVar::BoundaryType[boundIndex - 1][2] = 2;  //type 2 is weak prescribed
-								}
-								else if (str2.compare("strongBCs") == 0)
-								{
-									meshVar::BoundaryType[boundIndex - 1][2] = 3;  //type 3 is strongBCs
-								}
-								else
-								{
-									std::string errorStr = "Boundary method <" + ptr[1] + R"(> is unknown, available boundary methods in file boundaryPatch are:
-	weakRiemann
-	weakPrescibed)";
-									message::writeLog(systemVar::pwd, systemVar::caseName, errorStr);
-								}
-							}
 						}
 						else
 						{
@@ -266,9 +243,9 @@ namespace IO
 		if (Fluxinedel)
 		{
 			Fluxinedel << headerFile << std::endl << "	inedel array\n" << "\n";
-			for (int i = 0; i < 4; i++)
+            for (int i = 0; i < meshVar::nelem2D; i++)
 			{
-				for (int j = 0; j < meshVar::nelem2D; j++)
+                for (int j = 0; j < 4; j++)
 				{
 					Fluxinedel << meshVar::inedel[i][j] << " ";
 				}
@@ -285,9 +262,9 @@ namespace IO
 		if (Fluxineled)
 		{
 			Fluxineled << headerFile << std::endl << "	ineled array\n" << "\n";
-			for (int i = 0; i < 2; i++)
+            for (int i = 0; i < meshVar::inpoedCount; i++)
 			{
-				for (int j = 0; j < meshVar::inpoedCount; j++)
+                for (int j = 0; j < 2; j++)
 				{
 					Fluxineled << meshVar::ineled[i][j] << " ";
 				}
@@ -304,9 +281,9 @@ namespace IO
 		if (Fluxinpoed)
 		{
 			Fluxinpoed << headerFile << std::endl << "	inpoed array\n" << "\n";
-			for (int i = 0; i < 4; i++)
+            for (int i = 0; i < meshVar::inpoedCount; i++)
 			{
-				for (int j = 0; j < meshVar::inpoedCount; j++)
+                for (int j = 0; j < 4; j++)
 				{
 					Fluxinpoed << meshVar::inpoed[i][j] << " ";
 				}
@@ -391,21 +368,39 @@ namespace IO
 		/*Read Material*/
 		std::string MatfileName("Material.txt");
         std::string MatLoc(systemVar::wD + "/CASES/" + systemVar::caseName + "/Constant");
-		std::string MatkeyWordsDouble[5] = { "gammaRatio", "gasConstant", "PrandtlNumber", "SutherlandAs", "SutherlandTs" }, MatkeyWordsInt[1] = {}, MatkeyWordsBool[1] = {}, MatkeyWordsStr[1] = {};
-		double MatoutDB[5] = {};
+        std::string MatkeyWordsDouble[6] = { "gammaRatio", "gasConstant", "PrandtlNumber", "SutherlandAs", "SutherlandTs" , "DmCoef"}, MatkeyWordsInt[1] = {}, MatkeyWordsBool[1] = {}, MatkeyWordsStr[1] = {};
+        double MatoutDB[6] = {};
 		int MatoutInt[1] = {};
 		bool MatoutBool[1] = {};
 		std::string MatoutStr[1] = {};
 
-		readDataFile(MatfileName, MatLoc, MatkeyWordsDouble, MatkeyWordsInt, MatkeyWordsBool, MatkeyWordsStr, MatoutDB, MatoutInt, MatoutBool, MatoutStr, 5, 0, 0, 0);
+        readDataFile(MatfileName, MatLoc, MatkeyWordsDouble, MatkeyWordsInt, MatkeyWordsBool, MatkeyWordsStr, MatoutDB, MatoutInt, MatoutBool, MatoutStr, 6, 0, 0, 0);
 		material::gamma = MatoutDB[0];
 		material::R = MatoutDB[1];
 		material::Pr = MatoutDB[2];
 		material::As = MatoutDB[3];
 		material::Ts = MatoutDB[4];
+        material::massDiffusion::DmCoeff = MatoutDB[5];
 
 		material::Cp = material::R*material::gamma / (material::gamma - 1);
 		material::Cv = material::Cp - material::R;
+
+        /*Read FlowProperties*/
+        std::string fileName("FlowProperties.txt");
+        std::string Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/System");
+        std::string keyWordsDouble[1] = {}, keyWordsInt[1] = {}, keyWordsBool[2] = {"Viscosity", "MassDiffusion"}, keyWordsStr[1] = {};
+        double outDB[1] = {};
+        int outInt[1] = {};
+        bool outBool[2] = {};
+        std::string outStr[1] = {};
+
+        readDataFile(fileName, Loc, keyWordsDouble, keyWordsInt, keyWordsBool, keyWordsStr, outDB, outInt, outBool, outStr, 0, 0, 2, 0);
+        flowProperties::viscous=outBool[0];
+        flowProperties::massDiffusion=outBool[1];
+        if (!flowProperties::massDiffusion)
+        {
+            material::massDiffusion::DmCoeff=0.0;
+        }
 	}
 
 	void loadLimiterSettings()
@@ -490,16 +485,6 @@ namespace IO
 		{
             message::writeLog((systemVar::wD + "/CASES/" + systemVar::caseName), systemVar::caseName, message::opFError(fileName, FileLoc));
 		}
-
-		if (limitVal::limiterName.size() > 0)
-		{
-			std::cout << "Selected limiter(s): ";
-            for (int i = 0; i < static_cast<int>(limitVal::limiterName.size()); i++)
-			{
-				std::cout << limitVal::limiterName[i] << " ";
-			}
-			std::cout << "\n";
-		}
 	}
 
 	void loadpTU()
@@ -530,7 +515,7 @@ namespace IO
 		- numParamDbl, numParamInt, numParamBool, numParamStr: number of double, int, bool, string parameters*/
 
 		double dataDbl(0.0);
-		int dataInt(0);
+        int dataInt(0);
 		std::string dataStr("abc");
 		std::cout << "	Reading " << fileName <<"\n";
         std::string FileLoc(direction + "/" + fileName);
@@ -1014,7 +999,7 @@ namespace IO
 	void saveCase()
 	{
 		std::string iter_str = std::to_string(systemVar::iterCount);
-		std::string fileName("rho.txt"), Loc(systemVar::wD + "\\CASES\\" + systemVar::caseName + "\\" + iter_str);
+        std::string fileName("rho.txt"), Loc(systemVar::wD + "/CASES/" + systemVar::caseName + "/" + iter_str);
         auxUlti::createFolder(Loc);
 
 		/*Conservative variables*/

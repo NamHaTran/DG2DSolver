@@ -307,15 +307,15 @@ namespace math
 		int master(0), servant(0), masterIndex(0), servantIndex(0), masterType(0), servantType(0);
 		double JMaster(0.0), JServant(0.0), xA(0.0), xB(0.0), xC(0.0), xD(0.0), yA(0.0), yB(0.0), yC(0.0), yD(0.0);
 
-		if (meshVar::ineled[0][edge]>meshVar::ineled[1][edge])
+        if (meshVar::ineled[edge][0]>meshVar::ineled[edge][1])
 		{
-			master = meshVar::ineled[0][edge];
-			servant = meshVar::ineled[1][edge];
+            master = meshVar::ineled[edge][0];
+            servant = meshVar::ineled[edge][1];
 		}
-		else if (meshVar::ineled[0][edge]<meshVar::ineled[1][edge])
+        else if (meshVar::ineled[edge][0]<meshVar::ineled[edge][1])
 		{
-			master = meshVar::ineled[1][edge];
-			servant = meshVar::ineled[0][edge];
+            master = meshVar::ineled[edge][1];
+            servant = meshVar::ineled[edge][0];
 		}
 
 		masterIndex = auxUlti::findEdgeOrder(master, edge);
@@ -578,18 +578,48 @@ namespace math
 	}
 
 	double CalcTFromConsvVar(double rho, double rhou, double rhov, double rhoE)
-	{
-		double T((material::gamma - 1)*(rhoE - 0.5*(pow(rhou, 2) + pow(rhov, 2)) / rho) / (material::R*rho));
-		if ((T <= 0) && (fabs(T) < 0.001))
-		{
-			//std::cout << "Warning!!! limiting T " << T <<std::endl;
-			//T = limitVal::TDwn;
-			//limitVal::limitTOrNot = true;
-			//system("pause");
-			T = fabs(T);
-		}
+    {
+        double T((material::gamma - 1)*(rhoE - 0.5*(pow(rhou, 2) + pow(rhov, 2)) / rho) / (material::R*rho));
 		return T;
 	}
+
+    double CalcTFromConsvVar_massDiff(double rho, double rhou, double rhov, double rhoE, double rhox, double rhoy)
+    {
+        //Em is total energy with total velocity (um), not advective velocity (u)
+        /*
+        double T(0.0), TIni(0.0), Ax(0.0), Ay(0.0), B1(0.0), B2(0.0), B3(0.0),
+                u(rhou/rho), v(rhov/rho), Em(rhoE/rho);
+        std::vector<double> polynomialPower{3.0, 2.5, 2, 1.5, 1, 0};
+        Ax=material::massDiffusion::DmCoeff*rhox/(rho*rho);
+        Ay=material::massDiffusion::DmCoeff*rhoy/(rho*rho);
+        B1=Ax*Ax+Ay*Ay;
+        B2=2*(u*Ax+v*Ay);
+        B3=u*u+v*v-2*Em;
+        std::vector<double> polynomialCoeffs{
+            B1*pow(material::As,2)+2*material::Cv,
+                    -material::As*B2,
+                    4*material::Cv*material::Ts+B3,
+                    -material::As*B2*material::Ts,
+                    2*material::Cv*pow(material::Ts,2)+2*B3*material::Ts,
+                    B3*pow(material::Ts,2)
+        };
+        //compute initial T
+
+        TIni=math::CalcTFromConsvVar(rho,rhou,rhov,rhoE);
+        //Solve T
+        T=math::solvePolynomialsEq::NewtonRaphson(polynomialPower,polynomialCoeffs,TIni);
+        if (T!=T || T<0)
+        {
+            //std::cout<<"Failed to solve T\n";
+            //int c = getchar();
+            return TIni;
+        }
+        else {
+            return TIni;
+        }
+        */
+        return math::CalcTFromConsvVar(rho,rhou,rhov,rhoE);
+    }
 
 	double CalcP(double T, double rho)
 	{
@@ -663,7 +693,7 @@ namespace math
 		return dB;
 	}
 
-	double surfaceInte(std::vector<double> &Fvalue, int edge, int elem)
+    double surfaceInte(std::vector<double> &Fvalue, int edge)
 	{
         double inte(0.0), J(meshVar::J1D[edge]), w(0.0);
 		for (int nG = 0; nG <= mathVar::nGauss; nG++)
@@ -702,16 +732,15 @@ namespace math
 					rhouVal(math::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(math::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
-				out = material::Cv*math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+                out = material::Cv*math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 			}
 			else if (valType == 5)  //p
 			{
 				double rhoVal(math::calcConsvVarWthLimiter(element, a, b, 1)),
 					rhouVal(math::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(math::calcConsvVarWthLimiter(element, a, b, 3)),
-					rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
-				double TVal(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal));
-				out = math::CalcP(TVal, rhoVal);
+                    rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
+                out = math::CalcP(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal), rhoVal);
 			}
 			else if (valType == 6)  //T
 			{
@@ -719,15 +748,11 @@ namespace math
 					rhouVal(math::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(math::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
-				out = math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
+                out=math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 				if ((out < 0) && (fabs(out) < 0.001))
 				{
 					std::cout << "Negative T" << out << " at cell " << element + meshVar::nelem1D + 1 << std::endl;
-					//system("pause");
-					std::cout << theta1Arr[element] << std::endl;
-					std::cout << theta2Arr[element] << std::endl;
-					std::cout << a << ", " << b << std::endl;
-					out = fabs(out);
+                    int c = getchar();
 				}
 			}
 			else if (valType == 7)  //mu
@@ -736,7 +761,8 @@ namespace math
 					rhouVal(math::calcConsvVarWthLimiter(element, a, b, 2)),
 					rhovVal(math::calcConsvVarWthLimiter(element, a, b, 3)),
 					rhoEVal(math::calcConsvVarWthLimiter(element, a, b, 4));
-				double TVal(math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal));
+                double TVal(0.0);
+                TVal=math::CalcTFromConsvVar(rhoVal, rhouVal, rhovVal, rhoEVal);
 				if ((TVal<0) && fabs(TVal) < 0.001)
 				{
 					TVal = fabs(TVal);
@@ -745,15 +771,7 @@ namespace math
 				if (out < 0 || out != out)
 				{
 					std::cout << "unphysical mu at cell " << element + meshVar::nelem1D + 1 << std::endl;
-					std::cout << "TVal " << TVal << std::endl;
-					std::cout << "rhoVal " << rhoVal << std::endl;
-					std::cout << "rhouVal " << rhouVal << std::endl;
-					std::cout << "rhovVal " << rhovVal << std::endl;
-					std::cout << "rhoEVal " << rhoEVal << std::endl;
-					std::cout << theta1Arr[element] << std::endl;
-					std::cout << theta2Arr[element] << std::endl;
-					std::cout << a << ", " << b << std::endl;
-					system("pause");
+                    int c = getchar();
 				}
 			}
 		}
@@ -887,20 +905,47 @@ namespace math
 	}
 
 	double pointAuxValue(int element, double a, double b, int valType, int dir)
-	{
-		double out(0.0);
-		std::vector<double> Value(mathVar::orderElem + 1, 0.0);
+    {
+        double out(0.0);
+        //if Mass diffusion is on, d(rho) must be multiplied by mu before returning
+        std::vector<double> Value(mathVar::orderElem + 1, 0.0);
 
-		Value = auxUlti::getElementAuxValuesOfOrder(element, valType, dir);
+        Value = auxUlti::getElementAuxValuesOfOrder(element, valType, dir);
 
-		math::basisFc(a, b, auxUlti::checkType(element));
-		for (int order = 0; order <= mathVar::orderElem; order++)
-		{
-			out += Value[order] * mathVar::B[order];
-		}
-		//out = out / muVal;
-		return out;
+        math::basisFc(a, b, auxUlti::checkType(element));
+        for (int order = 0; order <= mathVar::orderElem; order++)
+        {
+            out += Value[order] * mathVar::B[order];
+        }
+        return out;
 	}
+
+    double pointDerivRho(int element, double a, double b, int dir)
+    {
+        double out(0.0);
+        std::vector<double> Value(mathVar::orderElem + 1, 0.0);
+        if (dir==1)  //Ox direction
+        {
+            for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+            {
+                Value[iorder] = rhoX[element][iorder];
+            }
+        }
+        else if (dir==2)  //Ox direction
+        {
+            for (int iorder = 0; iorder <= mathVar::orderElem; iorder++)
+            {
+                Value[iorder] = rhoY[element][iorder];
+            }
+        }
+
+        math::basisFc(a, b, auxUlti::checkType(element));
+        for (int order = 0; order <= mathVar::orderElem; order++)
+        {
+            out += Value[order] * mathVar::B[order];
+        }
+        return out;
+    }
 
 	double calcThermalConductivity(double muVal)
 	{
@@ -1228,135 +1273,10 @@ namespace math
 
 		double diffusiveFlux(double FPlus, double FMinus, double UPlus, double UMinus, double Beta, double vectorComp)
 		{
-			/*use central numerical flux*/
-			Beta = 0.0;
-			double flux(0.5*((FPlus + FMinus)*vectorComp + Beta * (UMinus - UPlus)));
+            /*use central numerical flux*/
+            Beta = 0.0;
+            double flux(0.5*((FPlus + FMinus)*vectorComp + Beta * (UMinus - UPlus)));
 			return flux;
-		}
-
-		std::vector<std::vector<double>> NSFEqAdvDiffFluxFromConserVars(int edge, std::vector<double> &UPlus, std::vector<double> &UMinus, std::vector<double> &dUXPlus, std::vector<double> &dUXMinus, std::vector<double> &dUYPlus, std::vector<double> &dUYMinus, std::vector<double> &normVector)
-		{
-			/*Fluxes array has the following form:
-			- column 0: advective fluxes
-			- column 1: diffusive fluxes*/
-			std::vector<std::vector<double>> Fluxes(4, std::vector<double>(2, 0.0));
-
-			/*StressHeat matrix has form:
-			[tauXx		tauXy		Qx]
-			[tauYx		tauYy		Qy]
-			*/
-			std::vector<std::vector<double>> StressHeatP(2, std::vector<double>(3, 0.0));
-			std::vector<std::vector<double>> StressHeatM(2, std::vector<double>(3, 0.0));
-
-			double rhoPlus(UPlus[0]), rhouPlus(UPlus[1]), rhovPlus(UPlus[2]), rhoEPlus(UPlus[3]),
-				rhoMinus(UMinus[0]), rhouMinus(UMinus[1]), rhovMinus(UMinus[2]), rhoEMinus(UMinus[3]),
-				nx(normVector[0]), ny(normVector[1]);
-
-			double
-				uPlus(rhouPlus / rhoPlus),
-				uMinus(rhouMinus / rhoMinus),
-
-				vPlus(rhovPlus / rhoPlus),
-				vMinus(rhovMinus / rhoMinus),
-
-				totalEPlus(rhoEPlus / rhoPlus),
-				totalEMinus(rhoEMinus / rhoMinus),
-
-				TPlus(0.0),
-				TMinus(0.0),
-
-				pPlus(0.0),
-				pMinus(0.0);
-
-				//muPlus(0.0),
-				//muMinus(0.0);
-
-			double
-				termX1P(0.0), termX1M(0.0),  //(rho*u)					or 0
-				termX2P(0.0), termX2M(0.0),  //(rho*u^2 + p)			or tauxx
-				termX3P(0.0), termX3M(0.0),  //(rho*u*v)				or tauxy
-				termX4P(0.0), termX4M(0.0),  //(rho*totalE + p)*u		or tauxx*u + tauxy*v + Qx
-
-				termY1P(0.0), termY1M(0.0),  //(rho*v)					or 0
-				termY2P(0.0), termY2M(0.0),  //(rho*u*v)				or tauxy
-				termY3P(0.0), termY3M(0.0),  //(rho*v^2 + p)			or tauyy
-				termY4P(0.0), termY4M(0.0);  //(rho*totalE + p)*v		or tauxy*u + tauyy*v + Qy
-
-			double C(0.0), Beta(0.0),
-				uMagP(0.0),
-				uMagM(0.0),
-				aP(0.0),
-				aM(0.0);
-
-			/*INVISCID TERMS*/
-			/*calculate velocity magnitude*/
-			uMagP = sqrt(pow(uPlus, 2) + pow(vPlus, 2));
-			uMagM = sqrt(pow(uMinus, 2) + pow(vMinus, 2));
-
-			/*calculate T and P*/
-			TPlus = math::CalcTFromConsvVar(rhoPlus, rhouPlus, rhovPlus, rhoEPlus);
-			TMinus = math::CalcTFromConsvVar(rhoMinus, rhouMinus, rhovMinus, rhoEMinus);
-			pPlus = math::CalcP(TPlus, rhoPlus);
-			pMinus = math::CalcP(TMinus, rhoMinus);
-			//muPlus = math::CalcVisCoef(TPlus);
-			//muMinus = math::CalcVisCoef(TMinus);
-
-			/*calculate speed of sound*/
-			aP = math::CalcSpeedOfSound(TPlus);
-			aM = math::CalcSpeedOfSound(TMinus);
-
-			if (auxUlti::getBCType(edge) == 0)
-			{
-				C = LxFConst[edge];
-			}
-			else
-			{
-				C = math::numericalFluxes::constantC(uMagP, uMagM, aP, aM);
-			}
-
-			/*calculate inviscid terms*/
-			std::tie(termX1P, termX2P, termX3P, termX4P) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoPlus, uPlus, vPlus, totalEPlus, pPlus, 1);
-			std::tie(termY1P, termY2P, termY3P, termY4P) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoPlus, uPlus, vPlus, totalEPlus, pPlus, 2);
-
-			std::tie(termX1M, termX2M, termX3M, termX4M) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoMinus, uMinus, vMinus, totalEMinus, pMinus, 1);
-			std::tie(termY1M, termY2M, termY3M, termY4M) = math::inviscidTerms::calcInvisTermsFromPriVars(rhoMinus, uMinus, vMinus, totalEMinus, pMinus, 2);
-
-			/*Calculate fluxes*/
-			Fluxes[0][0] = math::numericalFluxes::advectiveFlux(termX1P, termX1M, rhoPlus, rhoMinus, C, nx) + math::numericalFluxes::advectiveFlux(termY1P, termY1M, rhoPlus, rhoMinus, C, ny);
-			Fluxes[1][0] = math::numericalFluxes::advectiveFlux(termX2P, termX2M, rhouPlus, rhouMinus, C, nx) + math::numericalFluxes::advectiveFlux(termY2P, termY2M, rhouPlus, rhouMinus, C, ny);
-			Fluxes[2][0] = math::numericalFluxes::advectiveFlux(termX3P, termX3M, rhovPlus, rhovMinus, C, nx) + math::numericalFluxes::advectiveFlux(termY3P, termY3M, rhovPlus, rhovMinus, C, ny);
-			Fluxes[3][0] = math::numericalFluxes::advectiveFlux(termX4P, termX4M, rhoEPlus, rhoEMinus, C, nx) + math::numericalFluxes::advectiveFlux(termY4P, termY4M, rhoEPlus, rhoEMinus, C, ny);
-
-			/*VISCOUS TERMS*/
-			/*calculate inviscid terms*/
-			StressHeatP = math::viscousTerms::calcStressTensorAndHeatFlux(UPlus, dUXPlus, dUYPlus);
-			StressHeatM = math::viscousTerms::calcStressTensorAndHeatFlux(UMinus, dUXMinus, dUYMinus);
-			/*
-			if (auxUlti::getBCType(edge) == 0)
-			{
-				Beta=DiffusiveFluxConst[edge];
-			}
-			else
-			{
-				double eP(material::Cv*TPlus), eM(material::Cv*TMinus);
-				std::vector<double> nP(2, 0.0);
-				nP[0] = nx;
-				nP[0] = ny;
-				Beta = math::numericalFluxes::constantBeta(uMagP, uMagM, UPlus[0], UMinus[0], eP, eM, pPlus, pMinus, StressHeatP, StressHeatM, nP);
-			}
-			*/
-			std::tie(termX1P, termX2P, termX3P, termX4P) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uPlus, vPlus, 1);
-			std::tie(termY1P, termY2P, termY3P, termY4P) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatP, uPlus, vPlus, 2);
-			std::tie(termX1M, termX2M, termX3M, termX4M) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uMinus, vMinus, 1);
-			std::tie(termY1M, termY2M, termY3M, termY4M) = math::viscousTerms::calcViscousTermsFromStressHeatFluxMatrix(StressHeatM, uMinus, vMinus, 2);
-
-			/*Calculate fluxes*/
-			Fluxes[0][1] = math::numericalFluxes::diffusiveFlux(termX1M, termX1P, rhoPlus, rhoMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY1M, termY1P, rhoPlus, rhoMinus, Beta, ny);
-			Fluxes[1][1] = math::numericalFluxes::diffusiveFlux(termX2M, termX2P, rhouPlus, rhouMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY2M, termY2P, rhouPlus, rhouMinus, Beta, ny);
-			Fluxes[2][1] = math::numericalFluxes::diffusiveFlux(termX3M, termX3P, rhovPlus, rhovMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY3M, termY3P, rhovPlus, rhovMinus, Beta, ny);
-			Fluxes[3][1] = math::numericalFluxes::diffusiveFlux(termX4M, termX4P, rhoEPlus, rhoEMinus, Beta, nx) + math::numericalFluxes::diffusiveFlux(termY4M, termY4P, rhoEPlus, rhoEMinus, Beta, ny);
-
-			return Fluxes;
 		}
 
 		double constantC(double uMagP, double uMagM, double aP, double aM)
@@ -1369,7 +1289,7 @@ namespace math
 			return C;
 		}
 
-		double constantBeta(double uMagP, double uMagM, double rhoP, double rhoM, double eP, double eM, double pP, double pM, std::vector<std::vector<double>> stressHeatFluxP, std::vector<std::vector<double>> stressHeatFluxM, std::vector<double> nP)
+        double constantBeta(double uMagP, double uMagM, double rhoP, double rhoM, double eP, double eM, double pP, double pM, std::vector<std::vector<double>> stressHeatFluxP, std::vector<std::vector<double>> stressHeatFluxM, std::vector<double> nP)
 		{
 			std::vector<std::vector<double>> stressP(2, std::vector<double>(2, 0.0)), stressM(2, std::vector<double>(2, 0.0));
 			std::vector<double> heatP(2, 0.0), heatM(2, 0.0),
@@ -1391,11 +1311,11 @@ namespace math
 			nM[0] = -nP[0];
 			nM[1] = -nP[1];
 
-			pMultiN_P[0] = -pP * nP[0];
-			pMultiN_P[1] = -pP * nP[1];
+            pMultiN_P[0] = -pP * nP[0];
+            pMultiN_P[1] = -pP * nP[1];
 
-			pMultiN_M[0] = -pM * nM[0];
-			pMultiN_M[1] = -pM * nM[1];
+            pMultiN_M[0] = -pM * nM[0];
+            pMultiN_M[1] = -pM * nM[1];
 
 			//calculating
 			productHeatNP = math::vectorDotProduct(heatP, nP);
@@ -1426,23 +1346,23 @@ namespace math
 
 	namespace inviscidTerms
 	{
-		std::tuple<double, double, double, double> calcInvisTermsFromPriVars(double rhoVal, double uVal, double vVal, double totalE, double pVal, int dir)
+        std::tuple<double, double, double, double> calcInvisTermsFromPriVars(double rhoVal, double uVal, double umVal, double vVal, double vmVal, double totalE, double pVal, int dir)
 		{
 			double term1(0.0), term2(0.0), term3(0.0), term4(0.0);
 
 			if (dir==1)  //Ox direction
 			{ 
 				term1 = rhoVal * uVal;
-				term2 = rhoVal * pow(uVal, 2) + pVal;
-				term3 = rhoVal * uVal*vVal;
-				term4 = (rhoVal*totalE + pVal)*uVal;
+                term2 = rhoVal * uVal*umVal + pVal;
+                term3 = rhoVal * uVal*vmVal;
+                term4 = rhoVal*totalE*umVal + pVal*uVal;
 			}
 			else if (dir==2)  //Oy direction
 			{
 				term1 = rhoVal * vVal;
-				term2 = rhoVal * uVal*vVal;
-				term3 = rhoVal * pow(vVal, 2) + pVal;
-				term4 = (rhoVal*totalE + pVal)*vVal;
+                term2 = rhoVal * umVal*vVal;
+                term3 = rhoVal * vVal*vmVal + pVal;
+                term4 = rhoVal*totalE*vmVal + pVal*vVal;
 			}
 			return std::make_tuple(term1, term2, term3, term4);
 		}
@@ -1450,7 +1370,7 @@ namespace math
 
 	namespace viscousTerms
 	{
-		std::vector<std::vector<double>> calcStressTensorAndHeatFlux(std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy)
+        std::vector<std::vector<double>> calcStressTensorAndHeatFlux(std::vector<double> &U, std::vector<double> &dUx, std::vector<double> &dUy, double TVal)
 		{
 			/*Output matrix has form:
 			[tauXx		tauXy		Qx]
@@ -1470,7 +1390,14 @@ namespace math
 			rhoVal = U[0];
 			rhouVal = U[1];
 			rhovVal = U[2];
-			rhoEVal = U[3];
+            if (flowProperties::massDiffusion)
+            {
+                rhoEVal=rhoVal*material::Cv*TVal+0.5*(rhouVal*rhouVal+rhovVal*rhovVal)/rhoVal;
+            }
+            else
+            {
+                rhoEVal = U[3];
+            }
 
 			uVal = rhouVal / rhoVal;
 			vVal = rhovVal / rhoVal;
@@ -1531,7 +1458,7 @@ namespace math
 
 		double calcStressComponent(int index, double fstDeriv, double sndDeriv)
 		{
-			/*Formular of stress
+            /*Formula of stress
 			tau_xx = -mu((4/3)*du/dx - (2/3)*dv/dy)
 			tau_yy = -mu((4/3)*dv/dy - (2/3)*du/dx)
 			tau_xy = -mu(du/dy + dv/dx)
@@ -1562,7 +1489,7 @@ namespace math
 			return std::make_tuple(Qx, Qy);
 		}
 
-		std::tuple<double, double, double, double> calcViscousTermsFromStressHeatFluxMatrix(std::vector< std::vector<double> > &StressHeatFlux, double uVal, double vVal, int dir)
+        std::tuple<double, double, double, double> calcViscousTermsFromStressHeatFluxMatrix(std::vector< std::vector<double> > &StressHeatFlux, double uVal, double vVal, double nudRho, int dir)
 		{
 			/*StressHeatFlux is 2D array contents stress and heat flux component, has the following form:
 			[tauXx		tauXy		Qx]
@@ -1580,7 +1507,13 @@ namespace math
 			if (dir==1)
 			{
 				/*1. Ox direction*/
-				viscTerm1 = 0.0;
+                if (flowProperties::massDiffusion)
+                {
+                    viscTerm1 = -material::massDiffusion::DmCoeff*nudRho;
+                }
+                else {
+                    viscTerm1=0.0;
+                }
 				viscTerm2 = tauXx;
 				viscTerm3 = tauXy;
 				viscTerm4 = tauXx * uVal + tauXy * vVal + Qx;
@@ -1588,7 +1521,13 @@ namespace math
 			else if (dir==2)
 			{
 				/*2. Oy direction*/
-				viscTerm1 = 0.0;
+                if (flowProperties::massDiffusion)
+                {
+                    viscTerm1 = -material::massDiffusion::DmCoeff*nudRho;
+                }
+                else {
+                    viscTerm1=0.0;
+                }
 				viscTerm2 = tauXy;
 				viscTerm3 = tauYy;
 				viscTerm4 = tauXy * uVal + tauYy * vVal + Qy;
@@ -1738,7 +1677,7 @@ namespace math
 
 			for (int e = 0; e < elemType; e++)
 			{
-				edgeId = meshVar::inedel[e][element];
+                edgeId = meshVar::inedel[element][e];
 				neighborElemId = auxUlti::getNeighborElement(element, edgeId);
 				std::tie(deltaXe, deltaYe) = math::geometricOp::calEdgeMetric(edgeId, element);
 				if (neighborElemId >= 0)
@@ -1762,7 +1701,7 @@ namespace math
 
 		std::tuple<double, double> calEdgeMetric(int edgeId, int elementId)
 		{
-			int point1(meshVar::inpoed[0][edgeId]), point2(meshVar::inpoed[1][edgeId]);
+            int point1(meshVar::inpoed[edgeId][0]), point2(meshVar::inpoed[edgeId][1]);
 			double deltaX(0.0), deltaY(0.0);
 			if (auxUlti::findVertexOrder(point1, elementId) > auxUlti::findVertexOrder(point2, elementId))
 			{
@@ -1792,7 +1731,7 @@ namespace math
 		}
 
 		double calPolygonPerimeter(std::vector<double> &xCoor, std::vector<double> &yCoor, int numOfEdge) {
-			double perimeter(0.0), dx(0.0), dy(0.0);
+            double perimeter(0.0);
 			for (int iedge = 0; iedge < numOfEdge - 1; iedge++)
 			{
 				perimeter += math::geometricOp::calDistBetween2Points(xCoor[iedge], yCoor[iedge], xCoor[iedge + 1], yCoor[iedge + 1]);
@@ -1886,4 +1825,85 @@ namespace math
 		}
 		return index;
 	}
+
+    namespace solvePolynomialsEq {
+        double NewtonRaphson(std::vector<double> &power, std::vector<double> &coefs, double initialValue)
+        {
+            int polySize(static_cast<int>(power.size()));
+            std::vector<double> power_deriv(polySize, 0.0),
+                    coefs_deriv(polySize, 0.0);
+            double error(1), convergence_cri(1e-6), output(0.0), fValue(0.0), derivfValue(0.0);
+
+            //find 1st derivative of input polynomial
+            for (int polyOrder = 0; polyOrder < polySize; polyOrder++) {
+                power_deriv[polyOrder]=power[polyOrder] - 1.0;
+                coefs_deriv[polyOrder]=power[polyOrder]*coefs[polyOrder];
+            }
+
+            //solve equation
+            while (error > convergence_cri) {
+                fValue = 0.0;
+                derivfValue = 0.0;
+                for (int polyOrder = 0; polyOrder < polySize; polyOrder++) {
+                    fValue+=pow(initialValue,power[polyOrder])*coefs[polyOrder];
+                    derivfValue+=pow(initialValue,power_deriv[polyOrder])*coefs_deriv[polyOrder];
+                }
+                output = initialValue - fValue/derivfValue;
+                error = fabs(output - initialValue)/initialValue;
+                initialValue = output;
+            }
+            return output;
+        }
+
+        double Bisection(std::vector<double> &power, std::vector<double> &coefs, double initialValue)
+        {
+            const double range(0.3);
+            double upper(initialValue*(1+range)), lower((initialValue*(1-range))), fUpper(0.0), fLower(0.0);
+            double error(1), convergence_cri(1e-6), output(0.0), fOutput(0.0), outputOld(0.0);
+            //solve equation
+            fUpper=math::solvePolynomialsEq::subValToPolynomial(power,coefs,upper);
+            fLower=math::solvePolynomialsEq::subValToPolynomial(power,coefs,lower);
+            if (fUpper*fLower>0)
+            {
+                std::cout<<"Failed to solve polynomial equation by using Bisection\n";
+                int c = getchar();
+            }
+            else {
+                while (error > convergence_cri) {
+                    fUpper=math::solvePolynomialsEq::subValToPolynomial(power,coefs,upper);
+                    fLower=math::solvePolynomialsEq::subValToPolynomial(power,coefs,lower);
+                    output = 0.5*(upper+lower);
+                    fOutput=math::solvePolynomialsEq::subValToPolynomial(power,coefs,output);
+                    if (fUpper*fOutput<0)
+                    {
+                        lower=output;
+                    }
+                    else if (fLower*fOutput<0) {
+                        upper=output;
+                    }
+                    error = fabs((output - outputOld)/output);
+                    outputOld=output;
+                }
+            }
+            return output;
+        }
+
+        double subValToPolynomial(std::vector<double> &power, std::vector<double> &coefs, double Value)
+        {
+            int polySize(static_cast<int>(power.size()));
+            double fValue(0.0);
+            for (int polyOrder = 0; polyOrder < polySize; polyOrder++) {
+                fValue+=pow(Value,power[polyOrder])*coefs[polyOrder];
+            }
+            return fValue;
+        }
+    }
+
+    namespace massDiffusionFncs {
+    double calcTotalVelocity(double rho, double advecV, double mudRho)
+    {
+        //dRho here is mu*d(rho)/d(x,y)
+        return (advecV-material::massDiffusion::DmCoeff*mudRho/(rho*rho));
+    }
+    }
 }//end of namespace math

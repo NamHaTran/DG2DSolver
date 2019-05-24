@@ -4,31 +4,26 @@
   DGAuxUltilitiesLib.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(472): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(482): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(671): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgauxultilitieslib.cpp(675): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGBCsLib.cpp
   DGController.cpp
   DGIOLib.cpp
   DGLimiterLib.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dglimiterlib.cpp(950): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dglimiterlib.cpp(939): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGMath.cpp
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(853): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1188): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1202): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1874): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(871): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1233): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1247): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgmath.cpp(1813): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   DGMeshReaderLib.cpp
   DGMessagesLib.cpp
   DGPostProcessLib.cpp
 d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(159): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(232): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(236): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(240): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(244): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-d:\working\code c++ for fun\dgproject\dg2dsolver\dg2dsolver\dgpostprocesslib.cpp(248): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   DGProcLib.cpp
   dynamicVarDeclaration.cpp
   VarDeclaration.cpp
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
   Generating code
-  All 1371 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  All 1397 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   DG2DSolver.vcxproj -> D:\Working\Code C++ for fun\DGProject\DG2DSolver\x64\Release\DG2DSolver.exe

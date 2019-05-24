@@ -19,7 +19,7 @@ namespace message
 |--------------------DISCONTINUOS GALERKIN METHOD SOLVER-----------------|
 |                                  Author                                |
 |   Nam Ha Tran.                                                         |
-|   Ver 1.00                                                             |
+|   Ver 1.01                                                             |
 +------------------------------------------------------------------------+
 |   This program uses Discontinous Galerkin method to solve 2D problems  |
 |   on structural and unstructural mesh.                                 |
@@ -160,12 +160,56 @@ To convert unv mesh format to DG2D readable format, do following task step by st
 )";
 		std::cout << Str;
 	}
+
+    void checkCaseInformations()
+    {
+        std::string runOrNot(" ");
+        std::cout<<"\nCase's informations:\n";
+        std::cout<<"- Order of accuracy "<<mathVar::orderElem<<".\n";
+        if (refValues::subsonic)
+        {
+            std::cout<<"- Flow is subsonic.\n";
+        }
+        else {
+            std::cout<<"- Flow is supersonic.\n";
+        }
+
+        if (flowProperties::viscous)
+        {
+            std::cout<<"- Viscosity is on.\n";
+        }
+        else {
+            std::cout<<"- Viscosity is off.\n";
+        }
+
+        if (flowProperties::massDiffusion)
+        {
+            std::cout<<"- Mass diffusion is on.\n";
+        }
+        else {
+            std::cout<<"- Mass diffusion is off.\n";
+        }
+        if (limitVal::limiterName.size() > 0)
+        {
+            std::cout << "- Selected limiter(s): ";
+            for (int i = 0; i < static_cast<int>(limitVal::limiterName.size()); i++)
+            {
+                std::cout << limitVal::limiterName[i] << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout<<"Do you want to continue? <y/n> ";
+        std::cin>>runOrNot;
+        if (runOrNot.compare("n") == 0){
+            std::cout << "DGSolver is exitting.\n";
+            exit(EXIT_SUCCESS);
+        }
+    }
 }
 
 void exitDG(std::string str)
 {
 	std::cout << "ERROR: " << str << ". This is considered as fatal error." << std::endl;
-	std::cout << "DGSolver will exit after you hit return.\n";
-	system("pause");
+    std::cout << "DGSolver is exitting.\n";
 	exit(EXIT_FAILURE);
 }
